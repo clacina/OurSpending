@@ -122,3 +122,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# JetBrains
+.idea
+idea/
+
+*.html
+debug.log
+processing/report_output/
