@@ -1,5 +1,5 @@
 import db_utils
-from reports import reports
+# from reports import reports
 import sys
 from typing import Optional, List
 from radicli import Radicli, Arg
@@ -168,70 +168,70 @@ def category_report(batch_id: Optional[int] = None):
     
 """
 if __name__ == "__main__":
-    # cli.run()
+    cli.run()
 
-    report_data = reports.ReportData()
-    report_data.categories = db_utils.db_access.load_categories()
-    report_data.tags = db_utils.db_access.load_tags()
-    report_data.institutions = db_utils.db_access.load_institutions()
-    all_processors = settings.create_configs()
-
-    for bank in all_processors:
-        bank.analyze_data(processed_batch_id=3)
-        # print(json.dumps(bank.spending, indent=4))
-        print(bank.__dict__)
-        bank_json = {
-            'name': bank.name,
-            'datafile': bank.datafile,
-            'transactions': bank.transactions,
-            'config': bank.config,
-            'unrecognized_transactions': bank.unrecognized_transactions,
-            'spending': bank.spending,
-            'category_breakdown': bank.category_breakdown
-        }
-
-        for tx in bank.transactions:
-            print(tx.__dict__)
-            ts_json = {
-                'amount': tx.amount,
-                'category': tx.category,
-                'date': tx.date,
-                'description': tx.description,
-                'template_id': tx.template_id,
-                'transaction_id': tx.transaction_id,
-                'raw': tx.raw,
-                'institution_id': tx.institution_id,
-                'note': tx.note
-            }
-
-        for ut in bank.unrecognized_transactions:
-            ut_json = {
-
-            }
-
-        for template_id, v in bank.spending.items():
-            spend_json = {
-                'template_id': template_id,
-                'category_id': v['banking_entity'].category_id,
-                'hint': v['banking_entity'].hint,
-                'institution_id': v['banking_entity'].institution_id,
-                'qualifiers': v['banking_entity'].qualifiers,
-                'tags': v['banking_entity'].tags,
-                'transactions': []
-            }
-            for tx in v['transactions']:
-                ts_json = {
-                    'amount': tx.amount,
-                    'category': tx.category,
-                    'date': tx.date,
-                    'description': tx.description,
-                    'template_id': tx.template_id,
-                    'transaction_id': tx.transaction_id,
-                    'raw': tx.raw,
-                    'institution_id': tx.institution_id,
-                    'note': tx.note
-                }
-                spend_json['transactions'].append(ts_json)
+    # report_data = reports.ReportData()
+    # report_data.categories = db_utils.db_access.load_categories()
+    # report_data.tags = db_utils.db_access.load_tags()
+    # report_data.institutions = db_utils.db_access.load_institutions()
+    # all_processors = settings.create_configs()
+    #
+    # for bank in all_processors:
+    #     bank.analyze_data(processed_batch_id=3)
+    #     # print(json.dumps(bank.spending, indent=4))
+    #     print(bank.__dict__)
+    #     bank_json = {
+    #         'name': bank.name,
+    #         'datafile': bank.datafile,
+    #         'transactions': bank.transactions,
+    #         'config': bank.config,
+    #         'unrecognized_transactions': bank.unrecognized_transactions,
+    #         'spending': bank.spending,
+    #         'category_breakdown': bank.category_breakdown
+    #     }
+    #
+    #     for tx in bank.transactions:
+    #         print(tx.__dict__)
+    #         ts_json = {
+    #             'amount': tx.amount,
+    #             'category': tx.category,
+    #             'date': tx.date,
+    #             'description': tx.description,
+    #             'template_id': tx.template_id,
+    #             'transaction_id': tx.transaction_id,
+    #             'raw': tx.raw,
+    #             'institution_id': tx.institution_id,
+    #             'note': tx.note
+    #         }
+    #
+    #     for ut in bank.unrecognized_transactions:
+    #         ut_json = {
+    #
+    #         }
+    #
+    #     for template_id, v in bank.spending.items():
+    #         spend_json = {
+    #             'template_id': template_id,
+    #             'category_id': v['banking_entity'].category_id,
+    #             'hint': v['banking_entity'].hint,
+    #             'institution_id': v['banking_entity'].institution_id,
+    #             'qualifiers': v['banking_entity'].qualifiers,
+    #             'tags': v['banking_entity'].tags,
+    #             'transactions': []
+    #         }
+    #         for tx in v['transactions']:
+    #             ts_json = {
+    #                 'amount': tx.amount,
+    #                 'category': tx.category,
+    #                 'date': tx.date,
+    #                 'description': tx.description,
+    #                 'template_id': tx.template_id,
+    #                 'transaction_id': tx.transaction_id,
+    #                 'raw': tx.raw,
+    #                 'institution_id': tx.institution_id,
+    #                 'note': tx.note
+    #             }
+    #             spend_json['transactions'].append(ts_json)
 
     # {
     #     'name': 'Care Credit',

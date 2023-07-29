@@ -6,8 +6,8 @@ transactions derived from transaction_models.BaseTransaction
 
 """
 import csv
-import processing.transaction_models as models
-import processing.base as base
+import data_processing.transaction_models as models
+import data_processing.base as base
 
 
 class CapitalOne(base.ProcessorBase):

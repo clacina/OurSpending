@@ -1,6 +1,6 @@
 from fastapi import status, HTTPException
 
-import app.utils
+import rest_api.utils
 from common import db_access
 
 """  Server actions """

@@ -5,7 +5,7 @@ import sys
 sys.path.append("..")
 
 from common import db_access
-from processing.data_models import *
+from data_processing.data_models import *
 import json
 from typing import Optional
 

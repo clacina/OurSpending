@@ -2,8 +2,8 @@
 settings.py - Code for confguring data structures for analysis.
 """
 
-from processing.processors import *
-import processing.db_utils as db_utils
+from data_processing.processors import *
+import data_processing.db_utils as db_utils
 """ -------------------------- Entry Point ----------------------------- """
 
 

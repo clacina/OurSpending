@@ -1,29 +1,36 @@
 import sys
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from common import db_access
 import datafiles.original_data as entities
-from processing.data_models import *
+from data_processing.data_models import *
 import db_utils
+import argparse
 
+# Initialize parser
+parser = argparse.ArgumentParser()
+
+# Adding optional argument
+parser.add_argument("-c", "--create", action=argparse.BooleanOptionalAction, help="Drop and Create all Tables")
+parser.add_argument("-p", "--populate", action=argparse.BooleanOptionalAction, help="Populate Tables")
+parser.add_argument("-e", "--entities", action=argparse.BooleanOptionalAction, help="Generate Entities")
+
+# Read arguments from command line
+args = parser.parse_args()
 
 
 """ ------------------------------------ Entry Point ------------------------------------"""
-create_schema = True
-
 conn = db_access.connect_to_db()
 assert conn
 
-if create_schema:
+if args.create:
     db_utils.create_tables()
 
-institutions = db_access.load_institutions()
-categories = db_access.load_categories()
-tags = db_access.load_tags()
 
+if args.populate:
+    institutions = db_access.load_institutions()
 
-if create_schema:
     db_utils.create_qualifiers(
         conn,
         entities.carecredit_entities,
@@ -76,32 +83,32 @@ if create_schema:
         [x[0] for x in institutions if x[1] == "WLS_VISA"][0],
     )
 
-qualifiers = db_access.load_qualifiers()
+if args.entities:
+    institutions = db_access.load_institutions()
+    categories = db_access.load_categories()
+    tags = db_access.load_tags()
+    qualifiers = db_access.load_qualifiers()
 
+    entity_mapping = {
+        "CareCredit": {"id": "CC", "entries": entities.carecredit_entities},
+        "Wells Checking": {"id": "WLS_CHK", "entries": entities.wells_checking_entities},
+        "Wells Visa": {"id": "WLS_VISA", "entries": entities.wells_visa_entities},
+        "Capital One Visa": {"id": "CONE_VISA", "entries": entities.capitalone_entities},
+        "Chase Visa": {"id": "CH_VISA", "entries": entities.chase_entities},
+        "Home Depot": {"id": "HD", "entries": entities.homedepot_entities},
+        "PayPal": {"id": "PP", "entries": entities.paypal_entities},
+        "Lowes": {"id": "LWS", "entries": entities.lowes_entities},
+        "Sound Checking - House": {
+            "id": "SND_CHK_HOUSE",
+            "entries": entities.sound_checking_entities,
+        },
+        "Sound Checking - Christa": {
+            "id": "SND_CHK",
+            "entries": entities.sound_checking_entities_christa,
+        },
+        "Sound Visa": {"id": "SND_VISA", "entries": entities.sound_visa_entities},
+    }
 
-entity_mapping = {
-    "CareCredit": {"id": "CC", "entries": entities.carecredit_entities},
-    "Wells Checking": {"id": "WLS_CHK", "entries": entities.wells_checking_entities},
-    "Wells Visa": {"id": "WLS_VISA", "entries": entities.wells_visa_entities},
-    "Capital One Visa": {"id": "CONE_VISA", "entries": entities.capitalone_entities},
-    "Chase Visa": {"id": "CH_VISA", "entries": entities.chase_entities},
-    "Home Depot": {"id": "HD", "entries": entities.homedepot_entities},
-    "PayPal": {"id": "PP", "entries": entities.paypal_entities},
-    "Lowes": {"id": "LWS", "entries": entities.lowes_entities},
-    "Sound Checking - House": {
-        "id": "SND_CHK_HOUSE",
-        "entries": entities.sound_checking_entities,
-    },
-    "Sound Checking - Christa": {
-        "id": "SND_CHK",
-        "entries": entities.sound_checking_entities_christa,
-    },
-    "Sound Visa": {"id": "SND_VISA", "entries": entities.sound_visa_entities},
-}
-
-
-create_schema = True
-if create_schema:
     # Create banking Entities
     bank_entities = list()
     for inst, data in entity_mapping.items():

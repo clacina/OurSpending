@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
 
-from app.schemas import TokenPayload, SystemUser
+from rest_api.schemas import TokenPayload, SystemUser
 from common import db_access
 from .utils import ALGORITHM, JWT_SECRET_KEY
 

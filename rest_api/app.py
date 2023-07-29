@@ -8,13 +8,13 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseConfig
 
-from app import user_model
-from app.deps import get_current_user
-from app.logger import setup_rich_logger
+from rest_api import user_model
+from rest_api.deps import get_current_user
+from rest_api.logger import setup_rich_logger
 # import our router / routes
-from app.routes import router
-from app.schemas import UserOut, UserAuth, TokenSchema, SystemUser
-from app.utils import (
+from rest_api.routes import router
+from rest_api.schemas import UserOut, UserAuth, TokenSchema, SystemUser
+from rest_api.utils import (
     create_access_token,
     create_refresh_token,
     verify_password,
