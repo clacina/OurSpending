@@ -1,23 +1,57 @@
-import logo from './logo.svg';
 import './App.css';
+import {CategoriesProvider} from "./contexts/categories.context";
+import {TagsProvider} from "./contexts/tags.context";
+
+import TemplateList from "./components/template-list/template-list.component";
+
+const templates = [
+  {
+    "id": 20,
+    "credit": false,
+    "hint": "Loan Payment",
+    "notes": null,
+    "category": {
+      "id": 14,
+      "value": "Loan"
+    },
+    "institution": {
+      "id": 1,
+      "key": "WLS_CHK",
+      "name": "Wellsfargo Checking"
+    },
+    "tags": [
+      {
+        "id": 4,
+        "value": "Recurring"
+      },
+      {
+        "id": 7,
+        "value": "Loan"
+      }
+    ],
+    "qualifiers": [
+      {
+        "id": 83,
+        "value": "ONLINE TRANSFER REF ",
+        "institution_id": 1
+      },
+      {
+        "id": 84,
+        "value": " TO INSTALLMENT LOANS XXXXXX49130001",
+        "institution_id": 1
+      }
+    ]
+  }
+];
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <CategoriesProvider>
+        <TagsProvider>
+          <TemplateList templates={templates}/>
+        </TagsProvider>
+      </CategoriesProvider>
     </div>
   );
 }

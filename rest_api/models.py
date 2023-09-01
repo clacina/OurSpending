@@ -181,3 +181,100 @@ class TemplatesReportBuilder:
         for k, v in templates.items():
             template_list.append(v)
         return template_list
+
+
+# New template reporting models
+
+class TemplateDetailModel(BaseModel):
+    id: int = None
+    credit: bool = False
+    hint: str = None
+    notes: Optional[str]
+    category: CategoryModel = None
+    institution: InstitutionsModel = None
+
+    tags: List[TagModel] = []
+    qualifiers: List[QualifierModel] = []
+
+    def update(self, data):
+        self.id = data.id
+        self.credit = data.credit
+        self.hint = data.hint
+        self.notes = data.notes
+        self.category = data.category
+        self.institution = data.institution
+
+        for t in data.tags:
+            if t not in self.tags:
+                self.tags.append(t)
+
+        for q in data.qualifiers:
+            if q not in self.qualifiers:
+                self.qualifiers.append(q)
+
+
+class TemplateDetailReportBuilder:
+    """
+    Parse data and build a single template report object
+    """
+
+    def __init__(self, data):
+        self.data = data
+        self.tdm = TemplateDetailModel()
+
+    def process(self):
+        logging.info(f"query result: {self.data}")
+        logging.info(f"Found {len(self.data)} records to parse")
+
+        for row in self.data:
+            if row[0] is None:
+                # TODO: Should never happen, need to fix query
+                break
+            tdm = parse_template_detail_record(row)
+
+            self.tdm.update(tdm)
+
+        return self.tdm
+
+"""
+0    1     2        3         4             5        6    7          8          9              10
+id, hint, credit, notes, institution_id, bank_name, key, tag_id, tag_value, category_id, category_value,
+      11             12            13          14
+ qualifier_id, qualifier_value, template_id, tag_id,
+  
+20,Loan Payment,false,,1,Wellsfargo Checking,WLS_CHK,4,Recurring,14,Loan,83,ONLINE TRANSFER REF ,20,4
+
+"""
+
+
+def parse_template_detail_record(row):
+    category_id = row[9]
+    category_value = row[10]
+    qualifier_id = row[11]
+    qualifier_value = row[12]
+
+    institution_id = row[4]
+    institution_name = row[5]
+    institution_key = row[6]
+
+    tag_id = row[7]
+    tag_value = row[8]
+
+    tr = TemplateDetailModel()
+    tr.id = row[0]
+    tr.hint = row[1]
+    tr.credit = row[2]
+    tr.notes = row[3]
+
+    tr.institution = InstitutionsModel(id=institution_id, name=institution_name, key=institution_key)
+    tr.category = CategoryModel(id=category_id, value=category_value)
+
+    if qualifier_id:
+        qm = QualifierModel(id=qualifier_id, value=qualifier_value, institution_id=institution_id)
+        tr.qualifiers.append(qm)
+
+    if tag_id:
+        tm = TagModel(id=tag_id, value=tag_value)
+        tr.tags.append(tm)
+
+    return tr

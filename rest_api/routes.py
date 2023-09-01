@@ -61,12 +61,12 @@ def add_template(template: models.TemplateInputModel = Body(...)):
 @router.get(
     "/template/{template_id}",
     summary="Get list of available templates. May restrict the search by Institution",
-    response_model=models.TemplateReportModel,
+    response_model=models.TemplateDetailModel,
 )
 async def get_template(template_id: int):
     query_result = db_access.query_templates_by_id(template_id)
     if query_result:
-        return models.SingleTemplateReportBuilder(query_result).process()
+        return models.TemplateDetailReportBuilder(query_result).process()
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Unable to find template with id: {template_id}",
