@@ -53,7 +53,7 @@ const templateData = {
 
 const Template = ({template}) => {
     const [templateFields, setTemplateFields] = useState(templateData);
-    const {hint, notes} = templateFields;
+    const {hint, notes, credit} = templateFields;
 
     const {categoriesMap} = useContext(CategoriesContext);
     const {tagsMap} = useContext(TagsContext);
@@ -80,7 +80,8 @@ const Template = ({template}) => {
     }
 
     function updateCredit(event) {
-        console.log("Update credit: ", event);
+        console.log("Update credit: ", event.target.checked);
+        setTemplateFields({...templateFields, 'credit': event.target.checked});
     }
 
     return (
@@ -104,7 +105,7 @@ const Template = ({template}) => {
                            onChange={handleChange}/>
                 <span>Qualifiers: </span><EntityList nodes={templateFields.qualifiers}/>
                 <span>Tags: </span><EntityList nodes={templateFields.tags}/>
-                <input type='checkbox' value={templateFields.credit} onChange={updateCredit}/>
+                <input type='checkbox' value={credit} onChange={updateCredit} name='credit'/>
                 <span> Is Credit</span>
                 <Dropdown placeholder='Change Category' options={categoriesMap}
                           onChange={updateCategory}/>
