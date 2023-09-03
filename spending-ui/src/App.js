@@ -9,7 +9,7 @@ const templates = [
     "id": 20,
     "credit": false,
     "hint": "Loan Payment",
-    "notes": null,
+    "notes": "",
     "category": {
       "id": 14,
       "value": "Loan"

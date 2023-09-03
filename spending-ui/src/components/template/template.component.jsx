@@ -1,4 +1,4 @@
-import {useContext, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 
 import Dropdown from 'react-dropdown';
 import 'react-dropdown/style.css';
@@ -40,38 +40,71 @@ import {TagsContext} from "../../contexts/tags.context";
     }
 */
 
+const templateData = {
+    id: "",
+    hint: "",
+    notes: "",
+    qualifiers: [],
+    credit: "",
+    tags: [],
+    institution: "",
+    category: ""
+}
+
 const Template = ({template}) => {
-    const {id, hint, notes, qualifiers, credit, tags, institution, category} = template;
+    const [templateFields, setTemplateFields] = useState(templateData);
+    const {hint, notes} = templateFields;
+
     const {categoriesMap} = useContext(CategoriesContext);
     const {tagsMap} = useContext(TagsContext);
-    const [currentCategory, setCurrentCategory] = useState(category.value);
-    const [currentTags, setCurrentTags] = useState(tags);
+
+    useEffect(() => {
+        setTemplateFields(template);
+    }, [template]);
 
     function updateCategory(event) {
-        console.log('Category change: ', event);
-        setCurrentCategory(event.value);
+        const existingCategory = categoriesMap.find((item) => event.value === item.value);
+        setTemplateFields({...templateFields, 'category': existingCategory});
     }
 
     function addTag(event) {
-        console.log('tag change: ', event);
-        const newTag = tagsMap.find(event.value);
-        setCurrentTags([...currentTags, {...newTag}])
+        const existingTag = tagsMap.find((item) => event.value === item.value);
+        const newTagSet = [...templateFields.tags, {...existingTag}];
+        setTemplateFields({...templateFields, 'tags': newTagSet});
+    }
+
+    // generic handler for hint and notes
+    function handleChange(event) {
+        const {name, value} = event.target;
+        setTemplateFields({...templateFields, [name]: value});
+    }
+
+    function updateCredit(event) {
+        console.log("Update credit: ", event);
     }
 
     return (
         <TemplateContainer>
-            <p>Institution: {institution.name}</p>
-            <p>Template ID: {id}</p>
-            <p>{qualifiers.map((item) => item.value)}</p>
-            <p>{currentCategory}</p>
-            <p>{currentTags.map((item) => item.value)}</p>
+            <p>Institution: {templateFields.institution.name}</p>
+            <p>Template ID: {templateFields.id}</p>
+            <p>{templateFields.qualifiers.map((item) => item.value)}</p>
+            <p>{templateFields.credit}</p>
+            <p>{templateFields.tags.map((item) => item.value)}</p>
+            <p>Category: {templateFields.category.value}</p>
+            <p>{templateFields.notes}</p>
 
-            <p>{notes}</p>
             <form>
-                <FormInput label='Hint' value={hint}/>
-                <span>Qualifiers: </span><EntityList nodes={qualifiers}/>
-                <span>Tags: </span><EntityList nodes={tags}/>
-                <input type='checkbox' value={credit}/>
+                <FormInput label='Hint'
+                           name='hint'
+                           value={hint}
+                           onChange={handleChange}/>
+                <FormInput label='Notes'
+                           name='notes'
+                           value={notes}
+                           onChange={handleChange}/>
+                <span>Qualifiers: </span><EntityList nodes={templateFields.qualifiers}/>
+                <span>Tags: </span><EntityList nodes={templateFields.tags}/>
+                <input type='checkbox' value={templateFields.credit} onChange={updateCredit}/>
                 <span> Is Credit</span>
                 <Dropdown placeholder='Change Category' options={categoriesMap}
                           onChange={updateCategory}/>
