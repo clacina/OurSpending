@@ -6,7 +6,7 @@ import logging
 
 def connect_to_db():
     host = 'localhost'      # Local Server
-    host = '10.0.0.20'      # Ubuntu server
+    # host = '10.0.0.20'      # Ubuntu server
 
     try:
         conn = psycopg2.connect(

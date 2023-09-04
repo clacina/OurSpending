@@ -6,6 +6,7 @@ import 'react-dropdown/style.css';
 import {TemplateContainer} from "./template.component.styles";
 import EntityList from "../entity-list/entity-list.component";
 import FormInput from "../form-input/form-input.component";
+import Button from "../button/button-component";
 import {CategoriesContext} from "../../contexts/categories.context";
 import {TagsContext} from "../../contexts/tags.context";
 
@@ -84,6 +85,26 @@ const Template = ({template}) => {
         setTemplateFields({...templateFields, 'credit': event.target.checked});
     }
 
+    async function handleSubmit(event) {
+        event.preventDefault();  // don't have form clear screen
+        console.log("handleSubmit: ", event);
+        // Store Data
+        try {
+            // const {user} = await createAuthUserWithEmailAndPassword(email, password);
+            // console.log('user: ', user);
+            //
+            // // Store our user in our context
+            // // setCurrentUser(user);
+            // await createUserDocumentFromAuth(user, {displayName});
+            // resetFormFields();
+        } catch (error) {
+            console.log("Error storing template: ", error);
+            return false;
+        }
+
+        return true;
+    }
+
     return (
         <TemplateContainer>
             <p>Institution: {templateFields.institution.name}</p>
@@ -94,7 +115,7 @@ const Template = ({template}) => {
             <p>Category: {templateFields.category.value}</p>
             <p>{templateFields.notes}</p>
 
-            <form>
+            <form onSubmit={handleSubmit}>
                 <FormInput label='Hint'
                            name='hint'
                            value={hint}
@@ -111,6 +132,7 @@ const Template = ({template}) => {
                           onChange={updateCategory}/>
                 <Dropdown placeholder='Add Tag' options={tagsMap}
                           onChange={addTag}/>
+                <Button type='submit' id='submit'>Save</Button>
             </form>
 
         </TemplateContainer>

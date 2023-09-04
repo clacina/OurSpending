@@ -9,7 +9,7 @@ const TemplateList = ({templates}) => {
 
     return (
         <div>
-            Templates
+            <h1>Templates</h1>
             {templateList.map(item => <Template key={item.id} template={item}/>)}
         </div>
     )
