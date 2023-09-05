@@ -434,6 +434,24 @@ async def add_tag_to_transaction(
     return get_transaction(transaction_id)
 
 
+@router.get("/transactions_descriptions", response_model=List[models.TransactionDescriptionModel])
+async def get_transaction_descriptions():
+    # SELECT id, institution_id, transaction_date, transaction_data, notes
+    transaction_data = db_access.load_transaction_data_descriptions()
+
+    transaction_list = []
+    for row in transaction_data:
+        tr = models.TransactionDescriptionModel(
+            id=row[0],
+            institution_id=row[1],
+            column_number=row[2],
+            column_name=row[3],
+            column_type=row[4]
+        )
+        transaction_list.append(tr)
+    return transaction_list
+
+
 """ Aggregate Results """
 
 

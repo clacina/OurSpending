@@ -62,6 +62,13 @@ class TransactionRecordModel(BaseModel):
     tags: Optional[List[str]]
 
 
+class TransactionDescriptionModel(BaseModel):
+    id: int
+    institution_id: int
+    column_number: int
+    column_name: str
+    column_type: str
+
 #  ----------------------------------------------------------------------------------------------------
 
 

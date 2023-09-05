@@ -6,7 +6,7 @@ import logging
 
 def connect_to_db():
     host = 'localhost'      # Local Server
-    # host = '10.0.0.20'      # Ubuntu server
+    host = '10.0.0.20'      # Ubuntu server
 
     try:
         conn = psycopg2.connect(
@@ -575,3 +575,17 @@ def create_qualifer_from_transaction(conn, transaction_id):
     qid = create_qualifer(desc)
     logging.info(f"New qualifier: {qid}")
     return qid
+
+
+def load_transaction_data_descriptions():
+    sql = "SELECT id, institution_id, column_number, column_name, column_type from transaction_data_description"
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+    try:
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return rows
+    except Exception as e:
+        print(f"Error listing transaction_data_description records: {str(e)}")
+        raise e

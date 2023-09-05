@@ -50,8 +50,9 @@ CREATE TABLE template_qualifiers
 (
     template_id  INTEGER REFERENCES templates (id) ON DELETE CASCADE  NOT NULL,
     qualifier_id INTEGER REFERENCES qualifiers (id) ON DELETE CASCADE NOT NULL,
+    data_column  TEXT                                                          DEFAULT NULL,
     sys_period   TSTZRANGE                                            NOT NULL DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, NULL),
-    unique (template_id, qualifier_id)
+    unique (template_id, qualifier_id, data_column)
 );
 
 DROP TABLE IF EXISTS template_qualifiers_history;
