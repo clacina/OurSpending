@@ -6,7 +6,7 @@ import {StaticDataProvider} from "./contexts/static_data.context";
 // import TemplateList from "./components/template-list/template-list.component";
 // import {templates} from "./data";
 import {transactions} from "./data";
-import TransactionList from "./components/transaction-list/transaction-list.component";
+import TransactionsList from "./components/transactions-list/transactions-list.component";
 
 function App() {
   return (
@@ -15,7 +15,7 @@ function App() {
           <CategoriesProvider>
             <TagsProvider>
               {/*<TemplateList templates={templates}/>*/}
-              <TransactionList transactions={transactions} />
+              <TransactionsList transactions={transactions} />
             </TagsProvider>
           </CategoriesProvider>
         </StaticDataProvider>

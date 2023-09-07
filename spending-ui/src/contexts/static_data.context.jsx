@@ -1,16 +1,22 @@
 import {createContext, useEffect, useState} from "react";
-import {transaction_data_descriptions} from "../data";
+import {transaction_data_descriptions, institutionData} from "../data";
 
 export const StaticDataContext = createContext({
     transactionDataDefinitions: [],
     setTransactionDataDefinitions: () => null,
+    institutions: [],
+    setInstitutions: () => null,
 });
 
 export const StaticDataProvider = ({children}) => {
     const [transactionDataDefinitions, setTransactionDataDefinitions] = useState([]);
+    const [institutions, setInstitutions] = useState([]);
 
+    console.log("In StaticProvider with: ", transaction_data_descriptions);
     useEffect(() => {
+        console.log("Setting context: ", transaction_data_descriptions);
         setTransactionDataDefinitions(transaction_data_descriptions);
+        setInstitutions(institutionData);
         // because we're calling an async function, we need an async handler
         // const getCategoriesMap = async () => {
         //     const categoryMap = await getCategoriesAndDocuments();
@@ -19,6 +25,6 @@ export const StaticDataProvider = ({children}) => {
         // getCategoriesMap();
     }, []);
 
-    const value = {transactionDataDefinitions, setTransactionDataDefinitions};
+    const value = {transactionDataDefinitions, setTransactionDataDefinitions, institutions, setInstitutions};
     return <StaticDataContext.Provider value={value}>{children}</StaticDataContext.Provider>
 };
