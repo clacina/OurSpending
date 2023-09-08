@@ -12,25 +12,17 @@ const TransactionList = ({institution_id, transactions}) => {
         } else {
             console.info("No definitions yet");
         }
-
     }, [transactionDataDefinitions]);
 
     if(isLoading) {
-        console.info("Data for institution: ", institution_id);
-        // console.info(transactionDataDefinitions);
         const ourInstitution = institutions.filter((i) => {
             return (i.id === institution_id)
         })
-        console.info("OurInst:", ourInstitution[0]);
 
         const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === institution_id);
-        console.info("DD: ", dataDefinition);
         const dataNames = dataDefinition.map((column) => (
             column.column_name
         ));
-        console.info("Found data def for institution: " + institution_id + " of " + dataDefinition.length);
-        console.info("--Names: ", dataNames);
-        // {transactions.map(item => <Transaction key={item.id} transaction={item} />)}
 
         return (
             <div>
@@ -42,6 +34,9 @@ const TransactionList = ({institution_id, transactions}) => {
                                 {dataNames.map((col) => <th>{col}</th>)}
                             </tr>
                         </thead>
+                        <tbody>
+                            {transactions.map(item => <Transaction key={item.id} transaction={item} />)}
+                        </tbody>
                     </table>
                 </div>
             </div>

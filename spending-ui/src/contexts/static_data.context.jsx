@@ -12,9 +12,7 @@ export const StaticDataProvider = ({children}) => {
     const [transactionDataDefinitions, setTransactionDataDefinitions] = useState([]);
     const [institutions, setInstitutions] = useState([]);
 
-    console.log("In StaticProvider with: ", transaction_data_descriptions);
     useEffect(() => {
-        console.log("Setting context: ", transaction_data_descriptions);
         setTransactionDataDefinitions(transaction_data_descriptions);
         setInstitutions(institutionData);
         // because we're calling an async function, we need an async handler

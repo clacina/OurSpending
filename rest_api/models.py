@@ -58,8 +58,10 @@ class TransactionRecordModel(BaseModel):
     institution_id: int
     transaction_date: datetime.date
     transaction_data: List[str]
-    notes: Optional[str]
+    # notes: Optional[str]
     tags: Optional[List[str]]
+    description: Optional[str]
+    amount: Optional[float]
 
 
 class TransactionDescriptionModel(BaseModel):
@@ -68,6 +70,8 @@ class TransactionDescriptionModel(BaseModel):
     column_number: int
     column_name: str
     column_type: str
+    is_description: bool
+    is_amount: bool
 
 #  ----------------------------------------------------------------------------------------------------
 

@@ -10,20 +10,21 @@ import TransactionList from "../transaction-list/transaction-list.component";
 const TransactionsList = ({transactions}) => {
     // Group transactions by institution id
     const trans_groups = {}
+
     transactions.forEach((t) => {
-        if (!trans_groups.hasOwnProperty(t.institution.id)) {
-            trans_groups[t.institution.id] = [];
+        if (!trans_groups.hasOwnProperty(t.institution_id)) {
+            trans_groups[t.institution_id] = [];
         }
-        trans_groups[t.institution.id].push(t);
+        trans_groups[t.institution_id].push(t);
     })
-    // console.log('Groupings: ', trans_groups);
+
     const grouping_array = Object.values(trans_groups);
-    return(
+    return (
         <div>
             <h1>Transactions</h1>
             {grouping_array.map((item) => {
-                // console.log('Item: ', item);
-                return(<TransactionList key={item[0].institution.id} transactions={item} institution_id={item[0].institution.id}/>);
+                return (<TransactionList key={item[0].institution_id} transactions={item}
+                                         institution_id={item[0].institution_id}/>);
             })}
         </div>
     )

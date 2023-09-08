@@ -353,22 +353,27 @@ async def add_tag(
 
 @router.get("/transactions", response_model=List[models.TransactionRecordModel])
 async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
-    # SELECT id, institution_id, transaction_date, transaction_data, notes
+    # SELECT id, institution_id, transaction_date, transaction_data, description, amount
     transactions = db_access.query_transactions_from_batch(
         batch_id=batch_id, offset=offset, limit=limit
     )
 
     transaction_list = []
-    for row in transactions:
-        tr = models.TransactionRecordModel(
-            id=row[0],
-            batch_id=batch_id,
-            institution_id=row[1],
-            transaction_date=row[2],
-            transaction_data=row[3],
-            notes=row[4],
-        )
-        transaction_list.append(tr)
+    if transactions:
+        for row in transactions:
+            tr = models.TransactionRecordModel(
+                id=row[0],
+                batch_id=batch_id,
+                institution_id=row[1],
+                transaction_date=row[2],
+                transaction_data=row[3],
+                description=row[4],
+                amount=row[5],
+            )
+            transaction_list.append(tr)
+    else:
+        logging.info({"message": f"No transactions found for batch {batch_id}"})
+
     return transaction_list
 
 
@@ -378,7 +383,7 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     response_model=models.TransactionRecordModel,
 )
 async def get_transaction(transaction_id: int):
-    # id, batch_id, institution_id, transaction_date, transaction_data, notes
+    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
     row = db_access.fetch_transaction(transaction_id=transaction_id)
     tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
 
@@ -388,7 +393,8 @@ async def get_transaction(transaction_id: int):
         institution_id=row[2],
         transaction_date=row[3],
         transaction_data=row[4],
-        notes=row[5],
+        description=row[5],
+        amount=row[6],
         tags=tags,
     )
     return tr
@@ -400,7 +406,7 @@ async def get_transaction(transaction_id: int):
     response_model=List[models.TagModel],
 )
 async def get_transaction_tags(transaction_id: int):
-    # id, batch_id, institution_id, transaction_date, transaction_data, notes
+    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
     row = db_access.fetch_transaction(transaction_id=transaction_id)
     tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
 
@@ -436,7 +442,7 @@ async def add_tag_to_transaction(
 
 @router.get("/transactions_descriptions", response_model=List[models.TransactionDescriptionModel])
 async def get_transaction_descriptions():
-    # SELECT id, institution_id, transaction_date, transaction_data, notes
+    # SELECT id, institution_id, transaction_date, transaction_data, description, amount
     transaction_data = db_access.load_transaction_data_descriptions()
 
     transaction_list = []
@@ -446,7 +452,9 @@ async def get_transaction_descriptions():
             institution_id=row[1],
             column_number=row[2],
             column_name=row[3],
-            column_type=row[4]
+            column_type=row[4],
+            is_description=row[5],
+            is_amount=row[6]
         )
         transaction_list.append(tr)
     return transaction_list
