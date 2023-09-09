@@ -297,38 +297,25 @@ def fetch_template(template_id: int):
 # -- template.category_id -> categories.id
 # -- template_tags.id -> tags.id
 # -- template_qualifiers.qualifier_id -> qualifiers
-# FIXME: Query does not pick up ALL templates
-TemplatSQlOrig = """
-    SELECT templates.id, templates.hint, templates.credit, t.value, c.value, q.value, templates.notes, templates.institution_id FROM templates
-    full outer JOIN template_tags tt on tt.template_id = templates.id
-    full outer JOIN tags t on t.id = tt.tag_id
-    full outer JOIN categories c on templates.category_id = c.id
-    full outer JOIN template_qualifiers tq on templates.id = tq.template_id
-    full outer JOIN qualifiers q on tq.qualifier_id = q.id    
-"""
+
 
 TemplateSQl = """
-SELECT
-    templates.id, templates.hint, templates.credit, templates.notes, 
-    templates.institution_id, bank.name as bank_name, bank.key,
-    t.id as tag_id, t.value as tag_value, 
-    c.id as category_id, c.value as category_value, 
-    q.id AS qualifier_id, q.value as qualifier_value, 
-    tt.template_id, tt.tag_id
-FROM
-    templates
-INNER JOIN template_tags tt on tt.template_id = templates.id
-INNER JOIN tags t on t.id = tt.tag_id
-INNER JOIN categories c on templates.category_id = c.id
-INNER JOIN template_qualifiers tq on templates.id = tq.template_id
-INNER JOIN qualifiers q on tq.qualifier_id = q.id
-INNER JOIN institutions bank on templates.institution_id = bank.id
-"""
-
-"""
-    where tq.template_id = templates.id 
-    and tt.template_id = templates.id
-    
+WITH tlist AS(
+SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
+         , bank.name as bank_name, bank.key
+         , t.id as tag_id, t.value as tag_value 
+         , tt.template_id, tt.tag_id
+         , c.id as category_id, c.value as category_value 
+         , q.id AS qualifier_id, q.value as qualifier_value 
+         FROM templates
+         JOIN institutions bank on templates.institution_id = bank.id
+         full outer JOIN template_tags tt on tt.template_id = templates.id
+         full OUTER JOIN tags t on t.id = tt.tag_id
+         full outer JOIN categories c on templates.category_id = c.id
+         full outer JOIN template_qualifiers tq on templates.id = tq.template_id
+         full outer JOIN qualifiers q on tq.qualifier_id = q.id
+) 
+SELECT * FROM tlist
 """
 
 
@@ -342,11 +329,13 @@ def query_templates_by_id(template_id):
     conn = connect_to_db()
     assert conn
 
-    sql = f"{TemplateSQl} WHERE templates.id=%(template_id)s"
+    sql = f"{TemplateSQl} WHERE TID=%(template_id)s"
     query_params = {"template_id": template_id}
 
     try:
         cur = conn.cursor()
+        mog = cur.mogrify(sql, query_params);
+        logging.info(f"Mog: {mog}")
         cur.execute(sql, query_params)
         rows = cur.fetchall()
         logging.info(f"Returned {len(rows)} matching records.")
@@ -372,11 +361,10 @@ def query_templates_by_institution(institution_id):
     query_params = {}
     if institution_id >= 0:
         logging.info(f"Using institution id of {institution_id}")
-        sql = f"{TemplateSQl} WHERE templates.institution_id=%(institution_id)s"
+        sql = f"{TemplateSQl} WHERE BANK_ID=%(institution_id)s"
         query_params = {"institution_id": institution_id}
 
     try:
-        sql += " order by templates.id"
         cur = conn.cursor()
         cur.execute(sql, query_params)
         rows = cur.fetchall()

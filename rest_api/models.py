@@ -78,7 +78,7 @@ class TransactionDescriptionModel(BaseModel):
 
 class TemplateInputModel(BaseModel):
     institution_id: int
-    category: str
+    category: Optional[str]
     credit: bool
     tags: Optional[List[str]]
     qualifiers: Optional[List[str]]
@@ -87,7 +87,7 @@ class TemplateInputModel(BaseModel):
 
 
 class TemplateReportModel(TemplateInputModel):
-    template_id: int
+    id: int
 
     def update(self, rep):
         if rep.qualifiers:
@@ -97,9 +97,10 @@ class TemplateReportModel(TemplateInputModel):
 
 
 def parse_template_record(row):
-    if not row[7]:
-        return
-
+    # if not row[7]:
+    #     logging.info({"message": "Invalid payload passed to parse_template_row",
+    #                   "row": row})
+    #     return None, None
     if isinstance(row[3], List):
         tags = row[3]
     elif isinstance(row[3], str):
@@ -138,14 +139,14 @@ class SingleTemplateReportBuilder:
             tags, qualifiers = parse_template_record(row)
 
             tr = TemplateReportModel(
-                institution_id=row[7],
-                template_id=row[0],
+                institution_id=row[4],
+                id=row[0],
                 credit=row[2],
                 tags=tags,
                 hint=row[1],
-                notes=row[6],
+                notes=row[3],
                 qualifiers=qualifiers,
-                category=row[4],
+                category=row[12]
             )
             if not self.tr:
                 self.tr = tr
@@ -157,6 +158,19 @@ class SingleTemplateReportBuilder:
 class TemplatesReportBuilder:
     """
     Returns a list of TemplateRemoteModel objects
+                   0                     1               2                3                  4
+    SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id
+                         5                 6
+             , bank.name as bank_name, bank.key
+                         7              8
+             , t.id as tag_id, t.value as tag_value
+                        9               10
+             , tt.template_id, tt.tag_id
+                        11                      12
+             , c.id as category_id, c.value as category_value
+                        13                      14
+             , q.id AS qualifier_id, q.value as qualifier_value
+
     """
 
     def __init__(self, data):
@@ -174,19 +188,19 @@ class TemplatesReportBuilder:
             tags, qualifiers = parse_template_record(row)
 
             tr = TemplateReportModel(
-                institution_id=row[7],
-                template_id=row[0],
+                institution_id=row[4],
+                id=row[0],
                 credit=row[2],
                 tags=tags,
                 hint=row[1],
-                notes=row[6],
+                notes=row[3],
                 qualifiers=qualifiers,
-                category=row[4],
+                category=row[12],
             )
-            if tr.template_id not in templates:
-                templates[tr.template_id] = tr
+            if tr.id not in templates:
+                templates[tr.id] = tr
             else:
-                templates[tr.template_id].update(tr)
+                templates[tr.id].update(tr)
 
         template_list = list()
         for k, v in templates.items():
@@ -278,7 +292,8 @@ def parse_template_detail_record(row):
     tr.notes = row[3]
 
     tr.institution = InstitutionsModel(id=institution_id, name=institution_name, key=institution_key)
-    tr.category = CategoryModel(id=category_id, value=category_value)
+    if category_id and category_value:
+        tr.category = CategoryModel(id=category_id, value=category_value)
 
     if qualifier_id:
         qm = QualifierModel(id=qualifier_id, value=qualifier_value, institution_id=institution_id)
