@@ -59,9 +59,10 @@ class TransactionRecordModel(BaseModel):
     transaction_date: datetime.date
     transaction_data: List[str]
     # notes: Optional[str]
-    tags: Optional[List[str]]
+    tags: Optional[List[str]] = []
     description: Optional[str]
     amount: Optional[float]
+    notes: Optional[List[str]] = []
 
 
 class TransactionDescriptionModel(BaseModel):

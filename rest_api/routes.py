@@ -386,6 +386,7 @@ async def get_transaction(transaction_id: int):
     # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
     row = db_access.fetch_transaction(transaction_id=transaction_id)
     tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
+    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
 
     tr = models.TransactionRecordModel(
         id=row[0],
@@ -396,6 +397,7 @@ async def get_transaction(transaction_id: int):
         description=row[5],
         amount=row[6],
         tags=tags,
+        notes=notes,
     )
     return tr
 

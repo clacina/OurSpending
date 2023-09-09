@@ -2,15 +2,15 @@
  Transactions UI
  TransactionsList - grouping of transactions by institution
  TransactionList - list of transactions for a given institution
- Transaction - container for TransactionCell
- TransactionCell - row in TransactionList
+ Transaction - container for TransactionRow below - possibly redundant?
+ TransactionRow - row in TransactionList
+ TransactionEntry - single transaction edit form
  *************************************************************************************/
 import TransactionList from "../transaction-list/transaction-list.component";
 
 const TransactionsList = ({transactions}) => {
     // Group transactions by institution id
     const trans_groups = {}
-
     transactions.forEach((t) => {
         if (!trans_groups.hasOwnProperty(t.institution_id)) {
             trans_groups[t.institution_id] = [];

@@ -23,6 +23,30 @@ def connect_to_db():
 """ Transactions """
 
 
+def query_notes_for_transaction(transaction_id):
+    sql = """
+        SELECT
+               note
+        FROM
+            transaction_notes
+        WHERE
+            transaction_id=%(transaction_id)s
+
+    """
+    query_params = {"transaction_id": transaction_id}
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql, query_params)
+        rows = cur.fetchall()
+        return rows
+    except Exception as e:
+        logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
+        raise e
+
+
 def query_transactions_from_batch(batch_id, offset=0, limit=10):
     conn = connect_to_db()
     assert conn

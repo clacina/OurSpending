@@ -1,8 +1,8 @@
-import TransactionCell from "../transaction-cell/transaction-cell.component";
+import TransactionRow from "../transaction-row/transaction-row.component";
 
 const Transaction = ({transaction}) => {
     return(
-        <TransactionCell transaction={transaction} />
+        <TransactionRow transaction={transaction} />
     )
 }
 
