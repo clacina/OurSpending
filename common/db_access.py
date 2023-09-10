@@ -155,6 +155,43 @@ def list_processed_batches():
         raise e
 
 
+def fetch_processed_batch(batch_id: int):
+    conn = connect_to_db()
+    assert conn
+    sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch WHERE id=%(batch_id)s"
+    query_params = {"batch_id": batch_id}
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        result = cur.fetchone()
+        return result
+    except Exception as e:
+        logging.exception(f"Error: {str(e)}")
+        raise e
+
+
+def get_processed_transaction_records(batch_id, offset=0, limit=10):
+    conn = connect_to_db()
+    assert conn
+    sql = """
+        SELECT 
+            id, transaction_id, template_id, institution_id
+        FROM
+            processed_transaction_records
+        WHERE processed_batch_id=%(batch_id)s
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+
+    query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        result = cur.fetchall()
+        return result
+    except Exception as e:
+        logging.exception({"message": f"Error in transaction query: {str(e)}"})
+        raise e
+
 """ Institutions """
 
 

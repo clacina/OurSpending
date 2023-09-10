@@ -54,7 +54,7 @@ const TransactionEntry = ({transaction}) => {
         } else {
             console.info("No definitions yet");
         }
-    }, [transactionDataDefinitions, institutions]);
+    }, [transactionDataDefinitions, institutions, transaction]);
 
     function handleChange(event) {
         setNewNote(event.target.value);
@@ -69,9 +69,13 @@ const TransactionEntry = ({transaction}) => {
     }
 
     const addTag = (event) => {
-        const existingTag = tagsMap.find((item) => event.value === item.value);
-        const newTagSet = [...transactionFields.tags, {...existingTag}];
-        setTransactionFields({...transactionFields, 'tags': newTagSet});
+        const tagReference = tagsMap.find((item) => event.value === item.value);
+
+        // is the tag already applied
+        if(!transactionFields.tags.find((item) => event.value === item.value)) {
+            const newTagSet = [...transactionFields.tags, {...tagReference}];
+            setTransactionFields({...transactionFields, 'tags': newTagSet});
+        }
     }
 
     if(isLoading) {

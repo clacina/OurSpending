@@ -1,27 +1,27 @@
 import './App.css';
-import {CategoriesProvider} from "./contexts/categories.context";
-import {TagsProvider} from "./contexts/tags.context";
-import {StaticDataProvider} from "./contexts/static_data.context";
+import TempComponent from "./routes/temp/temp.component";
+import {Route, Routes} from "react-router-dom";
 
-// import TemplateList from "./components/template-list/template-list.component";
-// import {templates} from "./data";
-import {transactions} from "./data";
-// import TransactionsList from "./components/transactions-list/transactions-list.component";
-import TransactionEntry from "./components/transaction-entry/transaction-entry.component";
+import Navbar from "./routes/navigation/navigation.component";
+import Home from "./routes/home/home.component";
+import {Fragment} from "react";
 
 function App() {
   return (
-    <div className="App">
-        <StaticDataProvider>
-          <CategoriesProvider>
-            <TagsProvider>
-              {/*<TemplateList templates={templates}/>*/}
-              {/*<TransactionsList transactions={transactions} />*/}
-                <TransactionEntry transaction={transactions[0]} />
-            </TagsProvider>
-          </CategoriesProvider>
-        </StaticDataProvider>
-    </div>
+      <Fragment>
+          <Navbar />
+          <Routes>
+              <Route index element={<Home/>}/>
+              <Route path='categories/*' element={<TempComponent/>}/>
+              <Route path='tags/*' element={<TempComponent/>}/>
+              <Route path='banks/*' element={<TempComponent/>}/>
+              <Route path='templates/*' element={<TempComponent/>}/>
+              <Route path='batches/*' element={<TempComponent/>}/>
+              <Route path='transactions/*' element={<TempComponent/>}/>
+              <Route path='processed_batches/*' element={<TempComponent/>}/>
+              <Route path='processed_transactions/*' element={<TempComponent/>}/>
+          </Routes>
+      </Fragment>
   );
 }
 

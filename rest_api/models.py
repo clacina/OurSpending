@@ -52,17 +52,28 @@ class TransactionBatchModel(BaseModel):
     notes: str
 
 
+class ProcessedTransactionBatchModel(TransactionBatchModel):
+    transaction_batch_id: int
+
+
 class TransactionRecordModel(BaseModel):
     id: int
     batch_id: int
     institution_id: int
     transaction_date: datetime.date
     transaction_data: List[str]
-    # notes: Optional[str]
     tags: Optional[List[str]] = []
     description: Optional[str]
     amount: Optional[float]
     notes: Optional[List[str]] = []
+
+
+class ProcessedTransactionRecordModel(BaseModel):
+    id: int
+    processed_batch_id: int
+    transaction_id: int
+    template_id: Optional[int]
+    institution_id: int
 
 
 class TransactionDescriptionModel(BaseModel):

@@ -462,6 +462,100 @@ async def get_transaction_descriptions():
     return transaction_list
 
 
+""" ---------- Processed Batches ------------------------------------------------------------------"""
+
+
+@router.get(
+    "/processed_batches",
+    summary="List all processed batches in the system.",
+    response_model=List[models.ProcessedTransactionBatchModel],
+)
+async def get_processed_batches():
+    query_result = db_access.list_processed_batches()
+    response = []
+    for row in query_result:
+        entry = models.ProcessedTransactionBatchModel(
+            id=row[0],
+            run_date=row[1],
+            notes=row[2],
+            transaction_batch_id=row[3],
+        )
+        response.append(entry)
+    return response
+
+
+@router.get(
+    "/processed_batch/{batch_id}",
+    summary="Get details for a specific processed batch of transactions",
+    response_model=models.ProcessedTransactionBatchModel,
+)
+async def get_batch(batch_id: int):
+    query_result = db_access.fetch_processed_batch(batch_id)
+    if query_result:
+        response = models.ProcessedTransactionBatchModel(
+            id=query_result[0],
+            run_date=query_result[1],
+            notes=query_result[2],
+            transaction_batch_id=query_result[3],
+        )
+        return response
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="Batch not found."
+    )
+
+
+""" ---------- Processed Transactions ----------------------------------------------------------------------"""
+
+
+@router.get("/processed_transactions", response_model=List[models.ProcessedTransactionRecordModel])
+async def get_processed_transactions(batch_id: int, limit: int = 100, offset: int = 0):
+    # SELECT id, transaction_id, template_id, institution_id
+    transactions = db_access.get_processed_transaction_records(
+        batch_id=batch_id, offset=offset, limit=limit
+    )
+
+    transaction_list = []
+    if transactions:
+        for row in transactions:
+            tr = models.ProcessedTransactionRecordModel(
+                id=row[0],
+                processed_batch_id=batch_id,
+                transaction_id=row[1],
+                template_id=row[2],
+                institution_id=row[3],
+            )
+            transaction_list.append(tr)
+    else:
+        logging.info({"message": f"No transactions found for processed batch {batch_id}"})
+
+    return transaction_list
+
+
+@router.get(
+    "/processed_transaction/{transaction_id}",
+    summary="Get details for a specific transaction",
+    response_model=models.ProcessedTransactionRecordModel,
+)
+async def get_processed_transaction(transaction_id: int):
+    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
+    row = db_access.fetch_transaction(transaction_id=transaction_id)
+    tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
+    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
+
+    tr = models.ProcessedTransactionRecordModel(
+        id=row[0],
+        batch_id=row[1],
+        institution_id=row[2],
+        transaction_date=row[3],
+        transaction_data=row[4],
+        description=row[5],
+        amount=row[6],
+        tags=tags,
+        notes=notes,
+    )
+    return tr
+
+
 """ Aggregate Results """
 
 
