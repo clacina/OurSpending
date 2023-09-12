@@ -3,18 +3,18 @@ import {StaticDataContext} from "../../contexts/static_data.context";
 import {useContext, useEffect, useState} from "react";
 
 const TransactionList = ({institution_id, transactions}) => {
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions, institutions} = useContext(StaticDataContext);
 
     useEffect(() => {
         if(transactionDataDefinitions.length !== 0) {
-            setIsLoading(true);
+            setIsLoaded(true);
         } else {
             console.info("No definitions yet");
         }
     }, [transactionDataDefinitions]);
 
-    if(isLoading) {
+    if(isLoaded) {
         const ourInstitution = institutions.filter((i) => {
             return (i.id === institution_id)
         })
