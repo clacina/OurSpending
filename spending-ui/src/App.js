@@ -1,7 +1,9 @@
 import './App.css';
 import {Route, Routes} from "react-router-dom";
 
-import {institutionData, templates, transactions} from "./data";
+import {institutionData} from './assets/data/banks.jsx';
+import {templates} from './assets/data/templates.jsx';
+import {transactions} from "./assets/data/transactions.jsx";
 
 import Navbar from "./routes/navigation/navigation.component";
 import Home from "./routes/home/home.component";

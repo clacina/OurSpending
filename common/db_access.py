@@ -6,7 +6,7 @@ import logging
 
 def connect_to_db():
     host = 'localhost'      # Local Server
-    # host = '10.0.0.20'      # Ubuntu server
+    host = '10.0.0.20'      # Ubuntu server
 
     try:
         conn = psycopg2.connect(
@@ -627,7 +627,7 @@ def create_qualifer_from_transaction(conn, transaction_id):
 
 
 def load_transaction_data_descriptions():
-    sql = "SELECT id, institution_id, column_number, column_name, column_type from transaction_data_description"
+    sql = "SELECT id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id from transaction_data_description"
     conn = connect_to_db()
     assert conn
     cur = conn.cursor()

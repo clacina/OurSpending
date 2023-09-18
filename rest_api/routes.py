@@ -456,7 +456,8 @@ async def get_transaction_descriptions():
             column_name=row[3],
             column_type=row[4],
             is_description=row[5],
-            is_amount=row[6]
+            is_amount=row[6],
+            data_id=row[7]
         )
         transaction_list.append(tr)
     return transaction_list

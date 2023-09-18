@@ -1,5 +1,6 @@
 import {createContext, useEffect, useState} from "react";
-import {transaction_data_descriptions, institutionData} from "../data";
+import {transaction_data_descriptions} from "../assets/data/data_descriptions.jsx";
+import {institutionData} from "../assets/data/banks.jsx";
 
 export const StaticDataContext = createContext({
     transactionDataDefinitions: [],

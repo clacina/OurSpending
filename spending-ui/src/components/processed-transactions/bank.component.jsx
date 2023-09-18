@@ -11,11 +11,18 @@ const BankComponent = ({bankData}) => {
     const templateBreakdown = Object.values(bankData[1]);
     const bank = institutions.find((i) => i.id == bankId);
     const title = `${bank.name} - ${templateBreakdown.length} Templates`;
+    templateBreakdown.forEach((template) => {
+        console.log(`BC Template ${bankId}: `, template);
+    });
 
     return(
         <Collapsible trigger={title}>
             {templateBreakdown.map((template) => {
-                return(<TemplateComponent key={template[0].id} bank={bankId} templateTransactions={[template[0].id, template]} />)
+                return(<TemplateComponent
+                    key={template[0].id}
+                    bank={bankId}
+                    templateTransactions={[template[0].template_id, template]}
+                />)
             })}
         </Collapsible>
     )

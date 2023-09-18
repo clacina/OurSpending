@@ -1,6 +1,8 @@
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {useContext, useEffect, useState} from "react";
-import {processed_transactions, templates, transactions} from "../../data";
+import {processed_transactions} from "../../data.jsx";
+import {templates} from "../../assets/data/templates.jsx";
+import {transactions} from "../../assets/data/transactions.jsx";
 import BankComponent from "./bank.component";
 
 /*
@@ -75,8 +77,10 @@ const ProcessedTransactions = () => {
             }
             institution_groups[t.institution_id].push(t);
         })
+        // console.log("bank groupings");
         const template_groups = {}
         for (const [key, value] of Object.entries(institution_groups)) {
+            // console.log(key, value);
             template_groups[key] = groupTransactionsByTemplate(value);
         }
 

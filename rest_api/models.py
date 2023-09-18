@@ -82,6 +82,7 @@ class TransactionDescriptionModel(BaseModel):
     column_number: int
     column_name: str
     column_type: str
+    data_id: Optional[str]
     is_description: bool
     is_amount: bool
 
