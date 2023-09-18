@@ -61,12 +61,12 @@ def add_template(template: models.TemplateInputModel = Body(...)):
 @router.get(
     "/template/{template_id}",
     summary="Get list of available templates. May restrict the search by Institution",
-    response_model=models.TemplateReportModel,
+    response_model=models.TemplateDetailModel,
 )
 async def get_template(template_id: int):
     query_result = db_access.query_templates_by_id(template_id)
     if query_result:
-        return models.SingleTemplateReportBuilder(query_result).process()
+        return models.TemplateDetailReportBuilder(query_result).process()
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Unable to find template with id: {template_id}",
@@ -353,22 +353,27 @@ async def add_tag(
 
 @router.get("/transactions", response_model=List[models.TransactionRecordModel])
 async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
-    # SELECT id, institution_id, transaction_date, transaction_data, notes
+    # SELECT id, institution_id, transaction_date, transaction_data, description, amount
     transactions = db_access.query_transactions_from_batch(
         batch_id=batch_id, offset=offset, limit=limit
     )
 
     transaction_list = []
-    for row in transactions:
-        tr = models.TransactionRecordModel(
-            id=row[0],
-            batch_id=batch_id,
-            institution_id=row[1],
-            transaction_date=row[2],
-            transaction_data=row[3],
-            notes=row[4],
-        )
-        transaction_list.append(tr)
+    if transactions:
+        for row in transactions:
+            tr = models.TransactionRecordModel(
+                id=row[0],
+                batch_id=batch_id,
+                institution_id=row[1],
+                transaction_date=row[2],
+                transaction_data=row[3],
+                description=row[4],
+                amount=row[5],
+            )
+            transaction_list.append(tr)
+    else:
+        logging.info({"message": f"No transactions found for batch {batch_id}"})
+
     return transaction_list
 
 
@@ -378,9 +383,10 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     response_model=models.TransactionRecordModel,
 )
 async def get_transaction(transaction_id: int):
-    # id, batch_id, institution_id, transaction_date, transaction_data, notes
+    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
     row = db_access.fetch_transaction(transaction_id=transaction_id)
     tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
+    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
 
     tr = models.TransactionRecordModel(
         id=row[0],
@@ -388,8 +394,10 @@ async def get_transaction(transaction_id: int):
         institution_id=row[2],
         transaction_date=row[3],
         transaction_data=row[4],
-        notes=row[5],
+        description=row[5],
+        amount=row[6],
         tags=tags,
+        notes=notes,
     )
     return tr
 
@@ -400,7 +408,7 @@ async def get_transaction(transaction_id: int):
     response_model=List[models.TagModel],
 )
 async def get_transaction_tags(transaction_id: int):
-    # id, batch_id, institution_id, transaction_date, transaction_data, notes
+    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
     row = db_access.fetch_transaction(transaction_id=transaction_id)
     tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
 
@@ -432,6 +440,121 @@ async def add_tag_to_transaction(
     db_access.add_tag_to_transaction(transaction_id, tag_id)
 
     return get_transaction(transaction_id)
+
+
+@router.get("/transactions_descriptions", response_model=List[models.TransactionDescriptionModel])
+async def get_transaction_descriptions():
+    # SELECT id, institution_id, transaction_date, transaction_data, description, amount
+    transaction_data = db_access.load_transaction_data_descriptions()
+
+    transaction_list = []
+    for row in transaction_data:
+        tr = models.TransactionDescriptionModel(
+            id=row[0],
+            institution_id=row[1],
+            column_number=row[2],
+            column_name=row[3],
+            column_type=row[4],
+            is_description=row[5],
+            is_amount=row[6],
+            data_id=row[7]
+        )
+        transaction_list.append(tr)
+    return transaction_list
+
+
+""" ---------- Processed Batches ------------------------------------------------------------------"""
+
+
+@router.get(
+    "/processed_batches",
+    summary="List all processed batches in the system.",
+    response_model=List[models.ProcessedTransactionBatchModel],
+)
+async def get_processed_batches():
+    query_result = db_access.list_processed_batches()
+    response = []
+    for row in query_result:
+        entry = models.ProcessedTransactionBatchModel(
+            id=row[0],
+            run_date=row[1],
+            notes=row[2],
+            transaction_batch_id=row[3],
+        )
+        response.append(entry)
+    return response
+
+
+@router.get(
+    "/processed_batch/{batch_id}",
+    summary="Get details for a specific processed batch of transactions",
+    response_model=models.ProcessedTransactionBatchModel,
+)
+async def get_batch(batch_id: int):
+    query_result = db_access.fetch_processed_batch(batch_id)
+    if query_result:
+        response = models.ProcessedTransactionBatchModel(
+            id=query_result[0],
+            run_date=query_result[1],
+            notes=query_result[2],
+            transaction_batch_id=query_result[3],
+        )
+        return response
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="Batch not found."
+    )
+
+
+""" ---------- Processed Transactions ----------------------------------------------------------------------"""
+
+
+@router.get("/processed_transactions", response_model=List[models.ProcessedTransactionRecordModel])
+async def get_processed_transactions(batch_id: int, limit: int = 100, offset: int = 0):
+    # SELECT id, transaction_id, template_id, institution_id
+    transactions = db_access.get_processed_transaction_records(
+        batch_id=batch_id, offset=offset, limit=limit
+    )
+
+    transaction_list = []
+    if transactions:
+        for row in transactions:
+            tr = models.ProcessedTransactionRecordModel(
+                id=row[0],
+                processed_batch_id=batch_id,
+                transaction_id=row[1],
+                template_id=row[2],
+                institution_id=row[3],
+            )
+            transaction_list.append(tr)
+    else:
+        logging.info({"message": f"No transactions found for processed batch {batch_id}"})
+
+    return transaction_list
+
+
+@router.get(
+    "/processed_transaction/{transaction_id}",
+    summary="Get details for a specific transaction",
+    response_model=models.ProcessedTransactionRecordModel,
+)
+async def get_processed_transaction(transaction_id: int):
+    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
+    row = db_access.fetch_transaction(transaction_id=transaction_id)
+    tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
+    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
+
+    tr = models.ProcessedTransactionRecordModel(
+        id=row[0],
+        batch_id=row[1],
+        institution_id=row[2],
+        transaction_date=row[3],
+        transaction_data=row[4],
+        description=row[5],
+        amount=row[6],
+        tags=tags,
+        notes=notes,
+    )
+    return tr
 
 
 """ Aggregate Results """

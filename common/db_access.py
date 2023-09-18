@@ -16,18 +16,42 @@ def connect_to_db():
         )
         return conn
     except Exception as e:
-        print(f"I am unable to connect to the database:{str(e)}")
+        logging.exception(f"I am unable to connect to the database:{str(e)}")
         raise e
 
 
 """ Transactions """
 
 
+def query_notes_for_transaction(transaction_id):
+    sql = """
+        SELECT
+               note
+        FROM
+            transaction_notes
+        WHERE
+            transaction_id=%(transaction_id)s
+
+    """
+    query_params = {"transaction_id": transaction_id}
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql, query_params)
+        rows = cur.fetchall()
+        return rows
+    except Exception as e:
+        logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
+        raise e
+
+
 def query_transactions_from_batch(batch_id, offset=0, limit=10):
     conn = connect_to_db()
     assert conn
     sql = """
-        SELECT id, institution_id, transaction_date, transaction_data, notes
+        SELECT id, institution_id, transaction_date, transaction_data, description, amount
         FROM
             transaction_records
         WHERE batch_id=%(batch_id)s
@@ -41,14 +65,14 @@ def query_transactions_from_batch(batch_id, offset=0, limit=10):
         result = cur.fetchall()
         return result
     except Exception as e:
-        print(f"Error: {str(e)}")
-    return None
+        logging.exception({"message": f"Error in transaction query: {str(e)}"})
+        raise e
 
 
 def fetch_transaction(transaction_id):
     sql = """
         SELECT
-               id, batch_id, institution_id, transaction_date, transaction_data, notes
+               id, batch_id, institution_id, transaction_date, transaction_data, description, amount
         FROM
             transaction_records
         WHERE
@@ -65,7 +89,7 @@ def fetch_transaction(transaction_id):
         row = cur.fetchone()
         return row
     except Exception as e:
-        print(f"Error loading transaction {transaction_id}: {str(e)}")
+        logging.exception(f"Error loading transaction {transaction_id}: {str(e)}")
         raise e
 
 
@@ -82,8 +106,8 @@ def list_batches():
         result = cur.fetchall()
         return result
     except Exception as e:
-        print(f"Error: {str(e)}")
-    return None
+        logging.exception(f"Error: {str(e)}")
+        raise e
 
 
 def delete_batch(batch_id):
@@ -95,7 +119,7 @@ def delete_batch(batch_id):
     try:
         cur.execute(sql, query_params)
     except Exception as e:
-        print(f"Error: {str(e)}")
+        logging.exception(f"Error: {str(e)}")
         raise e
 
 
@@ -110,8 +134,8 @@ def fetch_batch(batch_id: int):
         result = cur.fetchone()
         return result
     except Exception as e:
-        print(f"Error: {str(e)}")
-    return None
+        logging.exception(f"Error: {str(e)}")
+        raise e
 
 
 """ Processed Batches """
@@ -127,9 +151,46 @@ def list_processed_batches():
         result = cur.fetchall()
         return result
     except Exception as e:
-        print(f"Error: {str(e)}")
-    return None
+        logging.exception(f"Error: {str(e)}")
+        raise e
 
+
+def fetch_processed_batch(batch_id: int):
+    conn = connect_to_db()
+    assert conn
+    sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch WHERE id=%(batch_id)s"
+    query_params = {"batch_id": batch_id}
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        result = cur.fetchone()
+        return result
+    except Exception as e:
+        logging.exception(f"Error: {str(e)}")
+        raise e
+
+
+def get_processed_transaction_records(batch_id, offset=0, limit=10):
+    conn = connect_to_db()
+    assert conn
+    sql = """
+        SELECT 
+            id, transaction_id, template_id, institution_id
+        FROM
+            processed_transaction_records
+        WHERE processed_batch_id=%(batch_id)s
+        LIMIT %(limit)s OFFSET %(offset)s
+    """
+
+    query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        result = cur.fetchall()
+        return result
+    except Exception as e:
+        logging.exception({"message": f"Error in transaction query: {str(e)}"})
+        raise e
 
 """ Institutions """
 
@@ -155,7 +216,7 @@ def create_institution(key, name):
             conn.commit()
             return new_id
         except Exception as e:
-            print(f"Error: {str(e)}")
+            logging.exception(f"Error: {str(e)}")
             raise e
 
 
@@ -170,8 +231,8 @@ def fetch_institution(institution_id: int):
         result = cur.fetchone()
         return result
     except Exception as e:
-        print(f"Error: {str(e)}")
-    return None
+        logging.exception(f"Error: {str(e)}")
+        raise e
 
 
 def load_institutions():
@@ -184,7 +245,7 @@ def load_institutions():
         rows = cur.fetchall()
         return rows
     except Exception as e:
-        print(f"Error listing institutions: {str(e)}")
+        logging.exception(f"Error listing institutions: {str(e)}")
         raise e
 
 
@@ -200,7 +261,7 @@ def load_categories():
         rows = cur.fetchall()
         return rows
     except Exception as e:
-        print(f"Error listing categories: {str(e)}")
+        logging.exception(f"Error listing categories: {str(e)}")
         raise e
 
 
@@ -214,7 +275,7 @@ def get_category(category_id):
         row = cur.fetchone()
         return row
     except Exception as e:
-        print(f"Error fetching category:{category_id}: {str(e)}")
+        logging.exception(f"Error fetching category:{category_id}: {str(e)}")
         raise e
 
 
@@ -231,7 +292,7 @@ def create_category(value: str):
         if row:
             return None
     except Exception as e:
-        print(f"Error searching for category: {str(e)}")
+        logging.exception(f"Error searching for category: {str(e)}")
         raise e
 
     sql = "INSERT INTO categories (value) VALUES (%(value)s) RETURNING id"
@@ -241,7 +302,7 @@ def create_category(value: str):
         conn.commit()
         return row[0], value
     except Exception as e:
-        print(f"Error creating category: {str(e)}")
+        logging.exception(f"Error creating category: {str(e)}")
         raise e
 
 
@@ -256,7 +317,7 @@ def update_category(category_id: int, value: str):
         cur.execute(sql, query_params)
         conn.commit()
     except Exception as e:
-        print(f"Category specified already exists: {str(e)}")
+        logging.exception(f"Category specified already exists: {str(e)}")
         raise e
 
 
@@ -288,7 +349,7 @@ def fetch_template(template_id: int):
         row = cur.fetchone()
         return row
     except Exception as e:
-        print(f"Error fetting template {template_id}: {str(e)}")
+        logging.exception(f"Error fetching template {template_id}: {str(e)}")
         raise e
 
 
@@ -297,19 +358,25 @@ def fetch_template(template_id: int):
 # -- template.category_id -> categories.id
 # -- template_tags.id -> tags.id
 # -- template_qualifiers.qualifier_id -> qualifiers
-# FIXME: Query does not pick up ALL templates
-TemplatSQl = """
-    SELECT templates.id, templates.hint, templates.credit, t.value, c.value, q.value, templates.notes, templates.institution_id FROM templates
-    full outer JOIN template_tags tt on tt.template_id = templates.id
-    full outer JOIN tags t on t.id = tt.tag_id
-    full outer JOIN categories c on templates.category_id = c.id
-    full outer JOIN template_qualifiers tq on templates.id = tq.template_id
-    full outer JOIN qualifiers q on tq.qualifier_id = q.id    
-"""
-"""
-    where tq.template_id = templates.id 
-    and tt.template_id = templates.id
-    
+
+
+TemplateSQl = """
+WITH tlist AS(
+SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
+         , bank.name as bank_name, bank.key
+         , t.id as tag_id, t.value as tag_value 
+         , tt.template_id, tt.tag_id
+         , c.id as category_id, c.value as category_value 
+         , q.id AS qualifier_id, q.value as qualifier_value 
+         FROM templates
+         JOIN institutions bank on templates.institution_id = bank.id
+         full outer JOIN template_tags tt on tt.template_id = templates.id
+         full OUTER JOIN tags t on t.id = tt.tag_id
+         full outer JOIN categories c on templates.category_id = c.id
+         full outer JOIN template_qualifiers tq on templates.id = tq.template_id
+         full outer JOIN qualifiers q on tq.qualifier_id = q.id
+) 
+SELECT * FROM tlist
 """
 
 
@@ -323,18 +390,20 @@ def query_templates_by_id(template_id):
     conn = connect_to_db()
     assert conn
 
-    sql = f"{TemplatSQl} WHERE templates.id=%(template_id)s"
+    sql = f"{TemplateSQl} WHERE TID=%(template_id)s"
     query_params = {"template_id": template_id}
 
     try:
         cur = conn.cursor()
+        mog = cur.mogrify(sql, query_params);
+        logging.info(f"Mog: {mog}")
         cur.execute(sql, query_params)
         rows = cur.fetchall()
         logging.info(f"Returned {len(rows)} matching records.")
         logging.info(f"Rows: {rows}")
         return rows
     except Exception as e:
-        print(f"Error loading Template {template_id}: {str(e)}")
+        logging.exception(f"Error loading Template {template_id}: {str(e)}")
         raise e
 
 
@@ -348,16 +417,15 @@ def query_templates_by_institution(institution_id):
     conn = connect_to_db()
     assert conn
 
-    sql = TemplatSQl
+    sql = TemplateSQl
 
     query_params = {}
     if institution_id >= 0:
         logging.info(f"Using institution id of {institution_id}")
-        sql = f"{TemplatSQl} WHERE templates.institution_id=%(institution_id)s"
+        sql = f"{TemplateSQl} WHERE BANK_ID=%(institution_id)s"
         query_params = {"institution_id": institution_id}
 
     try:
-        sql += " order by templates.id"
         cur = conn.cursor()
         cur.execute(sql, query_params)
         rows = cur.fetchall()
@@ -365,7 +433,7 @@ def query_templates_by_institution(institution_id):
         logging.info(f"Rows: {rows}")
         return rows
     except Exception as e:
-        print(f"Error loading Template with institution {institution_id}: {str(e)}")
+        logging.exception(f"Error loading Template with institution {institution_id}: {str(e)}")
         raise e
 
 
@@ -383,8 +451,8 @@ def query_tags_for_transaction(transaction_id: int):
         result = cur.fetchall()
         return result
     except Exception as e:
-        print(f"Error: {str(e)}")
-    return None
+        logging.exception(f"Error: {str(e)}")
+        raise e
 
 
 def load_tags():
@@ -397,7 +465,7 @@ def load_tags():
         rows = cur.fetchall()
         return rows
     except Exception as e:
-        print(f"Error listing tags: {str(e)}")
+        logging.exception(f"Error listing tags: {str(e)}")
         raise e
 
 
@@ -412,7 +480,7 @@ def fetch_tag(tag_id: int):
         row = cur.fetchone()
         return row
     except Exception as e:
-        print(f"Error fetching tag {tag_id}: {str(e)}")
+        logging.exception(f"Error fetching tag {tag_id}: {str(e)}")
         raise e
 
 
@@ -427,7 +495,7 @@ def fetch_tag_by_value(value: str):
         row = cur.fetchone()
         return row
     except Exception as e:
-        print(f"Error fetching tag {value}: {str(e)}")
+        logging.exception(f"Error fetching tag {value}: {str(e)}")
         raise e
 
 
@@ -441,7 +509,7 @@ def add_tag_to_transaction(transaction_id, tag_id):
         cur.execute(sql, query_params)
         conn.commit()
     except Exception as e:
-        print(f"Error attaching tag {tag_id} to transaction {transaction_id}: {str(e)}")
+        logging.exception(f"Error attaching tag {tag_id} to transaction {transaction_id}: {str(e)}")
         raise e
 
 
@@ -458,7 +526,7 @@ def create_tag(value: str):
         if row:
             return None
     except Exception as e:
-        print(f"Error searching for tag: {str(e)}")
+        logging.exception(f"Error searching for tag: {str(e)}")
         raise e
 
     sql = "INSERT INTO tags (value) VALUES (%(value)s) RETURNING id"
@@ -468,7 +536,7 @@ def create_tag(value: str):
         conn.commit()
         return row[0], value
     except Exception as e:
-        print(f"Error creating tag: {str(e)}")
+        logging.exception(f"Error creating tag: {str(e)}")
         raise e
 
 
@@ -494,11 +562,11 @@ def create_qualifer(value: str, institution_id: int):
         conn.commit()
         return new_id
     except UniqueViolation as uv:
-        print(f"Error inserting qualifier {value}: {str(uv)}")
+        logging.exception(f"Error inserting qualifier {value}: {str(uv)}")
         raise uv
 
     except Exception as e:
-        print(f"Error inserting qualifier {value}: {str(e)}")
+        logging.exception(f"Error inserting qualifier {value}: {str(e)}")
         raise e
 
 
@@ -514,7 +582,7 @@ def fetch_qualifier(qualifier_id: int):
         row = cur.fetchone()
         return row
     except Exception as e:
-        print(f"Error fetching qualifier {qualifier_id}: {str(e)}")
+        logging.exception(f"Error fetching qualifier {qualifier_id}: {str(e)}")
         raise e
 
 
@@ -529,7 +597,7 @@ def load_qualifiers():
         rows = cur.fetchall()
         return rows
     except Exception as e:
-        print(f"Error listing qualifiers: {str(e)}")
+        logging.exception(f"Error listing qualifiers: {str(e)}")
         raise e
 
 
@@ -556,3 +624,17 @@ def create_qualifer_from_transaction(conn, transaction_id):
     qid = create_qualifer(desc)
     logging.info(f"New qualifier: {qid}")
     return qid
+
+
+def load_transaction_data_descriptions():
+    sql = "SELECT id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id from transaction_data_description"
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+    try:
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return rows
+    except Exception as e:
+        logging.exception(f"Error listing transaction_data_description records: {str(e)}")
+        raise e

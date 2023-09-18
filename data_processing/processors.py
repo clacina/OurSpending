@@ -31,7 +31,7 @@ class CapitalOne(base.ProcessorBase):
 
     def parse_raw_data(self, dataset: list):
         raw_transactions = list()
-        # transaction_id, institution_id, date time, raw data, notes
+        # transaction_id, institution_id, date time, raw data
         for row in dataset:
             data = models.CapitalOneTransaction()
             data.parse_json(row[3])

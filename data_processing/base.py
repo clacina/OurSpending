@@ -7,8 +7,10 @@
 
 """
 import abc
+
 # import csv
-# import data_processing.db_utils
+import data_processing.db_utils
+
 # import transaction_models as models
 
 
@@ -28,6 +30,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
             self.parse_datafile(self.datafile)
 
     """ -------------------- Abstract Methods - Must be implemented by derived classes -----------------"""
+
     @abc.abstractmethod
     def parse_datafile(self, datafile: str):
         """parse from csv"""
@@ -44,16 +47,17 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         pass
 
     """ -------------------- Template Matching Algorithm  -----------------"""
+
     def find_banking_template(self, transaction):
         """
         loop through our config.bank_entries and then through each set of qualifiers to see if we have a match
         :param transaction:
         :return: matching template or None if not found
         """
-        if 'Deposit Home Banking Transfer From Sha' in transaction.description:
-            print('Found')
-        if 'Deposit Home Banking Transfer From Sha' in transaction.category:
-            print('Found')
+        if "Deposit Home Banking Transfer From Sha" in transaction.description:
+            print("Found")
+        if "Deposit Home Banking Transfer From Sha" in transaction.category:
+            print("Found")
 
         for be in self.config.templates:
             found_count = 0
@@ -102,18 +106,18 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         batch id.  This is used when loading the original datafiles from the banks
         :return: None
         """
-        conn = processing.db_utils.db_access.connect_to_db()
+        conn = data_processing.db_utils.db_access.connect_to_db()
         for transaction in self.transactions:
             transaction.normalize_data()
             transaction.institution_id = self.config.institution_id
             assert (
                 transaction.description and len(transaction.description) > 1
             ), f"Invalid entry {transaction}"
-            processing.db_utils.add_transaction(conn, transaction, batch_id)
+            data_processing.db_utils.add_transaction(conn, transaction, batch_id)
 
     def match_templates(self, batch_id: int, processed_batch_id: int):
         """
-        This loads the given batch from the database and then analyzes each
+        This loads the given transaction_batch from the database and then analyzes each
         transaction:
             First it finds a matching template for the transaction
             if successful:
@@ -121,11 +125,13 @@ class ProcessorBase(metaclass=abc.ABCMeta):
                 Category Breakdown Dictionary
             otherwise it adds the transaction to the 'Extras' list
         :param batch_id: batch to process
+               processed_batch_id:
         :return: None
         """
         # Load data to process
-        raw_data = processing.db_utils.fetch_transactions_from_batch(batch_id=batch_id,
-                                                          institution_id=self.config.institution_id)
+        raw_data = data_processing.db_utils.fetch_transactions_from_batch(
+            batch_id=batch_id, institution_id=self.config.institution_id
+        )
         self.transactions = self.parse_raw_data(raw_data)
 
         # Loop through all transactions in the dataset
@@ -136,15 +142,19 @@ class ProcessorBase(metaclass=abc.ABCMeta):
             if found_match:
                 template_id_match = found_match.id
 
-            processing.db_utils.add_processed_transaction(transaction_id=transaction.transaction_id,
-                                               template_id=template_id_match,
-                                               processed_batch_id=processed_batch_id,
-                                               institution_id=self.config.institution_id)
+            data_processing.db_utils.add_processed_transaction(
+                transaction_id=transaction.transaction_id,
+                template_id=template_id_match,
+                processed_batch_id=processed_batch_id,
+                institution_id=self.config.institution_id,
+            )
 
     def load_processed_batch(self, processed_batch_id):
         # gives us template_id and transaction_id
-        batch_data = processing.db_utils.fetch_processed_transactions_from_batch(processed_batch_id=processed_batch_id,
-                                                                      institution_id=self.config.institution_id)
+        batch_data = data_processing.db_utils.fetch_processed_transactions_from_batch(
+            processed_batch_id=processed_batch_id,
+            institution_id=self.config.institution_id,
+        )
         # Format data for downstream processing
         new_data = []
         for r in batch_data:
@@ -170,7 +180,9 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         # Loop through all transactions in the dataset
         for transaction in self.transactions:
             if transaction.template_id:
-                template = [x for x in self.config.templates if x.id == transaction.template_id][0]
+                template = [
+                    x for x in self.config.templates if x.id == transaction.template_id
+                ][0]
                 self.add_spending_transaction(template, transaction)
                 self.update_category_breakdown(template, transaction)
             else:

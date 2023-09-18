@@ -69,7 +69,7 @@ def fetch_transactions_from_batch(batch_id: int, institution_id: Optional[int] =
     conn = db_access.connect_to_db()
     assert conn
     sql = """
-        SELECT id, institution_id, transaction_date, transaction_data, notes
+        SELECT id, institution_id, transaction_date, transaction_data, description, amount
         FROM
             transaction_records
         WHERE batch_id=%(batch_id)s
@@ -94,11 +94,12 @@ def add_transaction(conn, transaction, batch_id):
                 institution_id,
                 transaction_date,
                 transaction_data,
-                notes,
-                batch_id
+                batch_id,
+                description,
+                amount
             )
         VALUES (
-            %(inst_id)s, %(transaction_date)s, %(data)s, %(notes)s, %(batch_id)s
+            %(inst_id)s, %(transaction_date)s, %(data)s, %(batch_id)s, %(description)s, %(amount)s
         )
     """
 
@@ -106,8 +107,9 @@ def add_transaction(conn, transaction, batch_id):
         "inst_id": transaction.institution_id,
         "transaction_date": transaction.date,
         "data": json.dumps(transaction.raw),
-        "notes": "Manual Entry",
         "batch_id": batch_id,
+        "description": transaction.description,
+        "amount": transaction.amount
     }
 
     cur = conn.cursor()
