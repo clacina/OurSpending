@@ -8,13 +8,23 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "assert": "^2.1.0",
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^6.0.3",
     "colors": "^1.3.3",
+    "crypto-browserify": "^3.12.0",
     "firebase": "^10.1.0",
+    "fs": "^0.0.1-security",
     "http-browserify": "^1.7.0",
     "https-browserify": "^1.0.0",
     "logdown": "^3.3.1",
     "nanoid": "^5.0.1",
+    "net": "^1.0.2",
     "os": "^0.1.2",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "querystring-es3": "^0.2.1",
     "react": "^18.2.0",
     "react-bootstrap-table-next": "^4.0.3",
     "react-bootstrap-table2-filter": "^1.3.3",
@@ -24,14 +34,19 @@
     "react-icons": "^4.11.0",
     "react-router-dom": "^6.14.2",
     "react-scripts": "5.0.1",
+    "request": "^2.88.2",
     "sass": "^1.64.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
     "styled-components": "^6.0.7",
+    "tls": "^0.0.1",
+    "url": "^0.11.3",
     "util": "^0.12.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -53,6 +68,12 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "react-app-rewired": "^2.2.1"
+  },
+  "browser": {
+    "fs": false,
+    "os": false,
+    "path": false
   }
 }

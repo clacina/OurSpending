@@ -1,6 +1,7 @@
 import {createContext, useEffect, useState} from "react";
 import {transaction_data_descriptions} from "../assets/data/data_descriptions.jsx";
-import {institutionData} from "../assets/data/banks.jsx";
+// import {institutionData} from "../assets/data/banks.jsx";
+const request = require('request');
 
 export const StaticDataContext = createContext({
     transactionDataDefinitions: [],
@@ -14,8 +15,11 @@ export const StaticDataProvider = ({children}) => {
     const [institutions, setInstitutions] = useState([]);
 
     useEffect(() => {
+        request('http://localhost:8000/resources/banks', (error, response, body) => {
+            console.log("Got banks: ", body);
+            setInstitutions(body);
+        });
         setTransactionDataDefinitions(transaction_data_descriptions);
-        setInstitutions(institutionData);
         // because we're calling an async function, we need an async handler
         // const getCategoriesMap = async () => {
         //     const categoryMap = await getCategoriesAndDocuments();
