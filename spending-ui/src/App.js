@@ -1,7 +1,6 @@
 import './App.css';
 import {Route, Routes} from "react-router-dom";
 
-import {institutionData} from './assets/data/banks.jsx';
 import {templates} from './assets/data/templates.jsx';
 import {transactions} from "./assets/data/transactions.jsx";
 
@@ -25,7 +24,7 @@ function App() {
                 <Route index element={<Home/>}/>
                 <Route path='categories/*' element={<CategoriesComponent/>}/>
                 <Route path='tags/*' element={<TagsComponent/>}/>
-                <Route path='banks/*' element={<BanksComponent banks={institutionData}/>}/>
+                <Route path='banks/*' element={<BanksComponent/>}/>
                 <Route path='templates/*' element={<TemplateList templates={templates}/>}/>
                 <Route path='batches/*' element={<BatchesComponent/>}/>
                 <Route path='transactions/*' element={<TransactionsList transactions={transactions}/>}/>

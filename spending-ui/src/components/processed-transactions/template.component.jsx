@@ -8,10 +8,6 @@ import {nanoid} from 'nanoid';
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {templates} from '../../assets/data/templates.jsx';
 
-// const logdown = require('logdown');
-// const logger = logdown('template.component');
-// localStorage.debug = '*';
-
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
@@ -21,24 +17,30 @@ const TemplateComponent = ({bank, templateTransactions}) => {
 
     transactionList.forEach((i) => {
         const newTrans = i.transaction;
+        // Create unique keyid per row
         newTrans.keyid = nanoid();
         transactions.push(i.transaction);
     })
 
-    const workingTemplate = templates.find((i) => i.id == templateId);
+    // Build our title string
+    const workingTemplate = templates.find((i) => Number(i.id) === Number(templateId));
     var title = "Template Transactions"
     if (workingTemplate) {
         title = `${workingTemplate.hint} - (Institution: ${bank}) Template: ${templateId}, ${transactions.length} Transactions `;
     }
-    const dataDefinition = transactionDataDefinitions.filter((x) => x.institution_id == bank);
+
+    // Create column definitions for this institution
+    const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(bank));
     const columns = [];
     dataDefinition.forEach((x) => {
-        columns.push({
-            dataField: x.data_id,
-            text: x.name
-        });
+        if(x.data_id) {
+            columns.push({
+                dataField: x.data_id,
+                text: x.column_name
+            });
+        }
     });
-    columns.push({dataField: 'keyid', text: ''})
+    columns.push({dataField: 'keyid', text: '', isDummyField: true})
 
     return (
         <Collapsible trigger={title}>

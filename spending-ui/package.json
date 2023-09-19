@@ -2,6 +2,7 @@
   "name": "spending-ui",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8000/",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@table-library/react-table-library": "^4.1.7",

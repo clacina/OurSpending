@@ -29,7 +29,7 @@ processed_transaction_records
 
 const ProcessedTransactions = () => {
     const [isLoaded, setIsLoaded] = useState(false);
-    const {transactionDataDefinitions, institutions} = useContext(StaticDataContext);
+    const {transactionDataDefinitions} = useContext(StaticDataContext);
 
     useEffect(() => {
         console.log("Start");
@@ -40,12 +40,12 @@ const ProcessedTransactions = () => {
         }
     }, [transactionDataDefinitions]);
 
-    const getInstitutionName = (id) => {
-        const entry = institutions.find((item) => {
-            return(item.id === id);
-        });
-        return entry.name;
-    }
+    // const getInstitutionName = (id) => {
+    //     const entry = institutions.find((item) => {
+    //         return(item.id === id);
+    //     });
+    //     return entry.name;
+    // }
 
     const groupTransactionsByTemplate = (entries) => {
         const templateEntries = {}
@@ -90,6 +90,7 @@ const ProcessedTransactions = () => {
             <div key='pb'>
                 <h1>Processed Transactions</h1>
                 {emap.map((bank) => {
+                    // console.log("Using bank: ", bank);
                     return(<BankComponent key={bank[0]} bankData={bank}/>)
                 })}
             </div>
