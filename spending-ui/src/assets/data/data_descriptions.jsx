@@ -65,7 +65,7 @@ export const transaction_data_descriptions = [
         "column_number": 6,
         "column_name": "Credit",
         "column_type": "Currency",
-        "data_id": "amount",
+        "data_id": null,
         "is_description": false,
         "is_amount": true
     },
@@ -1199,4 +1199,4 @@ export const transaction_data_descriptions = [
         "is_description": false,
         "is_amount": false
     }
-];
+]

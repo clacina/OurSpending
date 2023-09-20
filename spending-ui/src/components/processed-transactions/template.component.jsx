@@ -1,16 +1,33 @@
-import {useContext} from "react";
+/* eslint max-len: 0 */
+/* eslint no-unused-vars: 0 */
+
+import {useContext, useState} from "react";
 
 import Collapsible from 'react-collapsible';
 import BootstrapTable from 'react-bootstrap-table-next';
+
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import {nanoid} from 'nanoid';
 
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {templates} from '../../assets/data/templates.jsx';
 
+import paginationFactory from "react-bootstrap-table2-paginator";
+import React from "react";
+import ReactDOM from "react-dom";
+import Select from "react-select";
+import { Button, Col, FormControl, Row } from "react-bootstrap";
+import filterFactory, {
+    Comparator,
+    customFilter,
+    FILTER_TYPES
+} from "react-bootstrap-table2-filter";
+import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
+import "react-contexify/dist/ReactContexify.css";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
+    const [activeRow, setActiveRow] = useState(0);
     const templateId = templateTransactions[0];
     const transactionList = templateTransactions[1];
     const transactions = [];
@@ -29,6 +46,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         title = `${workingTemplate.hint} - (Institution: ${bank}) Template: ${templateId}, ${transactions.length} Transactions `;
     }
 
+    //-------------- Configure our table -----------------------------
     // Create column definitions for this institution
     const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(bank));
     const columns = [];
@@ -36,11 +54,43 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         if(x.data_id) {
             columns.push({
                 dataField: x.data_id,
-                text: x.column_name
+                text: x.column_name,
+                sort: true
             });
         }
     });
     columns.push({dataField: 'keyid', text: '', isDummyField: true})
+    console.log("Columns: ", columns);
+    console.log("Transactions:", transactions);
+
+    const rowStyle = (row) => {
+        if (row === activeRow) {
+            return {
+                backgroundColor: "lightcyan",
+                border: "solid 2px grey",
+                color: "purple"
+            };
+        }
+    };
+
+    const showContext = (event, row) => {
+        console.log("showContext: ", event);
+        setActiveRow(row);
+        event.preventDefault();
+        contextMenu.show({
+            id: "context-menu",
+            event: event
+        });
+    };
+
+    const rowEvents = {
+        onClick: (e, row, index) => {
+            setActiveRow(row);
+        },
+        onContextMenu: (e, row, index) => {
+            showContext(e, row);
+        }
+    };
 
     return (
         <Collapsible trigger={title}>
@@ -48,7 +98,24 @@ const TemplateComponent = ({bank, templateTransactions}) => {
                 keyField='keyid'
                 data={transactions}
                 columns={columns}
+                rowEvents={rowEvents}
+                rowStyle={rowStyle}
             />
+            <Menu id="context-menu" theme='dark'>
+                {activeRow && (
+                    <>
+                        <Item className="text-center">Header row {activeRow.id}</Item>
+                        <Separator />
+                        {["Google", "Apple"].includes("Google") && (
+                            <Submenu label="Contact" arrow=">">
+                                <Item>Phone</Item>
+                                <Item>Email</Item>
+                            </Submenu>
+                        )}
+                        <Item disabled={true}>Add to Cart</Item>
+                    </>
+                )}
+            </Menu>
         </Collapsible>
     )
 }

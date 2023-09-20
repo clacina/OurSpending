@@ -84,7 +84,7 @@ const ProcessedTransactions = () => {
             template_groups[key] = groupTransactionsByTemplate(value);
         }
 
-        const emap = Object.entries(template_groups);
+        const emap = Object.entries(template_groups).slice(1, 2);
 
         return (
             <div key='pb'>

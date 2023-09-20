@@ -273,7 +273,8 @@ CREATE TABLE transaction_data_description
     column_type     VARCHAR(20) REFERENCES transaction_column_types (data_type) DEFERRABLE,
     is_description  BOOLEAN DEFAULT false,
     is_amount       BOOLEAN DEFAULT false,
-    UNIQUE (institution_id, column_number)
+    UNIQUE (institution_id, column_number),
+    UNIQUE (institution_id, data_id)
 );
 
 -- Capital One institution id 3
@@ -289,7 +290,7 @@ VALUES
     (3, 3, 'Description', 'String', true, false, 'description'),
     (3, 4, 'Category', 'String', false, false, NULL),
     (3, 5, 'Debit', 'Currency', false, true, 'amount'),
-    (3, 6, 'Credit', 'Currency', false, true, 'amount')
+    (3, 6, 'Credit', 'Currency', false, true, NULL)
 ;
 
 -- Care Credit id 11
