@@ -1,5 +1,5 @@
 import {createContext, useEffect, useState} from "react";
-import {transaction_data_descriptions} from "../assets/data/data_descriptions.jsx";
+// import {transaction_data_descriptions} from "../assets/data/data_descriptions.jsx";
 
 export const StaticDataContext = createContext({
     transactionDataDefinitions: [],
@@ -14,7 +14,13 @@ export const StaticDataProvider = ({children}) => {
 
     const getBanks = async () => {
         const url = 'http://localhost:8000/resources/banks'
-        // console.log("Calling fetch: ");
+        const data = await fetch(url, { method: 'GET' })
+        var str = await data.json();
+        return(str);
+    };
+
+    const getTransactionDefinitions = async () => {
+        const url = 'http://localhost:8000/resources/data_definitions'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
@@ -22,15 +28,11 @@ export const StaticDataProvider = ({children}) => {
 
     useEffect(() => {
         try {
-            // console.log("Requesting bank data...");
-            getBanks().then((res) => {
-                // console.log("Data: ", res);
-                setInstitutions(res);
-            });
+            getBanks().then((res) => setInstitutions(res));
+            getTransactionDefinitions().then((res) => setTransactionDataDefinitions(res));
         } catch (e) {
-            console.log("Error getting bank data: ", e);
+            console.log("Error fetching database content: ", e);
         }
-        setTransactionDataDefinitions(transaction_data_descriptions);
     }, []);
 
     const value = {transactionDataDefinitions, setTransactionDataDefinitions, institutions, setInstitutions};

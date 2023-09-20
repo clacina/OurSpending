@@ -59,7 +59,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
             });
         }
     });
-    columns.push({dataField: 'keyid', text: '', isDummyField: true})
+    columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
     console.log("Columns: ", columns);
     console.log("Transactions:", transactions);
 
