@@ -16,7 +16,7 @@ export const CategoriesProvider = ({children}) => {
     };
 
     useEffect(() => {
-        setCategoriesMap(getCategories());
+        getCategories().then((res) => setCategoriesMap(res));
         // because we're calling an async function, we need an async handler
         // const getCategoriesMap = async () => {
         //     const categoryMap = await getCategoriesAndDocuments();
