@@ -2,8 +2,9 @@ import {StaticDataContext} from "../../contexts/static_data.context";
 import {useContext, useEffect, useState} from "react";
 import {processed_transactions} from "../../data.jsx";
 import {templates} from "../../assets/data/templates.jsx";
-import {transactions} from "../../assets/data/transactions.jsx";
+// import {transactions} from "../../assets/data/transactions.jsx";
 import BankComponent from "./bank.component";
+import {TransactionsContext} from "../../contexts/transactions.context.jsx";
 
 /*
 processed_transaction_records
@@ -30,6 +31,7 @@ processed_transaction_records
 const ProcessedTransactions = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
+    const {transactionsMap} = useContext(TransactionsContext);
 
     useEffect(() => {
         console.log("Start");
@@ -66,7 +68,7 @@ const ProcessedTransactions = () => {
             if (!institution_groups.hasOwnProperty(t.institution_id)) {
                 institution_groups[t.institution_id] = [];
             }
-            t.transaction = transactions.find((item) => {
+            t.transaction = transactionsMap.find((item) => {
                 return (item.id === t.transaction_id)
             });
             t.template = null;

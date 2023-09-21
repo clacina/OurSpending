@@ -8,7 +8,7 @@
  *************************************************************************************/
 import TransactionList from "../transaction-list/transaction-list.component";
 
-const TransactionsList = ({transactions}) => {
+const TransactionsList = () => {
     // Group transactions by institution id
     const trans_groups = {}
     transactions.forEach((t) => {

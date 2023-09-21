@@ -96,7 +96,8 @@ CREATE TABLE transaction_records
     transaction_date DATE                                                        NOT NULL,
     transaction_data JSONB                                                       NOT NULL,
     description      TEXT,
-    amount           DECIMAL(10, 4)
+    amount           DECIMAL(10, 4),
+    category_id      INTEGER REFERENCES categories (id) ON DELETE CASCADE        DEFAULT NULL
 );
 
 DROP TABLE IF EXISTS transaction_notes CASCADE;

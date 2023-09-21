@@ -77,6 +77,63 @@ router.get('/qualifiers', function(req, res, next) {
   });
 });
 
+/*
+Template Model
+{
+   "id": 23,
+   "institution": {
+        "id": 4,
+        "key": "WF",
+        "name": "Wells Fargo"
+    },
+    "category": {
+        "id": 34,
+        "value": "Fee"
+    },
+    "qualifiers": [
+        {
+            "id": 24,
+            "value": "ATM - "
+        }
+    ],
+    "tags": [
+        {
+            "id": 9,
+            "value": "Fee"
+        }
+    ],
+    "credit": false,
+    "hint": "ATM Withdrawal",
+    "notes": "Fines and Penalties"
+}
+
+ */
+router.get('/templates', function(req, res, next) {
+  const url = 'http://localhost:8080/templates';
+
+  request(url, (error, response, body) => {
+    console.log("Sending back: ", body);
+    console.log("Request errors: ", error);
+
+    // Loop through each template and fill in details??
+
+    res.send(body);
+  });
+});
+
+
+router.get('/transactions/:batch_id', function(req, res, next) {
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'];
+  console.log("URL: ", url);
+
+  request(url, (error, response, body) => {
+    console.log("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
+
 
 
 module.exports = router;

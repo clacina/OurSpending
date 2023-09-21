@@ -2,7 +2,7 @@ import './App.css';
 import {Route, Routes} from "react-router-dom";
 
 import {templates} from './assets/data/templates.jsx';
-import {transactions} from "./assets/data/transactions.jsx";
+// import {transactions} from "./assets/data/transactions.jsx";
 
 import Navbar from "./routes/navigation/navigation.component";
 import Home from "./routes/home/home.component";
@@ -27,7 +27,7 @@ function App() {
                 <Route path='banks/*' element={<BanksComponent/>}/>
                 <Route path='templates/*' element={<TemplateList templates={templates}/>}/>
                 <Route path='batches/*' element={<BatchesComponent/>}/>
-                <Route path='transactions/*' element={<TransactionsList transactions={transactions}/>}/>
+                <Route path='transactions/*' element={<TransactionsList/>}/>
                 <Route path='processed_batches/*' element={<ProcessedBatches/>}/>
                 <Route path='processed_transactions/*' element={<ProcessedTransactions/>}/>
             </Routes>
