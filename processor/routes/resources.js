@@ -47,5 +47,36 @@ router.get('/categories', function(req, res, next) {
   });
 });
 
+router.get('/batches', function(req, res, next) {
+  const url = 'http://localhost:8080/batches';
+
+  request(url, (error, response, body) => {
+    console.log("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
+
+router.get('/processed_batches', function(req, res, next) {
+  const url = 'http://localhost:8080/processed_batches';
+
+  request(url, (error, response, body) => {
+    console.log("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
+
+router.get('/qualifiers', function(req, res, next) {
+  const url = 'http://localhost:8080/qualifiers';
+
+  request(url, (error, response, body) => {
+    console.log("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
+
+
 
 module.exports = router;
