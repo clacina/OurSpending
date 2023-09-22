@@ -69,7 +69,7 @@ def fetch_transactions_from_batch(batch_id: int, institution_id: Optional[int] =
     conn = db_access.connect_to_db()
     assert conn
     sql = """
-        SELECT id, institution_id, transaction_date, transaction_data, description, amount
+        SELECT id, institution_id, transaction_date, transaction_data, description, amount, category_id
         FROM
             transaction_records
         WHERE batch_id=%(batch_id)s
@@ -251,7 +251,8 @@ def fetch_processed_transactions_from_batch(processed_batch_id: int, institution
             tr.id,
             tr.institution_id,
             tr.transaction_date,
-            tr.transaction_data
+            tr.transaction_data,
+            tr.category_id
         FROM
             processed_transaction_records
             JOIN transaction_records tr on processed_transaction_records.transaction_id = tr.id

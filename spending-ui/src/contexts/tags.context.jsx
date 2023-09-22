@@ -1,40 +1,5 @@
 import {createContext, useEffect, useState} from "react";
 
-const tagData = [
-    {
-        "id": 1,
-        "value": "Cable Addition"
-    },
-    {
-        "id": 2,
-        "value": "Concert"
-    },
-    {
-        "id": 3,
-        "value": "Interest Payment"
-    },
-    {
-        "id": 4,
-        "value": "Recurring"
-    },
-    {
-        "id": 5,
-        "value": "Credit Card"
-    },
-    {
-        "id": 6,
-        "value": "Gas"
-    },
-    {
-        "id": 7,
-        "value": "Loan"
-    },
-    {
-        "id": 8,
-        "value": "Transfer"
-    }
-]
-
 export const TagsContext = createContext({
     tags: [],
     setTags: () => null,
@@ -43,14 +8,19 @@ export const TagsContext = createContext({
 export const TagsProvider = ({children}) => {
     const [tagsMap, setTagsMap] = useState([]);
 
+    const getTags = async () => {
+        const url = 'http://localhost:8000/resources/tags'
+        const data = await fetch(url, { method: 'GET' })
+        var str = await data.json();
+        return(str);
+    };
+
     useEffect(() => {
-        setTagsMap(tagData);
-        // because we're calling an async function, we need an async handler
-        // const getCategoriesMap = async () => {
-        //     const categoryMap = await getCategoriesAndDocuments();
-        //     setCategoriesMap(categoryMap);
-        // }
-        // getCategoriesMap();
+        try {
+            getTags().then((res) => setTagsMap(res));
+        } catch (e) {
+            console.log("Error fetching database content: ", e);
+        }
     }, []);
 
     const value = {tagsMap, setTagsMap};

@@ -395,8 +395,6 @@ def query_templates_by_id(template_id):
 
     try:
         cur = conn.cursor()
-        mog = cur.mogrify(sql, query_params);
-        logging.info(f"Mog: {mog}")
         cur.execute(sql, query_params)
         rows = cur.fetchall()
         logging.info(f"Returned {len(rows)} matching records.")
