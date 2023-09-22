@@ -7,27 +7,44 @@
  TransactionEntry - single transaction edit form
  *************************************************************************************/
 import TransactionList from "../transaction-list/transaction-list.component";
+import {useContext, useEffect, useState} from "react";
+import {TransactionsContext} from "../../contexts/transactions.context.jsx";
 
 const TransactionsList = () => {
-    // Group transactions by institution id
-    const trans_groups = {}
-    transactions.forEach((t) => {
-        if (!trans_groups.hasOwnProperty(t.institution_id)) {
-            trans_groups[t.institution_id] = [];
-        }
-        trans_groups[t.institution_id].push(t);
-    })
+    const [isLoaded, setIsLoaded] = useState(false);
+    const {transactionsMap} = useContext(TransactionsContext);
+    const [groupingArray, setGroupingArray] = useState([]);
 
-    const grouping_array = Object.values(trans_groups);
-    return (
-        <div>
-            <h1>Transactions</h1>
-            {grouping_array.map((item) => {
-                return (<TransactionList key={item[0].institution_id} transactions={item}
-                                         institution_id={item[0].institution_id}/>);
-            })}
-        </div>
-    )
+    useEffect(() => {
+        console.log("Start");
+        if (transactionsMap.length !== 0) {
+            // Group transactions by institution id
+            const trans_groups = {}
+            transactionsMap.forEach((t) => {
+                if (!trans_groups.hasOwnProperty(t.institution_id)) {
+                    trans_groups[t.institution_id] = [];
+                }
+                trans_groups[t.institution_id].push(t);
+            })
+
+            setGroupingArray(Object.values(trans_groups));
+            setIsLoaded(true);
+        } else {
+            console.info("No definitions yet");
+        }
+    }, [transactionsMap]);
+
+    if (isLoaded) {
+        return (
+            <div>
+                <h1>Transactions</h1>
+                {groupingArray.map((item) => {
+                    return (<TransactionList key={item[0].institution_id} transactions={item}
+                                             institution_id={item[0].institution_id}/>);
+                })}
+            </div>
+        )
+    }
 }
 
 export default TransactionsList;
