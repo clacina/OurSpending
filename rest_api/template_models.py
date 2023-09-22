@@ -155,16 +155,11 @@ class TemplateDetailReportBuilder:  # called by single template and by template 
     """
     Parse data and build a single template report object
     """
-
     def __init__(self, data):
-        logging.info(f"Single!!: {data}")
         self.data = data
         self.tdm = TemplateDetailModel()
 
     def process(self):
-        logging.info(f"query result: {self.data}")
-        logging.info(f"Found {len(self.data)} records to parse")
-
         for rec in self.data:
             tdm = parse_template_detail_record(rec)
             self.tdm.update(tdm)
@@ -174,32 +169,28 @@ class TemplateDetailReportBuilder:  # called by single template and by template 
 class TemplatesDetailReportBuilder:
     def __init__(self, data):
         self.data = data
-        # logging.info(f"Templatesssss : {data}")
 
     def process(self):
-        # logging.info(f"query result: {self.data}")
-        # logging.info(f"Found {len(self.data)} records to parse")
+        usage = {}
         templates = []
         for row in self.data:
             if row[0] is None:
                 # TODO: Should never happen, need to fix query
+                # raise
                 break
-            # logging.info({"message": "Creating detail record", "data": row})
-            tdrb = TemplateDetailReportBuilder([row]).process()
-            templates.append(tdrb)
-
-        # logging.info(f"Returning list of models: {templates}")
+            # tdrb = TemplateDetailReportBuilder([row]).process()
+            tdrb = parse_template_detail_record(row)
+            if tdrb.id not in usage:
+                usage[tdrb.id] = {}
+            usage[tdrb.id].update(tdrb)
+        for k, v in usage.items():
+            templates.append(v)
         return templates
 
 
 # ------------------------ QUERY PARSE ROUTINES --------------------------
 
 def parse_template_record(row):
-    """
-
-    """
-    logging.info(f"PTR: {row}")
-
     if isinstance(row[3], List):
         tags = row[3]
     elif isinstance(row[3], str):

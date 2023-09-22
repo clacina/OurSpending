@@ -10,7 +10,6 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import {nanoid} from 'nanoid';
 
 import {StaticDataContext} from "../../contexts/static_data.context";
-import {templates} from '../../assets/data/templates.jsx';
 
 import paginationFactory from "react-bootstrap-table2-paginator";
 import React from "react";

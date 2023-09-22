@@ -1,9 +1,6 @@
 import './App.css';
 import {Route, Routes} from "react-router-dom";
 
-import {templates} from './assets/data/templates.jsx';
-// import {transactions} from "./assets/data/transactions.jsx";
-
 import Navbar from "./routes/navigation/navigation.component";
 import Home from "./routes/home/home.component";
 import {Fragment} from "react";
@@ -25,7 +22,7 @@ function App() {
                 <Route path='categories/*' element={<CategoriesComponent/>}/>
                 <Route path='tags/*' element={<TagsComponent/>}/>
                 <Route path='banks/*' element={<BanksComponent/>}/>
-                <Route path='templates/*' element={<TemplateList templates={templates}/>}/>
+                <Route path='templates/*' element={<TemplateList/>}/>
                 <Route path='batches/*' element={<BatchesComponent/>}/>
                 <Route path='transactions/*' element={<TransactionsList/>}/>
                 <Route path='processed_batches/*' element={<ProcessedBatches/>}/>

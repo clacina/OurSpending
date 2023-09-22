@@ -1,6 +1,5 @@
 /* eslint max-len: 0 */
 /* eslint no-unused-vars: 0 */
-
 import {useContext, useState} from "react";
 
 import Collapsible from 'react-collapsible';
@@ -10,23 +9,14 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import {nanoid} from 'nanoid';
 
 import {StaticDataContext} from "../../contexts/static_data.context";
-import {templates} from '../../assets/data/templates.jsx';
-
-import paginationFactory from "react-bootstrap-table2-paginator";
+import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import React from "react";
-import ReactDOM from "react-dom";
-import Select from "react-select";
-import { Button, Col, FormControl, Row } from "react-bootstrap";
-import filterFactory, {
-    Comparator,
-    customFilter,
-    FILTER_TYPES
-} from "react-bootstrap-table2-filter";
 import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
+    const {templatesMap} = useContext(TemplatesContext);
     const [activeRow, setActiveRow] = useState(0);
     const templateId = templateTransactions[0];
     const transactionList = templateTransactions[1];
@@ -40,7 +30,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     })
 
     // Build our title string
-    const workingTemplate = templates.find((i) => Number(i.id) === Number(templateId));
+    const workingTemplate = templatesMap.find((i) => Number(i.id) === Number(templateId));
     var title = "Template Transactions"
     if (workingTemplate) {
         title = `${workingTemplate.hint} - (Institution: ${bank}) Template: ${templateId}, ${transactions.length} Transactions `;
@@ -60,8 +50,6 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     });
     columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-    console.log("Columns: ", columns);
-    console.log("Transactions:", transactions);
 
     const rowStyle = (row) => {
         if (row === activeRow) {

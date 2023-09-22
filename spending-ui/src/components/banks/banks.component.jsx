@@ -16,7 +16,6 @@ import Button from "../button/button-component";
 
 const BanksComponent = () => {
     const {institutions} = useContext(StaticDataContext);
-    console.log("Banks: ", institutions);
     const [activeRow, setActiveRow] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
 

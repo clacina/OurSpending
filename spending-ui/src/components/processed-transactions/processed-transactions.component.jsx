@@ -1,8 +1,7 @@
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {useContext, useEffect, useState} from "react";
 import {processed_transactions} from "../../data.jsx";
-import {templates} from "../../assets/data/templates.jsx";
-// import {transactions} from "../../assets/data/transactions.jsx";
+import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import BankComponent from "./bank.component";
 import {TransactionsContext} from "../../contexts/transactions.context.jsx";
 
@@ -32,6 +31,7 @@ const ProcessedTransactions = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {transactionsMap} = useContext(TransactionsContext);
+    const {templatesMap} = useContext(TemplatesContext);
 
     useEffect(() => {
         console.log("Start");
@@ -73,7 +73,7 @@ const ProcessedTransactions = () => {
             });
             t.template = null;
             if (t.template_id) {
-                t.template = templates.find((item) => {
+                t.template = templatesMap.find((item) => {
                     return (item.id === t.template_id)
                 })
             }
