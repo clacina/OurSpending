@@ -16,7 +16,11 @@ export const TemplatesProvider = ({children}) => {
     };
 
     useEffect(() => {
-        getTemplates().then((res) => setTemplatesMap(res));
+        try {
+            getTemplates().then((res) => setTemplatesMap(res));
+        } catch (e) {
+            console.log("Error fetching database content: ", e);
+        }
     }, []);
 
     const value = {templatesMap, setTemplatesMap};

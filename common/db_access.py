@@ -5,7 +5,7 @@ import logging
 
 
 def connect_to_db():
-    host = 'localhost'      # Local Server
+    # host = 'localhost'      # Local Server
     host = '10.0.0.20'      # Ubuntu server
 
     try:
@@ -238,7 +238,7 @@ def fetch_institution(institution_id: int):
 def load_institutions():
     conn = connect_to_db()
     assert conn
-    sql = "SELECT id, key, name FROM institutions"
+    sql = "SELECT id, key, name, notes FROM institutions"
     cur = conn.cursor()
     try:
         cur.execute(sql)
@@ -454,7 +454,7 @@ def query_tags_for_transaction(transaction_id: int):
 
 
 def load_tags():
-    sql = "SELECT id, value FROM tags"
+    sql = "SELECT id, value, notes FROM tags"
     conn = connect_to_db()
     assert conn
     cur = conn.cursor()
@@ -468,7 +468,7 @@ def load_tags():
 
 
 def fetch_tag(tag_id: int):
-    sql = "SELECT id, value FROM tags WHERE id=%(tag_id)s"
+    sql = "SELECT id, value, notes FROM tags WHERE id=%(tag_id)s"
     query_params = {"tag_id": tag_id}
     conn = connect_to_db()
     assert conn
@@ -483,7 +483,7 @@ def fetch_tag(tag_id: int):
 
 
 def fetch_tag_by_value(value: str):
-    sql = "SELECT id, value FROM tags WHERE value=%(value)s"
+    sql = "SELECT id, value, notes FROM tags WHERE value=%(value)s"
     query_params = {"value": value}
     conn = connect_to_db()
     assert conn

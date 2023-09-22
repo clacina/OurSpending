@@ -6,6 +6,7 @@ CREATE TABLE institutions
     id   SERIAL PRIMARY KEY,
     key  VARCHAR(100),
     name TEXT,
+    notes TEXT DEFAULT NULL,
     unique (key)
 );
 
@@ -23,6 +24,7 @@ CREATE TABLE categories
 (
     id    SERIAL PRIMARY KEY,
     value TEXT,
+    notes TEXT DEFAULT NULL,
     unique (value)
 );
 
@@ -31,6 +33,7 @@ CREATE TABLE tags
 (
     id    SERIAL PRIMARY KEY,
     value TEXT,
+    notes TEXT DEFAULT NULL,
     unique (value)
 );
 

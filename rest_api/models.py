@@ -19,11 +19,11 @@ class SimpleLUTModel(BaseModel):
 
 
 class CategoryModel(SimpleLUTModel):
-    pass
+    notes: Optional[str]
 
 
 class TagModel(SimpleLUTModel):
-    pass
+    notes: Optional[str]
 
 
 class QualifierModel(SimpleLUTModel):
@@ -34,6 +34,7 @@ class InstitutionsModel(BaseModel):
     id: int
     key: str
     name: str
+    notes: Optional[str]
 
 
 class TemplateQualifierModel(BaseModel):
