@@ -13,9 +13,15 @@ from fastapi import APIRouter, Query, HTTPException, status, Body, Request
 
 import rest_api.models as models
 from common import db_access
-# from processing import db_utils
-# from reports import reports
-# from processing import settings
+from rest_api.template_models import (
+    TemplateDetailModel,
+    TemplatesDetailReportBuilder,
+    TemplateReportModel,
+    TemplateDetailReportBuilder,
+    TemplateInputModel,
+    SingleTemplateReportBuilder,
+)
+
 
 router = APIRouter()
 
@@ -26,27 +32,28 @@ router = APIRouter()
 @router.get(
     "/templates",
     summary="Get list of available templates. May restrict the search by Institution",
-    response_model=List[models.TemplateReportModel],
+    response_model=List[TemplateDetailModel],
 )
 async def query_templates(institution_id: Optional[int] = Query(-1)):
     """
-    Show details for the specified template
-
-    - **template_id**: Template to display
-    \f
     :param institution_id: Institution id.
     """
     query_result = db_access.query_templates_by_institution(institution_id)
-
-    return models.TemplatesReportBuilder(query_result).process()
+    if query_result:
+        return TemplatesDetailReportBuilder(query_result).process()
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unable to find templates for institution: {institution_id}",
+        )
 
 
 @router.post(
     "/templates",
     status_code=status.HTTP_201_CREATED,
-    response_model=models.TemplateReportModel,
+    response_model=TemplateReportModel,
 )
-def add_template(template: models.TemplateInputModel = Body(...)):
+def add_template(template: TemplateInputModel = Body(...)):
     db_access.create_template(
         institution_id=template.institution_id,
         category=template.category,
@@ -61,12 +68,12 @@ def add_template(template: models.TemplateInputModel = Body(...)):
 @router.get(
     "/template/{template_id}",
     summary="Get list of available templates. May restrict the search by Institution",
-    response_model=models.TemplateDetailModel,
+    response_model=TemplateDetailModel,
 )
 async def get_template(template_id: int):
     query_result = db_access.query_templates_by_id(template_id)
     if query_result:
-        return models.TemplateDetailReportBuilder(query_result).process()
+        return TemplateDetailReportBuilder(query_result).process()
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Unable to find template with id: {template_id}",
@@ -76,13 +83,13 @@ async def get_template(template_id: int):
 @router.put(
     "/template/{template_id}",
     summary="Update a specific template",
-    response_model=models.TemplateReportModel,
+    response_model=TemplateReportModel,
 )
-def update_template(template_id: int, template: models.TemplateReportModel = Body(...)):
+def update_template(template_id: int, template: TemplateReportModel = Body(...)):
     query_result = db_access.query_templates_by_id(template_id)
     if not query_result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    existing_template = models.SingleTemplateReportBuilder(query_result).process()
+    existing_template = SingleTemplateReportBuilder(query_result).process()
     update_data = template.dict(exclude_unset=True)
     new_template = existing_template.copy(update=update_data)
 
@@ -442,7 +449,10 @@ async def add_tag_to_transaction(
     return get_transaction(transaction_id)
 
 
-@router.get("/transactions_descriptions", response_model=List[models.TransactionDescriptionModel])
+@router.get(
+    "/transactions_descriptions",
+    response_model=List[models.TransactionDescriptionModel],
+)
 async def get_transaction_descriptions():
     # SELECT id, institution_id, transaction_date, transaction_data, description, amount
     transaction_data = db_access.load_transaction_data_descriptions()
@@ -457,7 +467,7 @@ async def get_transaction_descriptions():
             column_type=row[4],
             is_description=row[5],
             is_amount=row[6],
-            data_id=row[7]
+            data_id=row[7],
         )
         transaction_list.append(tr)
     return transaction_list
@@ -508,7 +518,10 @@ async def get_batch(batch_id: int):
 """ ---------- Processed Transactions ----------------------------------------------------------------------"""
 
 
-@router.get("/processed_transactions", response_model=List[models.ProcessedTransactionRecordModel])
+@router.get(
+    "/processed_transactions",
+    response_model=List[models.ProcessedTransactionRecordModel],
+)
 async def get_processed_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     # SELECT id, transaction_id, template_id, institution_id
     transactions = db_access.get_processed_transaction_records(
@@ -527,7 +540,9 @@ async def get_processed_transactions(batch_id: int, limit: int = 100, offset: in
             )
             transaction_list.append(tr)
     else:
-        logging.info({"message": f"No transactions found for processed batch {batch_id}"})
+        logging.info(
+            {"message": f"No transactions found for processed batch {batch_id}"}
+        )
 
     return transaction_list
 

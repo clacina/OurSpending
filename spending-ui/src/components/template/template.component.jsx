@@ -39,6 +39,20 @@ import {TagsContext} from "../../contexts/tags.context";
         "hint": "ATM Withdrawal",
         "notes": "Fines and Penalties"
     }
+
+   {
+        "institution_id": 1,
+        "category": "Interest",
+        "credit": false,
+        "tags": [],
+        "qualifiers": [
+            "Wellsfargo Checking"
+        ],
+        "hint": "Interest Payment",
+        "notes": null,
+        "id": 15
+    },
+
 */
 
 const templateData = {
@@ -58,7 +72,7 @@ const Template = ({template}) => {
 
     const {categoriesMap} = useContext(CategoriesContext);
     const {tagsMap} = useContext(TagsContext);
-
+    console.log("Using template: ", template);
     useEffect(() => {
         setTemplateFields(template);
     }, [template]);

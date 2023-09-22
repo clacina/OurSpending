@@ -5,6 +5,7 @@ import {useContext, useEffect, useState} from "react";
 const TransactionList = ({institution_id, transactions}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions, institutions} = useContext(StaticDataContext);
+    // console.log("Transactions: ", transactions);
 
     useEffect(() => {
         if(transactionDataDefinitions.length !== 0) {
