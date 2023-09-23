@@ -1,17 +1,17 @@
 import './App.css';
 import {Route, Routes} from "react-router-dom";
+import {Fragment} from "react";
 
 import Navbar from "./routes/navigation/navigation.component";
-import Home from "./routes/home/home.component";
-import {Fragment} from "react";
-import TemplateList from "./components/template-list/template-list.component";
-import TransactionsList from "./components/transactions-list/transactions-list.component";
-import ProcessedTransactions from "./components/processed-transactions/processed-transactions.component";
 import BanksComponent from "./components/banks/banks.component";
-import ProcessedBatches from "./components/processed-batches/processed-batches.component";
-import TagsComponent from "./components/tags/tags.component";
-import CategoriesComponent from "./components/categories/categories.component";
 import BatchesComponent from "./components/batches/batches.component";
+import CategoriesComponent from "./components/categories/categories.component";
+import Home from "./routes/home/home.component";
+import ProcessedBatches from "./components/processed-batches/processed-batches.component";
+import ProcessedTransactions from "./components/processed-transactions/processed-transactions.component";
+import TagsComponent from "./components/tags/tags.component";
+import TemplateList from "./components/template-list/template-list.component";
+import TransactionsList from "./components/transaction/transactions-list.component.jsx";
 
 function App() {
     return (
@@ -24,9 +24,9 @@ function App() {
                 <Route path='banks/*' element={<BanksComponent/>}/>
                 <Route path='templates/*' element={<TemplateList/>}/>
                 <Route path='batches/*' element={<BatchesComponent/>}/>
-                <Route path='transactions/*' element={<TransactionsList/>}/>
+                <Route path='transactions/:batch_id' element={<TransactionsList/>}/>
                 <Route path='processed_batches/*' element={<ProcessedBatches/>}/>
-                <Route path='processed_transactions/*' element={<ProcessedTransactions/>}/>
+                <Route path='processed_transactions/:batch_id' element={<ProcessedTransactions/>}/>
             </Routes>
         </Fragment>
     );

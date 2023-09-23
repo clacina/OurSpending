@@ -1,30 +1,16 @@
-/* eslint max-len: 0 */
-/* eslint no-unused-vars: 0 */
-
-import {useContext, useEffect, useState} from "react";
-import BootstrapTable from 'react-bootstrap-table-next';
-
-import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-
-import paginationFactory from "react-bootstrap-table2-paginator";
 import React from "react";
-import { Row } from "react-bootstrap";
-import filterFactory, {
-    Comparator,
-    customFilter,
-    FILTER_TYPES
-} from "react-bootstrap-table2-filter";
-import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
+import {useContext, useEffect, useState} from "react";
+
 import "react-contexify/dist/ReactContexify.css";
-import {CategoriesContext} from "../../contexts/categories.context.jsx";
-import cellEditFactory from 'react-bootstrap-table2-editor';
+import { Row } from "react-bootstrap";
+import TableBaseComponent from '../table-base/table-base.component.jsx';
 
 import FormInput from "../form-input/form-input.component";
 import Button from "../button/button-component";
+import {CategoriesContext} from "../../contexts/categories.context.jsx";
 
 const CategoriesComponent = () => {
     const {categoriesMap} = useContext(CategoriesContext);
-    const [activeRow, setActiveRow] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
     const [newEntry, setNewEntry] = useState("");
 
@@ -45,23 +31,6 @@ const CategoriesComponent = () => {
         }
     }, [categoriesMap]);
 
-    const rowStyle = (row) => {
-        if (row === activeRow) {
-            return {
-                backgroundColor: "lightcyan",
-                border: "solid 2px grey",
-                color: "purple"
-            };
-        }
-    };
-
-    const cellEdit = cellEditFactory({
-        mode: 'click',
-        afterSaveCell: (oldValue, newValue, row, column) => {
-            console.log("Save Cell ", [oldValue, newValue, row, column]);
-        }
-    })
-
     function handleChange(event) {
         const {name, value} = event.target;
         setNewEntry(value);
@@ -72,27 +41,7 @@ const CategoriesComponent = () => {
         console.log("handleSubmit: ", event);
         console.log("Adding new entry: ", newEntry);
         resetFormFields();
-
     }
-
-    const showContext = (event, row) => {
-        console.log("showContext: ", event);
-        setActiveRow(row);
-        event.preventDefault();
-        contextMenu.show({
-            id: "context-menu",
-            event: event
-        });
-    };
-
-    const rowEvents = {
-        onClick: (e, row, index) => {
-            setActiveRow(row);
-        },
-        onContextMenu: (e, row, index) => {
-            showContext(e, row);
-        }
-    };
 
     if (isLoaded) {
         return (
@@ -114,29 +63,7 @@ const CategoriesComponent = () => {
                     </form>
                 </Row>
                 <Row>
-                    <BootstrapTable
-                        keyField='id'
-                        data={categoriesMap}
-                        columns={columns}
-                        cellEdit={cellEdit}
-                        rowEvents={rowEvents}
-                        rowStyle={rowStyle}
-                    />
-                    <Menu id="context-menu" theme='dark'>
-                        {activeRow && (
-                            <>
-                                <Item className="text-center">Header row {activeRow.id}</Item>
-                                <Separator/>
-                                {["Google", "Apple"].includes("Google") && (
-                                    <Submenu label="Contact" arrow=">">
-                                        <Item>Phone</Item>
-                                        <Item>Email</Item>
-                                    </Submenu>
-                                )}
-                                <Item disabled={true}>Add to Cart</Item>
-                            </>
-                        )}
-                    </Menu>
+                    <TableBaseComponent columns={columns} data={categoriesMap} keyField='id'/>
                 </Row>
             </div>
         )

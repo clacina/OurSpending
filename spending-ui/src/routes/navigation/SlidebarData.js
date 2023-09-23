@@ -12,18 +12,6 @@ export const SidebarData = [
         cName: "nav-text"
     },
     {
-        title: "Categories",
-        path: "/categories",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "nav-text"
-    },
-    {
-        title: "Tags",
-        path: "/tags",
-        icon: <FaIcons.FaCartPlus />,
-        cName: "nav-text"
-    },
-    {
         title: "Banks",
         path: "/banks",
         icon: <IoIcons.IoMdPeople />,
@@ -42,21 +30,21 @@ export const SidebarData = [
         cName: "nav-text"
     },
     {
-        title: "Transactions",
-        path: "/transactions",
-        icon: <IoIcons.IoMdHelpCircle />,
-        cName: "nav-text"
-    },
-    {
         title: "Processed Batches",
         path: "/processed_batches",
         icon: <IoIcons.IoMdHelpCircle />,
         cName: "nav-text"
     },
     {
-        title: "Processed Transactions",
-        path: "/processed_transactions",
-        icon: <IoIcons.IoMdHelpCircle />,
+        title: "Categories",
+        path: "/categories",
+        icon: <IoIcons.IoIosPaper />,
         cName: "nav-text"
-    }
+    },
+    {
+        title: "Tags",
+        path: "/tags",
+        icon: <FaIcons.FaCartPlus />,
+        cName: "nav-text"
+    },
 ];
