@@ -365,17 +365,72 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
         batch_id=batch_id, offset=offset, limit=limit
     )
 
+    logging.info({"message": "Got transactions",
+                  "transactions": transactions
+                  })
+    """
+0         transaction_records.id AS TID, 
+1         transaction_records.batch_id AS BID, 
+2         transaction_records.transaction_date, 
+3         transaction_records.institution_id as BANK_ID,
+4         transaction_records.transaction_data,
+5         transaction_records.description,
+6         transaction_records.amount
+7,8      , bank.name as bank_name, bank.key
+9, 10    , t.id as tag_id, t.value as tag_value 
+11, 12   , tt.transaction_id, tt.tag_id
+13, 14   , c.id as category_id, c.value as category_value 
+15       , tn.note
+    
+    
+    0    (85, 
+    1     1, 
+    2     datetime.date(2023, 2, 26), 
+    3     6,
+    4     ['02/26/2023', '02:08:21', 'PST', 'ALIPAY US, INC.', 'Express Checkout Payment', 'Completed',
+              '1', '', '-19.28', '12990501203230226593801919513', '', 'Debit'], 
+    5     'ALIPAY US, INC.',
+    6     Decimal('-19.2800'), 
+    7     'PayPal', 
+    8     'PP', 
+    9     None, 
+    10     None, 
+    11     None, 
+    12    None, 
+    13     None, 
+    14     None)
+    """
     transaction_list = []
     if transactions:
         for row in transactions:
+            txn_category = None
+            txn_tags = []
+            if row[13] is not None:
+                txn_category = models.CategoryModel(
+                    id=row[13],
+                    value=row[14]
+                )
+            if row[9] is not None:
+                txn_tags.append(models.TagModel(
+                    id=row[9],
+                    value=row[10]
+                ))
+
             tr = models.TransactionRecordModel(
                 id=row[0],
                 batch_id=batch_id,
-                institution_id=row[1],
+                institution=models.InstitutionsModel(
+                    id=row[3],
+                    key=row[7],
+                    name=row[8]
+                ),
                 transaction_date=row[2],
-                transaction_data=row[3],
-                description=row[4],
-                amount=row[5],
+                transaction_data=row[4],
+                tags=txn_tags,
+                description=row[5],
+                amount=row[6],
+                notes=row[15],
+                category=txn_category
             )
             transaction_list.append(tr)
     else:

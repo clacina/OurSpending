@@ -60,20 +60,20 @@ class ProcessedTransactionBatchModel(TransactionBatchModel):
 class TransactionRecordModel(BaseModel):
     id: int
     batch_id: int
-    institution_id: int
+    institution: InstitutionsModel
     transaction_date: datetime.date
     transaction_data: List[str]
-    tags: Optional[List[str]] = []
+    tags: Optional[List[TagModel]]
     description: Optional[str]
     amount: Optional[float]
     notes: Optional[List[str]] = []
-    category_id: Optional[int] = None
+    category: Optional[CategoryModel]
 
 
 class ProcessedTransactionRecordModel(BaseModel):
     id: int
     processed_batch_id: int
-    transaction_id: int
+    transaction: TransactionRecordModel
     template_id: Optional[int]
     institution_id: int
 

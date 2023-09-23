@@ -23,10 +23,14 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     const transactions = [];
 
     transactionList.forEach((i) => {
-        const newTrans = i.transaction;
-        // Create unique keyid per row
-        newTrans.keyid = nanoid();
-        transactions.push(i.transaction);
+        if(i.transaction) {
+            const newTrans = i.transaction;
+            // Create unique keyid per row
+            newTrans.keyid = nanoid();
+            transactions.push(i.transaction);
+        } else {
+            console.log("Got missing transaction: ", i);
+        }
     })
 
     // Build our title string
@@ -50,7 +54,6 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     });
     columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-
     const rowStyle = (row) => {
         if (row === activeRow) {
             return {
@@ -80,6 +83,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     };
 
+    console.log("Transactions: ", transactions);
     return (
         <Collapsible trigger={title}>
             <BootstrapTable

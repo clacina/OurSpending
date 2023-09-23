@@ -50,14 +50,8 @@ def query_notes_for_transaction(transaction_id):
 def query_transactions_from_batch(batch_id, offset=0, limit=10):
     conn = connect_to_db()
     assert conn
-    sql = """
-        SELECT id, institution_id, transaction_date, transaction_data, description, amount
-        FROM
-            transaction_records
-        WHERE batch_id=%(batch_id)s
-        LIMIT %(limit)s OFFSET %(offset)s
-    """
-
+    sql = f"{TransactionSQl} WHERE BID=%(batch_id)s"
+    sql += " LIMIT %(limit)s OFFSET %(offset)s"
     query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
     cur = conn.cursor()
     try:
@@ -375,6 +369,30 @@ SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes,
          full outer JOIN categories c on templates.category_id = c.id
          full outer JOIN template_qualifiers tq on templates.id = tq.template_id
          full outer JOIN qualifiers q on tq.qualifier_id = q.id
+) 
+SELECT * FROM tlist
+"""
+
+
+TransactionSQl = """
+WITH tlist AS(
+SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID, 
+         transaction_records.transaction_date, 
+         transaction_records.institution_id as BANK_ID,
+         transaction_records.transaction_data,
+         transaction_records.description,
+         transaction_records.amount
+         , bank.name as bank_name, bank.key
+         , t.id as tag_id, t.value as tag_value 
+         , tt.transaction_id, tt.tag_id
+         , c.id as category_id, c.value as category_value 
+         , tn.note
+         FROM transaction_records
+         JOIN institutions bank on transaction_records.institution_id = bank.id
+         full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
+         full OUTER JOIN tags t on t.id = tt.tag_id
+         full outer JOIN categories c on transaction_records.category_id = c.id
+         full outer JOIN transaction_notes tn on transaction_records.id = tn.transaction_id
 ) 
 SELECT * FROM tlist
 """

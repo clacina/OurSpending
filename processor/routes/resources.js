@@ -134,6 +134,17 @@ router.get('/transactions/:batch_id', function(req, res, next) {
   });
 });
 
+router.get('/processed_transactions/:batch_id', function(req, res, next) {
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/processed_transactions?batch_id=' + req.params['batch_id'];
+  console.log("URL: ", url);
+
+  request(url, (error, response, body) => {
+    console.log("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
 
 
 module.exports = router;

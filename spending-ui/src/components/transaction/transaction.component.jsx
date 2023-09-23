@@ -1,4 +1,4 @@
-import TransactionRow from "../transaction-row/transaction-row.component";
+import TransactionRow from "./transaction-row.component.jsx";
 
 const Transaction = ({transaction}) => {
     return(

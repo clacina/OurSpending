@@ -1,19 +1,18 @@
-import Transaction from "../transaction/transaction.component";
-import {StaticDataContext} from "../../contexts/static_data.context";
+import Transaction from "./transaction.component.jsx";
+import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {useContext, useEffect, useState} from "react";
 
 const TransactionList = ({institution_id, transactions}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions, institutions} = useContext(StaticDataContext);
-    // console.log("Transactions: ", transactions);
 
     useEffect(() => {
-        if(transactionDataDefinitions.length !== 0) {
+        if(transactionDataDefinitions.length !== 0 && institutions.length !== 0) {
             setIsLoaded(true);
         } else {
             console.info("No definitions yet");
         }
-    }, [transactionDataDefinitions]);
+    }, [transactionDataDefinitions.length, institutions.length]);
 
     if(isLoaded) {
         const ourInstitution = institutions.filter((i) => {
@@ -21,9 +20,7 @@ const TransactionList = ({institution_id, transactions}) => {
         })
 
         const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === institution_id);
-        const dataNames = dataDefinition.map((column) => (
-            column.column_name
-        ));
+        const dataNames = dataDefinition.map((column) => column.column_name);
 
         return (
             <div>

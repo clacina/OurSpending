@@ -5,7 +5,7 @@ import cellEditFactory from "react-bootstrap-table2-editor";
 import {contextMenu, Item, Menu, Separator, Submenu} from "react-contexify";
 
 
-const TableBaseComponent = ({columns, data, keyField}) => {
+const TableBaseComponent = ({columns, data, keyField, double_click_handler}) => {
     const [activeRow, setActiveRow] = useState(0);
 
     const rowStyle = (row) => {
@@ -29,13 +29,13 @@ const TableBaseComponent = ({columns, data, keyField}) => {
     };
 
     const rowEvents = {
-        onClick: (e, row, index) => {
-            setActiveRow(row);
-        },
-        onContextMenu: (e, row, index) => {
-            showContext(e, row);
-        }
+        onClick: (e, row, index) => {setActiveRow(row);},
+        onContextMenu: (e, row, index) => {showContext(e, row);}
     };
+
+    if(double_click_handler) {
+        rowEvents['onDoubleClick'] = (e, row, index) => {double_click_handler(e, row, index)}
+    }
 
     const cellEdit = cellEditFactory({
         mode: 'click',

@@ -5,12 +5,11 @@ export const TransactionsContext = createContext({
     setTransactions: () => null,
 });
 
-export const TransactionsProvider = ({children}) => {
+export const TransactionsProvider = ({batch_id}) => {
     const [transactionsMap, setTransactionsMap] = useState([]);
-    // TODO: Need batch_id for db call
 
     const getTransactions = async () => {
-        const url = 'http://localhost:8000/resources/transactions/1'
+        const url = 'http://localhost:8000/resources/transactions/' + batch_id;
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
@@ -20,6 +19,6 @@ export const TransactionsProvider = ({children}) => {
         getTransactions().then((res) => setTransactionsMap(res));
     }, []);
 
-    const value = {transactionsMap, setTransactionsMap};
-    return <TransactionsContext.Provider value={value}>{children}</TransactionsContext.Provider>
+    // const value = {transactionsMap, setTransactionsMap};
+    // return <TransactionsContext.Provider value={value}>{children}</TransactionsContext.Provider>
 };
