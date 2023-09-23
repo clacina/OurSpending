@@ -1,18 +1,18 @@
-/* eslint max-len: 0 */
-/* eslint no-unused-vars: 0 */
+import React from "react";
 import {useContext, useState} from "react";
 
 import Collapsible from 'react-collapsible';
-import BootstrapTable from 'react-bootstrap-table-next';
 
+import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+
+import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
+import "react-contexify/dist/ReactContexify.css";
+
 import {nanoid} from 'nanoid';
 
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
-import React from "react";
-import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
-import "react-contexify/dist/ReactContexify.css";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
@@ -22,6 +22,8 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     const transactionList = templateTransactions[1];
     const transactions = [];
 
+    // console.table(templateTransactions);
+
     transactionList.forEach((i) => {
         if(i.transaction) {
             const newTrans = i.transaction;
@@ -29,7 +31,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
             newTrans.keyid = nanoid();
             transactions.push(i.transaction);
         } else {
-            console.log("Got missing transaction: ", i);
+            // console.log("Got missing transaction: ", i);
         }
     })
 
@@ -83,7 +85,6 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     };
 
-    console.log("Transactions: ", transactions);
     return (
         <Collapsible trigger={title}>
             <BootstrapTable

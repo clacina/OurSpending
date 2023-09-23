@@ -11,7 +11,6 @@ const BankComponent = ({bankData}) => {
         const templateBreakdown = Object.values(bankData[1]);
         const bank = institutions.find((i) => Number(i.id) === Number(bankId));
         const title = `${bank.name} - ${templateBreakdown.length} Templates`;
-        console.log("tb: ", templateBreakdown);
 
         return (
             <Collapsible trigger={title}>
