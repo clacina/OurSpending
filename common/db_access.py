@@ -167,15 +167,8 @@ def fetch_processed_batch(batch_id: int):
 def get_processed_transaction_records(batch_id, offset=0, limit=10):
     conn = connect_to_db()
     assert conn
-    sql = """
-        SELECT 
-            id, transaction_id, template_id, institution_id
-        FROM
-            processed_transaction_records
-        WHERE processed_batch_id=%(batch_id)s
-        LIMIT %(limit)s OFFSET %(offset)s
-    """
-
+    sql = f"{ProcessedTransactionSQL} WHERE BID=%(batch_id)s"
+    sql += " LIMIT %(limit)s OFFSET %(offset)s"
     query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
     cur = conn.cursor()
     try:
@@ -185,6 +178,7 @@ def get_processed_transaction_records(batch_id, offset=0, limit=10):
     except Exception as e:
         logging.exception({"message": f"Error in transaction query: {str(e)}"})
         raise e
+
 
 """ Institutions """
 
@@ -395,6 +389,41 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
          full outer JOIN transaction_notes tn on transaction_records.id = tn.transaction_id
 ) 
 SELECT * FROM tlist
+"""
+
+ProcessedTransactionSQL = """
+WITH tlist AS(
+SELECT   transaction_records.id AS TID, transaction_records.batch_id, 
+         transaction_records.transaction_date, 
+         transaction_records.institution_id as BANK_ID,
+         transaction_records.transaction_data,
+         transaction_records.description,
+         transaction_records.amount
+         , bank.name as bank_name, bank.key
+         , t.id as tag_id, t.value as tag_value 
+         , tt.transaction_id, tt.tag_id
+         , c.id as category_id, c.value as category_value 
+         , tn.note
+         FROM transaction_records
+         JOIN institutions bank on transaction_records.institution_id = bank.id
+         full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
+         full OUTER JOIN tags t on t.id = tt.tag_id
+         full outer JOIN categories c on transaction_records.category_id = c.id
+         full outer JOIN transaction_notes tn on transaction_records.id = tn.transaction_id
+),
+
+plist AS (
+SELECT   processed_transaction_records.id as PID,
+         processed_transaction_records.processed_batch_id as BID, 
+         processed_transaction_records.institution_id,
+         processed_transaction_records.template_id, processed_transaction_records.transaction_id,
+         tr.*         
+FROM 
+         processed_transaction_records
+JOIN 
+         tlist tr on processed_transaction_records.transaction_id = tr.TID
+)
+SELECT * FROM plist
 """
 
 

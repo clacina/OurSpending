@@ -360,14 +360,22 @@ async def add_tag(
 
 @router.get("/transactions", response_model=List[models.TransactionRecordModel])
 async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
-    # SELECT id, institution_id, transaction_date, transaction_data, description, amount
     transactions = db_access.query_transactions_from_batch(
         batch_id=batch_id, offset=offset, limit=limit
     )
 
-    logging.info({"message": "Got transactions",
-                  "transactions": transactions
-                  })
+    transaction_list = []
+    for tr in transactions:
+        try:
+            model = parse_transaction_record(tr)
+            transaction_list.append(model)
+        except Exception as e:
+            logging.info(f"Got exception: {str(e)}")
+
+    return transaction_list
+
+
+def parse_transaction_record(row):
     """
 0         transaction_records.id AS TID, 
 1         transaction_records.batch_id AS BID, 
@@ -400,43 +408,57 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     13     None, 
     14     None)
     """
-    transaction_list = []
-    if transactions:
-        for row in transactions:
-            txn_category = None
-            txn_tags = []
-            if row[13] is not None:
-                txn_category = models.CategoryModel(
-                    id=row[13],
-                    value=row[14]
-                )
-            if row[9] is not None:
-                txn_tags.append(models.TagModel(
-                    id=row[9],
-                    value=row[10]
-                ))
+    txn_category = None
+    txn_tags = []
+    if row[13] is not None:
+        txn_category = models.CategoryModel(
+            id=row[13],
+            value=row[14]
+        )
+    if row[9] is not None:
+        txn_tags.append(models.TagModel(
+            id=row[9],
+            value=row[10]
+        ))
 
-            tr = models.TransactionRecordModel(
-                id=row[0],
-                batch_id=batch_id,
-                institution=models.InstitutionsModel(
-                    id=row[3],
-                    key=row[7],
-                    name=row[8]
-                ),
-                transaction_date=row[2],
-                transaction_data=row[4],
-                tags=txn_tags,
-                description=row[5],
-                amount=row[6],
-                notes=row[15],
-                category=txn_category
-            )
-            transaction_list.append(tr)
-    else:
-        logging.info({"message": f"No transactions found for batch {batch_id}"})
-
-    return transaction_list
+    logging.info(f"Row: {row}")
+    """
+    (92, 
+    1, 
+    datetime.date(2023, 3, 6), 
+    6, 
+    ['03/06/2023', '12:34:44', 'PST', 'Udemy', 'Express    routes.py:423
+             Checkout Payment', 'Completed', 'USD', '-14.33', '0.00', '-14.33', 'clacina@mindspring.com',
+             'payments@udemy.com', '6AT54470H5253413J', 'course:3656160', '', '1.34', '', '', '', '', '', '',
+             '292343312', '1', '', '-14.33', 'Basic Home Electrical Wiring by Example and On the Job', '',
+             'Debit'], 
+    'Udemy', 
+    Decimal('-14.3300'), 
+    'PayPal', 
+    'PP', 
+    None, None, None, None, None, None, None)
+    """
+    try:
+        tr = models.TransactionRecordModel(
+            id=row[0],
+            batch_id=row[1],
+            institution=models.InstitutionsModel(
+                id=row[3],
+                key=row[7],
+                name=row[8]
+            ),
+            transaction_date=row[2],
+            transaction_data=row[4],
+            tags=txn_tags,
+            description=row[5],
+            amount=row[6],
+            notes=row[15],
+            category=txn_category
+        )
+        logging.info(f"TR complete: {tr}")
+    except Exception as e:
+        logging.exception(f"Can't create model {str(e)}")
+    return tr
 
 
 @router.get(
@@ -578,20 +600,32 @@ async def get_batch(batch_id: int):
     response_model=List[models.ProcessedTransactionRecordModel],
 )
 async def get_processed_transactions(batch_id: int, limit: int = 100, offset: int = 0):
-    # SELECT id, transaction_id, template_id, institution_id
     transactions = db_access.get_processed_transaction_records(
         batch_id=batch_id, offset=offset, limit=limit
     )
 
+    """
+     (142, 1, 1,
+         44, 142, 142, 1, datetime.date(2023, 4, 26), 1, ['04/26/2023', '-20.17', '*', '', 'PURCHASE
+         AUTHORIZED ON 04/26 ARCO#07027ARCO LAKEWOOD WA P000000272952645 CARD 0094'], 'PURCHASE AUTHORIZED
+         ON 04/26 ARCO#07027ARCO LAKEWOOD WA P000000272952645 CARD 0094', Decimal('-20.1700'), 'Wellsfargo
+         Checking', 'WLS_CHK', None, None, None, None, None, None, None)
+    
+SELECT   processed_transaction_records.id as PID,
+         processed_transaction_records.processed_batch_id as BID, 
+         processed_transaction_records.institution_id,
+         processed_transaction_records.template_id, processed_transaction_records.transaction_id,
+    """
     transaction_list = []
     if transactions:
         for row in transactions:
             tr = models.ProcessedTransactionRecordModel(
                 id=row[0],
                 processed_batch_id=batch_id,
-                transaction_id=row[1],
-                template_id=row[2],
-                institution_id=row[3],
+                transaction_id=row[4],
+                template_id=row[3],
+                institution_id=row[2],
+                transaction=parse_transaction_record(row[5:])
             )
             transaction_list.append(tr)
     else:
