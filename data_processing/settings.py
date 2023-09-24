@@ -1,6 +1,7 @@
 """
 settings.py - Code for confguring data structures for analysis.
 """
+import os.path
 
 from data_processing.processors import *
 import data_processing.db_utils as db_utils
@@ -125,6 +126,18 @@ def create_configs_with_data(source="../datafiles"):
     all_processors = list()
     # -------------------
     if debug_processors:
+        if os.path.isfile(f"{source}/CapitalOne.csv"):
+            cap = configure_processor(
+                institution_name="Capital One Visa",
+                datafile=f"{source}/CapitalOne.csv",
+                processor=CapitalOne,
+                config=data_mgr,
+            )
+            all_processors.append(cap)
+        return all_processors
+    # -------------------
+
+    if os.path.isfile(f"{source}/CapitalOne.csv"):
         cap = configure_processor(
             institution_name="Capital One Visa",
             datafile=f"{source}/CapitalOne.csv",
@@ -132,104 +145,105 @@ def create_configs_with_data(source="../datafiles"):
             config=data_mgr,
         )
         all_processors.append(cap)
-        return all_processors
-    # -------------------
 
-    cap = configure_processor(
-        institution_name="Capital One Visa",
-        datafile=f"{source}/CapitalOne.csv",
-        processor=CapitalOne,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/Chase.csv"):
+        cap = configure_processor(
+            institution_name="Chase Visa",
+            datafile=f"{source}/Chase.csv",
+            processor=Chase,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Chase Visa",
-        datafile=f"{source}/Chase.csv",
-        processor=Chase,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/PayPalCC.csv"):
+        cap = configure_processor(
+            institution_name="PayPal",
+            datafile=f"{source}/PayPalCC.csv",
+            processor=PayPal,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="PayPal",
-        datafile=f"{source}/PayPalCC.csv",
-        processor=PayPal,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/HomeDepot.csv"):
+        cap = configure_processor(
+            institution_name="Home Depot",
+            datafile=f"{source}/HomeDepot.csv",
+            processor=HomeDepot,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Home Depot",
-        datafile=f"{source}/HomeDepot.csv",
-        processor=HomeDepot,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/WellsChecking.csv"):
+        cap = configure_processor(
+            institution_name="Wellsfargo Checking",
+            datafile=f"{source}/WellsChecking.csv",
+            processor=WellsfargoChecking,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Wellsfargo Checking",
-        datafile=f"{source}/WellsChecking.csv",
-        processor=WellsfargoChecking,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/WellsCreditCard.csv"):
+        cap = configure_processor(
+            institution_name="Wellsfargo Visa",
+            datafile=f"{source}/WellsCreditCard.csv",
+            processor=WellsfargoVisa,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Wellsfargo Visa",
-        datafile=f"{source}/WellsCreditCard.csv",
-        processor=WellsfargoVisa,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/SoundChecking-House.csv"):
+        cap = configure_processor(
+            institution_name="Sound Checking - House",
+            datafile=f"{source}/SoundChecking-House.csv",
+            processor=SoundChecking,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Sound Checking - House",
-        datafile=f"{source}/SoundChecking-House.csv",
-        processor=SoundChecking,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/SoundChecking-Christa.csv"):
+        cap = configure_processor(
+            institution_name="Sound Checking - Christa",
+            datafile=f"{source}/SoundChecking-Christa.csv",
+            processor=SoundCheckingChrista,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Sound Checking - Christa",
-        datafile=f"{source}/SoundChecking-Christa.csv",
-        processor=SoundCheckingChrista,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/SoundVisa.csv"):
+        cap = configure_processor(
+            institution_name="Sound Visa",
+            datafile=f"{source}/SoundVisa.csv",
+            processor=SoundVisa,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Sound Visa",
-        datafile=f"{source}/SoundVisa.csv",
-        processor=SoundVisa,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/CareCredit.csv"):
+        cap = configure_processor(
+            institution_name="Care Credit",
+            datafile=f"{source}/CareCredit.csv",
+            processor=CareCredit,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Care Credit",
-        datafile=f"{source}/CareCredit.csv",
-        processor=CareCredit,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/Lowes.csv"):
+        cap = configure_processor(
+            institution_name="Lowes",
+            datafile=f"{source}/Lowes.csv",
+            processor=Lowes,
+            config=data_mgr,
+        )
+        all_processors.append(cap)
 
-    cap = configure_processor(
-        institution_name="Lowes",
-        datafile=f"{source}/Lowes.csv",
-        processor=Lowes,
-        config=data_mgr,
-    )
-    all_processors.append(cap)
-
-    cap = configure_processor(
-        institution_name="Amazon Chris",
-        processor=AmazonRetail,
-        config=data_mgr,
-        datafile=f"{source}/Amazon_Chris/Retail.OrderHistory.1.csv",
-    )
-    all_processors.append(cap)
+    if os.path.isfile(f"{source}/Amazon_Chris/Retail.OrderHistory.1.csv"):
+        cap = configure_processor(
+            institution_name="Amazon Chris",
+            processor=AmazonRetail,
+            config=data_mgr,
+            datafile=f"{source}/Amazon_Chris/Retail.OrderHistory.1.csv",
+        )
+        all_processors.append(cap)
 
     return all_processors
 

@@ -86,7 +86,7 @@ def present_processed_batch_menu_select():
 def load_datafiles(source: Optional[str]):
     """Load activity reports for processing."""
     print(f"Got source: {source}")
-    batch_id = process_transaction_files()
+    batch_id = process_transaction_files(source=source)
     print(f"Batch Created: {batch_id}")
 
 
