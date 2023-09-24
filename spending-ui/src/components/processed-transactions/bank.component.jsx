@@ -15,7 +15,7 @@ const BankComponent = ({bankData}) => {
         return (
             <Collapsible trigger={title}>
                 {templateBreakdown.map((template) => {
-                    console.log("Using template: ", template);
+                    // console.log("Using template: ", template);
                     return (<TemplateComponent
                         key={template[0].id}
                         bank={bankId}

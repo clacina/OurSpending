@@ -58,7 +58,6 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     })
 
-    console.log("Cats: ", categoryBreakdown);
 
     // Build our title string
     const workingTemplate = templatesMap.find((i) => Number(i.id) === Number(templateId));
