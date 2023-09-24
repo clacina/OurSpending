@@ -12,9 +12,11 @@ const ProcessedTransactions = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {templatesMap} = useContext(TemplatesContext);
+    const [templateGroups, setTemplateGroups] = useState({})
     const [transactionsMap, setTransactionsMap] = useState([]);
     const [useGrouping, setUseGrouping] = useState(false);
-    const [emap, setEmap] = useState([])
+    const [emap, setEmap] = useState([]);
+    const [institutionGroups, setInstitutionGroups] = useState({});
     const routeParams = useParams();
 
     const getTransactions = async () => {
@@ -23,6 +25,21 @@ const ProcessedTransactions = () => {
         const str = await data.json();
         return (str);
     };
+
+    useEffect(() => {
+        console.log("Updating template groups");
+        const template_groups = {}
+        for (const [key, value] of Object.entries(institutionGroups)) {
+            console.log("Template key: ", key)
+            template_groups[key] = groupTransactionsByTemplate(value);
+        }
+        console.log("Setting template groups: ", template_groups);
+        setTemplateGroups(template_groups);
+        console.log("Setting emap: ", Object.entries(template_groups));
+        setEmap(Object.entries(template_groups));
+        setIsLoaded(true);
+
+    }, [institutionGroups])
 
     useEffect(() => {
         console.log("Start");
@@ -43,14 +60,8 @@ const ProcessedTransactions = () => {
                 }
                 institution_groups[t.institution_id].push(t);
             })
-
-            const template_groups = {}
-            for (const [key, value] of Object.entries(institution_groups)) {
-                template_groups[key] = groupTransactionsByTemplate(value);
-            }
-
-            setEmap(Object.entries(template_groups));
-            setIsLoaded(true);
+            console.log("Setting Inst: ", institution_groups);
+            setInstitutionGroups(institution_groups);
         } else {
             console.info("No definitions yet");
         }
@@ -68,10 +79,30 @@ const ProcessedTransactions = () => {
         return templateEntries;
     }
 
-    const updateGrouping = (event) => {
-        console.log("Got group click");
-        setUseGrouping(!useGrouping);
+    const groupTransactionsByCategory = () => {
+        const categoryEntries = {}
+        for (const [key, value] of Object.entries(institutionGroups)) {
+            console.log("Key:" + key + ", value: " + value);
+        }
+
+        // entries.forEach((item) => {
+        //     console.log(item);
+        // })
+
+        return categoryEntries;
     }
+
+    const updateGrouping = (event) => {
+        console.log("Got group click: ", useGrouping);
+        setUseGrouping(!useGrouping);
+        if(useGrouping) {
+            setEmap(Object.entries(groupTransactionsByCategory()));
+        } else {
+            setEmap(Object.entries(templateGroups));
+        }
+    }
+    console.log("Template Groups: ", templateGroups);
+    console.log("emap: ", emap);
 
     if (isLoaded) {
         return (
