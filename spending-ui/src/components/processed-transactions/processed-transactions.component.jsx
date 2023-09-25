@@ -2,21 +2,25 @@ import {useContext, useEffect, useState} from "react";
 import {Col, Row} from "react-bootstrap";
 import {useParams} from "react-router-dom";
 
-import {StaticDataContext} from "../../contexts/static_data.context";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import Button from "../button/button-component.jsx";
 
 import BankComponent from "./bank.component";
 
 const ProcessedTransactions = () => {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {templatesMap} = useContext(TemplatesContext);
+    const [isLoaded, setIsLoaded] = useState(false);
     const [templateGroups, setTemplateGroups] = useState({})
     const [transactionsMap, setTransactionsMap] = useState([]);
     const [useGrouping, setUseGrouping] = useState(false);
-    const [emap, setEmap] = useState([]);
+    const [entityMap, setEntityMap] = useState([]);
     const [institutionGroups, setInstitutionGroups] = useState({});
+
+    const [transactionResourcesLoaded, setTransactionResourcesLoaded] = useState(false);
+    const [institutionsLoaded, setInstitutionsLoaded] = useState(false);
+    const [templatesGrouped, setTemplatesGrouped] = useState(false);
+    const [entityMapCreated, setEntityMapCreated] = useState(false);
+
     const routeParams = useParams();
 
     const getTransactions = async () => {
@@ -26,28 +30,21 @@ const ProcessedTransactions = () => {
         return (str);
     };
 
+    // -------------------- ASYNCHRONOUS LOADING ----------------------------
+
     useEffect(() => {
-        console.log("Updating template groups");
-        const template_groups = {}
-        for (const [key, value] of Object.entries(institutionGroups)) {
-            console.log("Template key: ", key)
-            template_groups[key] = groupTransactionsByTemplate(value);
+        if(transactionsMap.length === 0) {
+            console.log("Start - getting transactions");
+            getTransactions().then((res) => setTransactionsMap(res));
+            setTransactionResourcesLoaded(true);
         }
-        console.log("Setting template groups: ", template_groups);
-        setTemplateGroups(template_groups);
-        console.log("Setting emap: ", Object.entries(template_groups));
-        setEmap(Object.entries(template_groups));
-        setIsLoaded(true);
-
-    }, [institutionGroups])
+    }, [transactionsMap.length]);
 
     useEffect(() => {
-        console.log("Start");
-        getTransactions().then((res) => setTransactionsMap(res));
-
-        if (transactionsMap.length !== 0 && transactionDataDefinitions.length !== 0) {
-            // Group transactions by institution
-            const institution_groups = {}
+        // Group transactions by institution
+        // console.log("Grouping Transactions by Institution: ", transactionsMap.length);
+        if(transactionResourcesLoaded && transactionsMap.length) {
+            const institution_groups = {};
             transactionsMap.forEach((t) => {
                 if (!institution_groups.hasOwnProperty(t.institution_id)) {
                     institution_groups[t.institution_id] = [];
@@ -55,20 +52,53 @@ const ProcessedTransactions = () => {
                 t.template = null;
                 if (t.template_id) {
                     t.template = templatesMap.find((item) => {
-                        return (item.id === t.template_id)
+                        return (item.id === t.template_id);
                     })
                 }
                 institution_groups[t.institution_id].push(t);
             })
-            console.log("Setting Inst: ", institution_groups);
+            // console.log("Setting Inst: ", institution_groups);
             setInstitutionGroups(institution_groups);
-        } else {
-            console.info("No definitions yet");
+            setInstitutionsLoaded(true);
         }
-    }, [transactionDataDefinitions.length, transactionsMap.length]);
+    }, [transactionResourcesLoaded, transactionsMap.length]);
+
+    useEffect(() => {
+        // This is triggered when setInstitutionGroups() is called
+        if(institutionsLoaded) {
+            console.log("Updating template groups");
+            const template_groups = {};
+            for (const [key, value] of Object.entries(institutionGroups)) {
+                // console.log("Template key: ", key);
+                template_groups[key] = groupTransactionsByTemplate(value);
+            }
+            // console.log("Setting template groups: ", template_groups);
+            setTemplateGroups(template_groups);
+            setTemplatesGrouped(true);
+        }
+    }, [institutionsLoaded]);
+
+    useEffect(() => {
+        if(templatesGrouped) {
+            // This is triggered when setTemplateGroups() is called
+            // console.log("Setting entityMap: ", Object.entries(templateGroups));
+            setEntityMap(Object.entries(templateGroups));
+        }
+    }, [templatesGrouped, templateGroups]);
+
+    useEffect(() => {
+        // We're ready, so allow rendering
+        if(!entityMapCreated && entityMap.length) {
+            // console.log("Setting isLoaded to True - ", entityMap);
+            setIsLoaded(true);
+            setEntityMapCreated(true);
+        }
+    }, [entityMap, entityMapCreated]);
+
+    // ----------------------------------------------------------------
 
     const groupTransactionsByTemplate = (entries) => {
-        const templateEntries = {}
+        const templateEntries = {};
 
         entries.forEach((item) => {
             if (!templateEntries.hasOwnProperty(item.template_id)) {
@@ -96,15 +126,16 @@ const ProcessedTransactions = () => {
         console.log("Got group click: ", useGrouping);
         setUseGrouping(!useGrouping);
         if(useGrouping) {
-            setEmap(Object.entries(groupTransactionsByCategory()));
+            setEntityMap(Object.entries(groupTransactionsByCategory()));
         } else {
-            setEmap(Object.entries(templateGroups));
+            setEntityMap(Object.entries(templateGroups));
         }
     }
-    console.log("Template Groups: ", templateGroups);
-    console.log("emap: ", emap);
 
     if (isLoaded) {
+        console.log("Template Groups: ", templateGroups);
+        console.log("entityMap: ", entityMap);
+
         return (
             <div key='pb'>
                 <Row>
@@ -117,7 +148,7 @@ const ProcessedTransactions = () => {
                                 onClick={updateGrouping}>Group by Category</Button>
                     </Col>
                 </Row>
-                {emap.map((bank) => {
+                {entityMap.map((bank) => {
                     return (<BankComponent key={bank[0]} bankData={bank}/>)
                 })}
             </div>
