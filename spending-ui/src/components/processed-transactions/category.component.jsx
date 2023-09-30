@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import cellEditFactory from "react-bootstrap-table2-editor";
+import {nanoid} from 'nanoid';
 
 import Collapsible from 'react-collapsible';
 
@@ -15,21 +16,9 @@ const CategoryComponent = ({category}) => {
     var title = "Not Categorized";
     if(category[0].template) {
         title = category[0].template.category.value;
-        console.log("Got category: ", category[0].template.category.value);
+        // console.log("Got category: ", category[0].template.category.value);
     }
-    console.log(category);
-    //
-    // category.forEach((item) => {
-    //     console.log("--", item);
-    //     if (item.template) {
-    //         if (item.template.hasOwnProperty('category')) {
-    //             console.log("  ", item.template.category.value);
-    //         }
-    //     }
-    //     if (!item.hasOwnProperty('template')) {
-    //         console.log("----No Template");
-    //     }
-    // })
+    // console.log(category);
 
     /*
         category[].template.institution.name
@@ -45,23 +34,57 @@ const CategoryComponent = ({category}) => {
      */
 
     const columns = []
-    columns.push({dataField: 'template.hint', text: 'Template'})
-    columns.push({dataField: 'template.credit', text: 'Credit'})
-    columns.push({dataField: 'transaction.amount', text: 'Amount'})
-    columns.push({dataField: 'transaction.transaction_date', text: 'Date'})
+    columns.push({dataField: 'keyid', text:'', isDummyField: true, hidden: true})
+    columns.push({dataField: 'template.hint', text: 'Template', editable: false})
+    columns.push({dataField: 'template.credit', text: 'Credit', editable: false})
+    columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false})
+    columns.push({dataField: 'transaction.transaction_date', text: 'Date', editable: false})
     columns.push({dataField: 'transaction.tags', text: 'Tags'})
     columns.push({dataField: 'transaction.notes', text: 'Notes'})
-    columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
+    columns.push({dataField: 'transaction.id', text: '', hidden: true})
 
-    const rowStyle = (row) => {
-        if (row === activeRow) {
-            return {
-                backgroundColor: "lightcyan",
-                border: "solid 2px grey",
-                color: "purple"
-            };
+    const [expanded, setExpanded] = useState([]);
+
+    category.forEach((item) => {
+        item.keyid = nanoid();
+    })
+
+    // const handleBtnClick = () => {
+    //     if (!expanded.includes(2)) {
+    //         const curData = expanded;
+    //         setExpanded({expanded: [...expanded, 2]});
+    //     } else {
+    //         setExpanded({expanded: expanded.filter(x => x !== 2)});
+    //     }
+    // }
+
+    const handleOnExpand = (row, isExpand, rowIndex, e) => {
+        console.log({row, isExpand, rowIndex, e});
+        const curData = expanded;
+        console.log('curData: ', curData);
+        console.log("Row: ", row.keyid);
+
+        if (isExpand && !curData.includes(row.keyid)) {
+            setExpanded([...curData, row.keyid]);
+        } else {
+            setExpanded(curData.filter(x => x !== row.keyid));
         }
-    };
+    }
+
+    // ----------------------------------------------------------------
+
+
+    const expandRow = {
+        onlyOneExpanding: false,
+        // showExpandedColumn: true,
+        renderer: (row, rowIndex) => {
+            return(
+                <div>{row.keyid}</div>
+            )
+        },
+        expanded: expanded,
+        // onExpand: handleOnExpand
+    }
 
     const showContext = (event, row) => {
         console.log("showContext: ", event);
@@ -73,33 +96,13 @@ const CategoryComponent = ({category}) => {
         });
     };
 
-    const rowEvents = {
-        onClick: (e, row, index) => {
-            setActiveRow(row);
-        },
-        onContextMenu: (e, row, index) => {
-            showContext(e, row);
-        }
-    };
-
-    const cellEdit = cellEditFactory({
-        mode: 'click',
-        afterSaveCell: (oldValue, newValue, row, column) => {
-            console.log("Save Cell ", [oldValue, newValue, row, column]);
-        }
-    })
-
-
-
     return(
         <Collapsible trigger={title}>
             <BootstrapTable
                 keyField='keyid'
                 data={category}
                 columns={columns}
-                cellEdit={cellEdit}
-                rowEvents={rowEvents}
-                rowStyle={rowStyle}
+                expandRow={expandRow}
             />
             <Menu id="context-menu" theme='dark'>
                 {activeRow && (

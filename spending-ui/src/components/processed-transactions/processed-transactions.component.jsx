@@ -175,7 +175,7 @@ const ProcessedTransactions = () => {
                 </Row>
                 {useGrouping &&
                     categoriesMap.map((bank) => {
-                        console.log("Cat: ", bank[1]);
+                        // console.log("Cat: ", bank[1]);
                         return(<CategoryComponent category={bank[1]}/>)
                     })}
                 {/*{!useGrouping &&*/}
