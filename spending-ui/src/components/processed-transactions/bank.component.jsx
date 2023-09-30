@@ -5,17 +5,18 @@ import Collapsible from 'react-collapsible';
 import '../collapsible.scss';
 
 const BankComponent = ({bankData}) => {
+    console.log("Bank Data: ", bankData);
     const {institutions} = useContext(StaticDataContext);
     if (institutions && institutions.length > 0) {
         const bankId = bankData[0];
         const templateBreakdown = Object.values(bankData[1]);
         const bank = institutions.find((i) => Number(i.id) === Number(bankId));
+        console.log("Using bank: ", bank);
         const title = `${bank.name} - ${templateBreakdown.length} Templates`;
 
         return (
             <Collapsible trigger={title}>
                 {templateBreakdown.map((template) => {
-                    // console.log("Using template: ", template);
                     return (<TemplateComponent
                         key={template[0].id}
                         bank={bankId}
