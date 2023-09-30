@@ -16,7 +16,13 @@ const TransactionDetailComponent = ({row}) => {
             columns.push({
                 dataField: x.data_id,
                 text: x.column_name,
-                sort: true
+                // headerStyle: (column, colindex) => {
+                //     return {display: 'inline-flex'};
+                // },
+                // style: {
+                //     backgroundColor: 'light-blue',
+                //     color: 'white'
+                // }
             });
         }
     });
@@ -43,6 +49,7 @@ const TransactionDetailComponent = ({row}) => {
                 keyField='keyid'
                 data={[processed_data]}
                 columns={columns}
+
             />
             {/*<Menu id="context-menu" theme='dark'>*/}
             {/*        <>*/}
