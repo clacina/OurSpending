@@ -19,9 +19,12 @@ const ProcessedTransactions = () => {
     // Content for display
     const [entityMap, setEntityMap] = useState([]);
     const [categoriesMap, setCategoriesMap] = useState([]);
+    const [categorizedButtonTitle, setCategorizedButtonTitle] = useState('Hide Categorized');
+    const [groupByCategoryButtonTitle, setGroupByCategoryButtonTitle] = useState('Group by Category');
 
     // UI Display Flags
     const [useGrouping, setUseGrouping] = useState(false);
+    const [categorized, setCategorized]= useState(true);
 
     // Data Loading Flags
     const [isLoaded, setIsLoaded] = useState(false);
@@ -91,14 +94,13 @@ const ProcessedTransactions = () => {
             console.log("Setting entity map with templateGroups");
             // This is triggered when setTemplateGroups() is called
             setEntityMap(Object.entries(templateGroups));
-            console.log("Type: ", typeof entityMap);
         }
     }, [templatesGrouped, templateGroups]);
 
     useEffect(() => {
         // We're ready, so allow rendering
         if (!entityMapCreated && entityMap.length && !isLoaded) {
-            console.log("Setting isLoaded to True - ", entityMap);
+            // console.log("Setting isLoaded to True - ", entityMap);
             setIsLoaded(true);
             setEntityMapCreated(true);
         }
@@ -108,12 +110,24 @@ const ProcessedTransactions = () => {
         // Triggered when setUsingGroup() is called
         if (useGrouping) {
             console.log("Set entity map with categories");
-            setCategoriesMap(Object.entries(categoryGroups));
+            if(!categorized) {
+                // console.log("Filtering: ", categoryGroups);
+                setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
+                    // console.log(item[1][0]);
+                    return(item[1][0].template === null);
+                }));
+                setCategorizedButtonTitle("Show Categorized");
+            } else {
+                setCategoriesMap(Object.entries(categoryGroups));
+                setCategorizedButtonTitle("Hide Categorized");
+            }
+            setGroupByCategoryButtonTitle("Group by Institution");
         } else {
             console.log("Set entity map with template groups");
             setEntityMap(Object.entries(templateGroups));
+            setGroupByCategoryButtonTitle("Group by Category");
         }
-    }, [useGrouping]);
+    }, [useGrouping, categorized]);
 
     // ----------------------------------------------------------------
 
@@ -132,10 +146,10 @@ const ProcessedTransactions = () => {
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-        console.log("transactionsMap: ", transactionsMap);
-        console.log("institutionGroups: ", institutionGroups);
-        console.log("templateGroups: ", templateGroups);
-        console.log("templatesMap: ", templatesMap);
+        // console.log("transactionsMap: ", transactionsMap);
+        // console.log("institutionGroups: ", institutionGroups);
+        // console.log("templateGroups: ", templateGroups);
+        // console.log("templatesMap: ", templatesMap);
 
         // Key is bank, value is list of processed transactions
         categoryEntries['-1'] = []
@@ -160,6 +174,10 @@ const ProcessedTransactions = () => {
         setUseGrouping(!useGrouping);
     }
 
+    const updateCategorized = (event) => {
+        setCategorized(!categorized);
+    }
+
     if (isLoaded) {
         return (
             <div key='pb'>
@@ -170,19 +188,24 @@ const ProcessedTransactions = () => {
                     <Col>
                         <Button buttonType='google-sign-in'
                                 id='set_grouping'
-                                onClick={updateGrouping}>Group by Category</Button>
+                                onClick={updateGrouping}>{groupByCategoryButtonTitle}</Button>
+                        {useGrouping &&
+                            <Button buttonType='google-sign-in'
+                                    id='set_categorized'
+                                    onClick={updateCategorized}>{categorizedButtonTitle}</Button>
+                        }
                     </Col>
                 </Row>
                 {useGrouping &&
                     categoriesMap.map((bank) => {
                         // console.log("Cat: ", bank[1]);
-                        return(<CategoryComponent category={bank[1]}/>)
+                        return(<CategoryComponent category={bank[1]} display={categorized}/>)
                     })}
-                {/*{!useGrouping &&*/}
-                {/*    entityMap.map((bank) => {*/}
-                {/*        return (<BankComponent key={bank[0]} bankData={bank}/>)*/}
-                {/*    })*/}
-                {/*}*/}
+                {!useGrouping &&
+                    entityMap.map((bank) => {
+                        return (<BankComponent key={bank[0]} bankData={bank}/>)
+                    })
+                }
 
             </div>
         )

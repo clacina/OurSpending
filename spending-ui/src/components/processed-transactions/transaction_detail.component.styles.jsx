@@ -39,3 +39,16 @@ export const ItemTable = styled.table`
   td { border-left: 1px solid #000; }
   td:first-child { border-left: none; }  
 `;
+
+export const TitleSpacer = styled.span`
+  width: 250px;
+  margin-right: -250px;
+  
+`;
+
+export const TotalSpacer = styled.span`
+  float: right;
+    text-align: right;
+    margin-left: 250px;
+    margin-right: 30px;
+`;

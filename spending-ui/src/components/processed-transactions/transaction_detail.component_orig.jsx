@@ -9,10 +9,10 @@ const TransactionDetailComponent = ({row}) => {
     const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === row.institution_id);
     const columns = [];
 
-    const amountColumn = dataDefinition.find((x) => {return x.dataField === 'amount';});
-    const dateColumn = dataDefinition.find((x) => {return x.dataField === 'transaction_date';});
-    const descriptionColumn = dataDefinition.find((x) => {return x.dataField === 'description';});
-    console.log({amountColumn, dateColumn, descriptionColumn});
+    // const amountColumn = dataDefinition.find((x) => {return x.dataField === 'amount';});
+    // const dateColumn = dataDefinition.find((x) => {return x.dataField === 'transaction_date';});
+    // const descriptionColumn = dataDefinition.find((x) => {return x.dataField === 'description';});
+    // console.log({amountColumn, dateColumn, descriptionColumn});
 
     columns.push({
         dataField: 'transaction_date',

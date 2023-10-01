@@ -16,19 +16,22 @@ const TransactionDetailComponent = ({row}) => {
     }
 
     return(
-        <ItemTable>
-            <thead>
-                <tr>
-                    <td>Field</td>
-                    <td>Value</td>
-                </tr>
-            </thead>
-            <tbody>
-                {tableDef.map((item) => {
-                    return(<tr><td>{item.title}</td><td>{item.value}</td></tr>);
-                })}
-            </tbody>
-        </ItemTable>
+        <div>
+            <h2>{row.transaction.institution.name}</h2>
+            <ItemTable>
+                <thead>
+                    <tr>
+                        <td>Field</td>
+                        <td>Value</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {tableDef.map((item) => {
+                        return(<tr><td>{item.title}</td><td>{item.value}</td></tr>);
+                    })}
+                </tbody>
+            </ItemTable>
+        </div>
     );
 }
 
