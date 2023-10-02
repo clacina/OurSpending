@@ -14,37 +14,43 @@ export const SidebarData = [
     {
         title: "Banks",
         path: "/banks",
-        icon: <IoIcons.IoMdPeople />,
+        icon: <FaIcons.FaUniversity />,
         cName: "nav-text"
     },
     {
         title: "Templates",
         path: "/templates",
-        icon: <FaIcons.FaEnvelopeOpenText />,
+        icon: <FaIcons.FaAddressCard />,
         cName: "nav-text"
     },
     {
         title: "Batches",
         path: "/batches",
-        icon: <IoIcons.IoMdHelpCircle />,
+        icon: <FaIcons.FaList />,
         cName: "nav-text"
     },
     {
         title: "Processed Batches",
         path: "/processed_batches",
-        icon: <IoIcons.IoMdHelpCircle />,
+        icon: <FaIcons.FaDesktop />,
         cName: "nav-text"
     },
     {
         title: "Categories",
         path: "/categories",
-        icon: <IoIcons.IoIosPaper />,
+        icon: <FaIcons.FaObjectGroup />,
         cName: "nav-text"
     },
     {
         title: "Tags",
         path: "/tags",
-        icon: <FaIcons.FaCartPlus />,
+        icon: <FaIcons.FaTags />,
+        cName: "nav-text"
+    },
+    {
+        title: "Reports",
+        path: "/reports",
+        icon: <FaIcons.FaBook />,
         cName: "nav-text"
     },
 ];

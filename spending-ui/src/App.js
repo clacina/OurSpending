@@ -9,6 +9,7 @@ import CategoriesComponent from "./components/categories/categories.component";
 import Home from "./routes/home/home.component";
 import ProcessedBatches from "./components/processed-batches/processed-batches.component";
 import ProcessedTransactions from "./components/processed-transactions/processed-transactions.component";
+import Reports from "./components/reports/reports.component.jsx";
 import TagsComponent from "./components/tags/tags.component";
 import TemplateList from "./components/template-list/template-list.component";
 import TransactionsList from "./components/transaction/transactions-list.component.jsx";
@@ -27,6 +28,7 @@ function App() {
                 <Route path='transactions/:batch_id' element={<TransactionsList/>}/>
                 <Route path='processed_batches/*' element={<ProcessedBatches/>}/>
                 <Route path='processed_transactions/:batch_id' element={<ProcessedTransactions/>}/>
+                <Route path='reports/*' element={<Reports/>}/>
             </Routes>
         </Fragment>
     );

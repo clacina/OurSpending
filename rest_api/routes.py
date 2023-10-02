@@ -444,8 +444,8 @@ def parse_transaction_record(row):
             batch_id=row[1],
             institution=models.InstitutionsModel(
                 id=row[3],
-                key=row[7],
-                name=row[8]
+                key=row[8],
+                name=row[7]
             ),
             transaction_date=row[2],
             transaction_data=row[4],
