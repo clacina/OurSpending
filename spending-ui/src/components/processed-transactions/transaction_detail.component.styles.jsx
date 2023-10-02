@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import {BaseButton} from '../button/button.styles.jsx'
 
 export const ItemTable = styled.table`
   border-collapse: collapse;
@@ -36,19 +37,31 @@ export const ItemTable = styled.table`
     color: #009879;
   }
 
-  td { border-left: 1px solid #000; }
-  td:first-child { border-left: none; }  
+  td {
+    border-left: 1px solid #000;
+  }
+
+  td:first-child {
+    border-left: none;
+  }
 `;
 
 export const TitleSpacer = styled.span`
   width: 250px;
   margin-right: -250px;
-  
 `;
 
 export const TotalSpacer = styled.span`
   float: right;
-    text-align: right;
-    margin-left: 250px;
-    margin-right: 30px;
+  text-align: right;
+  margin-left: 250px;
+  margin-right: 30px;
 `;
+
+export const CButton = styled(BaseButton)`
+  position: absolute;
+  left: 50%;
+  bottom: 15px;
+  transform: translate(-50%, -15px);
+
+`

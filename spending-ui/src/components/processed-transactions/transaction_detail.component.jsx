@@ -1,12 +1,15 @@
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
+import CategorySelectDialog from "../category-select-dialog/category_select_dialog.component.jsx";
 import {ItemTable} from './transaction_detail.component.styles.jsx';
+import 'react-dropdown/style.css';
 
 
 const TransactionDetailComponent = ({row}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
-    const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === row.institution_id);
+    const [openCategories, setOpenCategories] = useState(false);
 
+    const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === row.institution_id);
     const tableDef = []
     for(let i=0;i<dataDefinition.length;i++) {
         const line = {}
@@ -15,9 +18,26 @@ const TransactionDetailComponent = ({row}) => {
         tableDef.push(line);
     }
 
+    const showModal = () => {
+        setOpenCategories(true);
+    }
+
+    const closeModal = (props) => {
+        console.log("Closed with: ", typeof props);
+        setOpenCategories(false);
+        if(typeof props === 'number') {
+            // got category id
+            console.log("Assign category: ", props);
+        }
+    }
+
     return(
         <div>
             <h2>{row.transaction.institution.name}</h2>
+            <span><button onClick={showModal}>Assign Category</button></span>
+            <span><button>Edit Tags</button></span>
+            <span><button>Edit Notes</button></span>
+            <span><button>Create Template</button></span>
             <ItemTable>
                 <thead>
                     <tr>
@@ -31,6 +51,7 @@ const TransactionDetailComponent = ({row}) => {
                     })}
                 </tbody>
             </ItemTable>
+            {openCategories && <CategorySelectDialog row={row} closeHandler={closeModal}/>}
         </div>
     );
 }
