@@ -184,15 +184,17 @@ const ProcessedTransactions = () => {
                 <Row>
                     <Col>
                         <h1>Processed Transactions</h1>
+                        {useGrouping && <p>Grouped by Category</p>}
+                        {useGrouping && categorized && <p>Show All</p>}
+                        {useGrouping && !categorized && <p>List Uncategorized</p>}
+                        {!useGrouping && <p>Grouped by Bank</p>}
                     </Col>
                     <Col>
-                        <Button buttonType='google-sign-in'
-                                id='set_grouping'
-                                onClick={updateGrouping}>{groupByCategoryButtonTitle}</Button>
+                        <button id='set_grouping'
+                                onClick={updateGrouping}>{groupByCategoryButtonTitle}</button>
                         {useGrouping &&
-                            <Button buttonType='google-sign-in'
-                                    id='set_categorized'
-                                    onClick={updateCategorized}>{categorizedButtonTitle}</Button>
+                            <button id='set_categorized'
+                                    onClick={updateCategorized}>{categorizedButtonTitle}</button>
                         }
                     </Col>
                 </Row>

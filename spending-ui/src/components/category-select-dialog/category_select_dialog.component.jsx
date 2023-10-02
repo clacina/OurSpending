@@ -27,6 +27,11 @@ const CategorySelectDialog = ({closeHandler}) => {
         setSelection(event.value);
     }
 
+    // Sort comparator
+    function compareCategories(a, b) {
+        return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
+    }
+
     // Format list
     const options = []
     categoriesMap.forEach((item) => {
@@ -44,7 +49,7 @@ const CategorySelectDialog = ({closeHandler}) => {
                 <Row>
                     <h2>Assign a Category</h2>
                     <Select
-                        options={options}
+                        options={options.sort(compareCategories)}
                         onChange={updateCategory}
                     />
                 </Row>

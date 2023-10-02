@@ -1,6 +1,7 @@
 import React, {useContext, useState} from "react";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import CategorySelectDialog from "../category-select-dialog/category_select_dialog.component.jsx";
+import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import {ItemTable} from './transaction_detail.component.styles.jsx';
 import 'react-dropdown/style.css';
 
@@ -8,6 +9,7 @@ import 'react-dropdown/style.css';
 const TransactionDetailComponent = ({row}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const [openCategories, setOpenCategories] = useState(false);
+    const [openNotes, setOpenNotes] = useState(false);
 
     const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === row.institution_id);
     const tableDef = []
@@ -22,12 +24,23 @@ const TransactionDetailComponent = ({row}) => {
         setOpenCategories(true);
     }
 
+    const showNotes = () => {
+        setOpenNotes(true);
+    }
+
     const closeModal = (props) => {
         console.log("Closed with: ", typeof props);
-        setOpenCategories(false);
-        if(typeof props === 'number') {
-            // got category id
-            console.log("Assign category: ", props);
+        if(openCategories) {
+            setOpenCategories(false);
+            if (typeof props === 'number') {
+                // got category id
+                console.log("Assign category: ", props);
+            }
+        } else if(openNotes) {
+            setOpenNotes(false);
+            if (typeof props === 'string') {
+                console.log("Add note: ", props);
+            }
         }
     }
 
@@ -36,7 +49,7 @@ const TransactionDetailComponent = ({row}) => {
             <h2>{row.transaction.institution.name}</h2>
             <span><button onClick={showModal}>Assign Category</button></span>
             <span><button>Edit Tags</button></span>
-            <span><button>Edit Notes</button></span>
+            <span><button onClick={showNotes}>Edit Notes</button></span>
             <span><button>Create Template</button></span>
             <ItemTable>
                 <thead>
@@ -52,6 +65,7 @@ const TransactionDetailComponent = ({row}) => {
                 </tbody>
             </ItemTable>
             {openCategories && <CategorySelectDialog row={row} closeHandler={closeModal}/>}
+            {openNotes && <NoteEditDialog closeHandler={closeModal} />}
         </div>
     );
 }
