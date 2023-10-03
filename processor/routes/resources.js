@@ -188,4 +188,49 @@ resourcesRouter.put('/categories/:id', async function(req, res, next) {
   }
 });
 
+
+resourcesRouter.put('/tags/:id', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/tags/' + req.params['id'];
+  console.log("URL: ", url);
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.put(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    // console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
+resourcesRouter.post('/tags', async function(req, res, next) {
+  req.accepts('application/json');
+  const url = 'http://localhost:8080/tags';
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.post(url, options).json();
+    res.status(201).send(data);
+  } catch (e) {
+    // console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
+
 export default resourcesRouter;

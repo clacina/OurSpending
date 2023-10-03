@@ -226,7 +226,7 @@ def fetch_institution(institution_id: int):
 def load_institutions():
     conn = connect_to_db()
     assert conn
-    sql = "SELECT id, key, name, notes FROM institutions"
+    sql = "SELECT id, key, name, notes FROM institutions order by name"
     cur = conn.cursor()
     try:
         cur.execute(sql)
@@ -241,7 +241,7 @@ def load_institutions():
 
 
 def load_categories():
-    sql = "SELECT id, value, notes FROM categories"
+    sql = "SELECT id, value, notes FROM categories order by value"
     conn = connect_to_db()
     cur = conn.cursor()
     try:
@@ -558,7 +558,7 @@ def add_tag_to_transaction(transaction_id, tag_id):
         raise e
 
 
-def create_tag(value: str):
+def create_tag(value: str, notes: str):
     conn = connect_to_db()
     assert conn
 
@@ -574,12 +574,41 @@ def create_tag(value: str):
         logging.exception(f"Error searching for tag: {str(e)}")
         raise e
 
-    sql = "INSERT INTO tags (value) VALUES (%(value)s) RETURNING id"
+    sql = "INSERT INTO tags (value, notes) VALUES (%(value)s, %(notes)s) RETURNING id"
+    query_params['notes'] = notes
     try:
         cur.execute(sql, query_params)
         row = cur.fetchone()
         conn.commit()
-        return row[0], value
+        return row[0], value, notes
+    except Exception as e:
+        logging.exception(f"Error creating tag: {str(e)}")
+        raise e
+
+
+def update_tag(tag_id: int, value: str, notes: str):
+    conn = connect_to_db()
+    assert conn
+
+    sql = "SELECT id FROM tags WHERE id=%(id)s"
+    query_params = {"id": tag_id}
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        row = cur.fetchone()
+        if not row:
+            return None
+    except Exception as e:
+        logging.exception(f"Error searching for tag: {str(e)}")
+        raise e
+
+    sql = """UPDATE tags SET value=%(value)s, notes=%(notes)s WHERE id=%(id)s"""
+    query_params['notes'] = notes
+    query_params['value'] = value
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+        return tag_id, value, notes
     except Exception as e:
         logging.exception(f"Error creating tag: {str(e)}")
         raise e
