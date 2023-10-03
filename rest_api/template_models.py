@@ -71,8 +71,8 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
         self.tr = None
 
     def process(self):
-        logging.info(f"query result: {self.data}")
-        logging.info(f"Found {len(self.data)} records to parse")
+        # logging.info(f"query result: {self.data}")
+        # logging.info(f"Found {len(self.data)} records to parse")
         #      0              1               2              3        4        5            6                     7
         # templates.id, templates.hint, templates.credit, t.value, c.value, q.value, templates.notes, templates.institution_id FROM templates
         for row in self.data:
@@ -120,8 +120,8 @@ class TemplatesReportBuilder:  # NOT USED
         self.data = data
 
     def process(self):
-        logging.info(f"query result: {self.data}")
-        logging.info(f"Found {len(self.data)} records to parse")
+        # logging.info(f"query result: {self.data}")
+        # logging.info(f"Found {len(self.data)} records to parse")
 
         templates = {}
         for row in self.data:

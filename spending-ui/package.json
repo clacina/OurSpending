@@ -20,6 +20,7 @@
     "fs": "^0.0.1-security",
     "http-browserify": "^1.7.0",
     "https-browserify": "^1.0.0",
+    "ky": "^1.0.1",
     "logdown": "^3.3.1",
     "nanoid": "^5.0.1",
     "net": "^1.0.2",

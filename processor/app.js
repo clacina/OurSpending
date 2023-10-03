@@ -1,13 +1,21 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var dns = require('dns');
+import express from 'express';
+import path from 'node:path';
+import cookieParser from 'cookie-parser';
+import logger from 'morgan';
+import dns from 'node:dns';
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var resourcesRouter = require('./routes/resources');
-var reportsRouter = require('./routes/reports');
+// Hack to use module type (newer)
+// https://stackoverflow.com/questions/8817423/why-is-dirname-not-defined-in-node-repl
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+import indexRouter from './routes/index.js';
+import usersRouter from './routes/users.js';
+import resourcesRouter from './routes/resources.js';
+import reportsRouter from './routes/reports.js';
 
 var app = express();
 app.listen(8000);
@@ -19,7 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const cors = require('cors');
+import cors from 'cors';
 
 const whitelist = ["http://localhost:3000"]
 const corsOptions = {
@@ -43,4 +51,4 @@ app.use('/reports', reportsRouter);
 // app.use('/logout', );
 // app.use('/signup', );
 
-module.exports = app;
+export default app;

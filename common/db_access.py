@@ -241,7 +241,7 @@ def load_institutions():
 
 
 def load_categories():
-    sql = "SELECT * FROM categories"
+    sql = "SELECT id, value, notes FROM categories"
     conn = connect_to_db()
     cur = conn.cursor()
     try:
@@ -267,12 +267,12 @@ def get_category(category_id):
         raise e
 
 
-def create_category(value: str):
+def create_category(value: str, notes: str = None):
     conn = connect_to_db()
     assert conn
 
     sql = "SELECT id FROM categories WHERE value=%(value)s"
-    query_params = {"value": value}
+    query_params = {"value": value, "notes": notes}
     cur = conn.cursor()
     try:
         cur.execute(sql, query_params)
@@ -283,7 +283,7 @@ def create_category(value: str):
         logging.exception(f"Error searching for category: {str(e)}")
         raise e
 
-    sql = "INSERT INTO categories (value) VALUES (%(value)s) RETURNING id"
+    sql = "INSERT INTO categories (value, notes) VALUES (%(value)s, %(notes)s) RETURNING id"
     try:
         cur.execute(sql, query_params)
         row = cur.fetchone()
@@ -294,12 +294,12 @@ def create_category(value: str):
         raise e
 
 
-def update_category(category_id: int, value: str):
+def update_category(category_id: int, value: str, notes: str):
     conn = connect_to_db()
     assert conn
 
-    sql = "UPDATE categories SET value=%(value)s WHERE id=%(category_id)s"
-    query_params = {"category_id": category_id, "value": value}
+    sql = "UPDATE categories SET value=%(value)s, notes=%(notes)s WHERE id=%(category_id)s"
+    query_params = {"category_id": category_id, "value": value, "notes": notes}
     cur = conn.cursor()
     try:
         cur.execute(sql, query_params)
@@ -444,8 +444,8 @@ def query_templates_by_id(template_id):
         cur = conn.cursor()
         cur.execute(sql, query_params)
         rows = cur.fetchall()
-        logging.info(f"Returned {len(rows)} matching records.")
-        logging.info(f"Rows: {rows}")
+        # logging.info(f"Returned {len(rows)} matching records.")
+        # logging.info(f"Rows: {rows}")
         return rows
     except Exception as e:
         logging.exception(f"Error loading Template {template_id}: {str(e)}")
@@ -466,7 +466,7 @@ def query_templates_by_institution(institution_id):
 
     query_params = {}
     if institution_id >= 0:
-        logging.info(f"Using institution id of {institution_id}")
+        # logging.info(f"Using institution id of {institution_id}")
         sql = f"{TemplateSQl} WHERE BANK_ID=%(institution_id)s"
         query_params = {"institution_id": institution_id}
 
@@ -474,8 +474,8 @@ def query_templates_by_institution(institution_id):
         cur = conn.cursor()
         cur.execute(sql, query_params)
         rows = cur.fetchall()
-        logging.info(f"Returned {len(rows)} matching records.")
-        logging.info(f"Rows: {rows}")
+        # logging.info(f"Returned {len(rows)} matching records.")
+        # logging.info(f"Rows: {rows}")
         return rows
     except Exception as e:
         logging.exception(f"Error loading Template with institution {institution_id}: {str(e)}")
