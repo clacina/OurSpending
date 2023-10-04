@@ -21,7 +21,6 @@ const TagsComponent = () => {
 
     const [newEntry, setNewEntry] = useState("");
     const [newNotes, setNewNotes] = useState("");
-    const [newColor, setNewColor] = useState("");
     const [selectedTag, setSelectedTag] = useState();
 
     const resetFormFields = () => {
@@ -29,53 +28,48 @@ const TagsComponent = () => {
         setNewNotes("");
     }
 
-    const handleColorChange = (color) => {
-        console.log(`ColorChange: ${color} for id ${selectedTag}`);
-        setNewColor(color.rgb);
+    // -------------------- Event handlers for Tag Edit ---------------------
+    const cellEdit = cellEditFactory({
+        mode: 'click',
+        afterSaveCell: async (oldValue, newValue, row, column) => {
+            console.log("Tag Cell ", [oldValue, newValue, row, column]);
+            // newValue is entire string to set
+            // row is our data row.id == category id
+            // colum == row.dataField == column data field
 
+            const requestOptions = {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    "value": row.value,
+                    "notes": row.notes
+                })
+            };
+            const url = 'http://localhost:8000/resources/tags/' + row.id;
+            const response = await fetch(url, requestOptions);
+            const str = await response.json();
+            console.log("Response: ", str);
+        }
+    })
+
+    // ------------------- Color Picker Support -----------------------
+    const handleColorChange = (color) => {
         const newMap = tagsMap.map((item) => {
-            if(item.id === selectedTag) {
-                console.log("Setting color of item: ", item.id)
-                console.log("-to color: ", color.rgb);
-            }
             return(item.id === selectedTag ? {...item, color: color.rgb} : item)
         })
         setTagsMap(newMap);
     };
 
-    useEffect(() => {
-        console.log("Calling ColorClose with: ", newColor);
-        // handleColorClose(newColor);
-        //
-        // const existingItem = tagsMap.find((item) => selectedTag === item.id);
-        //
-        // if(existingItem) {
-        //     tagsMap.map((item) => {
-        //         if(item.id === selectedTag) {
-        //             console.log("Setting color of item: ", item.id)
-        //             console.log("-to color: ", newColor);
-        //         }
-        //         return(item.id === selectedTag ? {...item, color: newColor} : item)
-        //     })
-        // }
-        // setTagsMap(tagsMap);
-
-    }, [newColor]);
-
     const handleColorClick = () => {
-        console.log("ColorClick: ");
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
-        console.log("ColorClose: ", color);
         setShowColorPicker(false);
         setSelectedTag(null);
     }
 
     const handleColorChangeComplete = (color, event) => {
-        console.log("ColorChangeComplete: ", color);
-        console.log(event);
         setShowColorPicker(false);
     }
 
@@ -130,21 +124,17 @@ const TagsComponent = () => {
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        console.log("ColEvent: ", e);
-        if (columnIndex === 3) {  // tags column - its a drop down
+        if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
             setSelectedTag(row.id);
-            console.log("colEvent - Selecting row %s", row.id );
         }
 
         if(showColorPicker) {
             e.stopPropagation();
         }
-
-        // console.log("colEvent: ");
-        // console.log({e, column, columnIndex, row, rowIndex})
     }
 
+    // Create column definitions for display table
     const columns = [];
     columns.push({dataField: 'id', text: 'Id', sort: true})
     columns.push({dataField: 'value', text: 'Value', sort: true})
@@ -169,28 +159,7 @@ const TagsComponent = () => {
         }
     }, [tagsMap]);
 
-    const cellEdit = cellEditFactory({
-        mode: 'click',
-        afterSaveCell: async (oldValue, newValue, row, column) => {
-            console.log("Tag Cell ", [oldValue, newValue, row, column]);
-            // newValue is entire string to set
-            // row is our data row.id == category id
-            // colum == row.dataField == column data field
-
-            const requestOptions = {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    "value": row.value,
-                    "notes": row.notes
-                })
-            };
-            const url = 'http://localhost:8000/resources/tags/' + row.id;
-            const response = await fetch(url, requestOptions);
-            const str = await response.json();
-            console.log("Response: ", str);
-        }
-    })
+    // -------------------------- Event handlers for New Tag ----------------------------
 
     function handleChange(event) {
         const {name, value} = event.target;
@@ -221,7 +190,7 @@ const TagsComponent = () => {
         resetFormFields();
     }
 
-
+    // --------------------------- Render ----------------------------------------
     if (isLoaded) {
         return (
             <div>
