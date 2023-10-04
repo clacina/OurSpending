@@ -9,24 +9,156 @@ import TableBaseComponent from '../table-base/table-base.component.jsx';
 
 import FormInput from "../form-input/form-input.component";
 import Button from "../button/button-component";
+import reactCSS from 'reactcss'
+
+import {SketchPicker} from 'react-color';
 
 
 const TagsComponent = () => {
-    const {tagsMap} = useContext(TagsContext);
+    const {tagsMap, setTagsMap} = useContext(TagsContext);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [showColorPicker, setShowColorPicker] = useState(false);
 
     const [newEntry, setNewEntry] = useState("");
     const [newNotes, setNewNotes] = useState("");
+    const [newColor, setNewColor] = useState("");
+    const [selectedTag, setSelectedTag] = useState();
 
     const resetFormFields = () => {
         setNewEntry("");
         setNewNotes("");
     }
 
+    const handleColorChange = (color) => {
+        console.log(`ColorChange: ${color} for id ${selectedTag}`);
+        setNewColor(color.rgb);
+
+        const newMap = tagsMap.map((item) => {
+            if(item.id === selectedTag) {
+                console.log("Setting color of item: ", item.id)
+                console.log("-to color: ", color.rgb);
+            }
+            return(item.id === selectedTag ? {...item, color: color.rgb} : item)
+        })
+        setTagsMap(newMap);
+    };
+
+    useEffect(() => {
+        console.log("Calling ColorClose with: ", newColor);
+        // handleColorClose(newColor);
+        //
+        // const existingItem = tagsMap.find((item) => selectedTag === item.id);
+        //
+        // if(existingItem) {
+        //     tagsMap.map((item) => {
+        //         if(item.id === selectedTag) {
+        //             console.log("Setting color of item: ", item.id)
+        //             console.log("-to color: ", newColor);
+        //         }
+        //         return(item.id === selectedTag ? {...item, color: newColor} : item)
+        //     })
+        // }
+        // setTagsMap(tagsMap);
+
+    }, [newColor]);
+
+    const handleColorClick = () => {
+        console.log("ColorClick: ");
+        setShowColorPicker(!showColorPicker);
+    }
+
+    const handleColorClose = (color) => {
+        console.log("ColorClose: ", color);
+        setShowColorPicker(false);
+        setSelectedTag(null);
+    }
+
+    const handleColorChangeComplete = (color, event) => {
+        console.log("ColorChangeComplete: ", color);
+        console.log(event);
+        setShowColorPicker(false);
+    }
+
+    // Setup tags column as a multi-select
+    const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        const styles = reactCSS({
+            'default': {
+                color: {
+                    width: '36px',
+                    height: '14px',
+                    borderRadius: '2px',
+                    background: `rgba(${ row.color.r }, ${ row.color.g }, ${ row.color.b }, ${ row.color.a })`,
+                },
+                swatch: {
+                    padding: '5px',
+                    background: '#fff',
+                    borderRadius: '1px',
+                    boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
+                    display: 'inline-block',
+                    cursor: 'pointer',
+                },
+                popover: {
+                    position: 'absolute',
+                    zIndex: '2',
+                },
+                cover: {
+                    position: 'fixed',
+                    top: '0px',
+                    right: '0px',
+                    bottom: '0px',
+                    left: '0px',
+                },
+            },
+        });
+
+        return (
+            <div>
+                <div style={ styles.swatch } onClick={ handleColorClick }>
+                    <div style={ styles.color } />
+                </div>
+                { showColorPicker &&
+                    <div style={ styles.popover }>
+                        <div style={ styles.cover } onClick={ handleColorClose }/>
+                        <SketchPicker
+                            color={ row.color }
+                            onChangeComplete={handleColorChangeComplete}
+                            onChange={ handleColorChange } />
+                    </div>
+                }
+            </div>
+        );
+    }
+
+    const colEvent = (e, column, columnIndex, row, rowIndex) => {
+        console.log("ColEvent: ", e);
+        if (columnIndex === 3) {  // tags column - its a drop down
+            e.stopPropagation();
+            setSelectedTag(row.id);
+            console.log("colEvent - Selecting row %s", row.id );
+        }
+
+        if(showColorPicker) {
+            e.stopPropagation();
+        }
+
+        // console.log("colEvent: ");
+        // console.log({e, column, columnIndex, row, rowIndex})
+    }
+
     const columns = [];
     columns.push({dataField: 'id', text: 'Id', sort: true})
     columns.push({dataField: 'value', text: 'Value', sort: true})
     columns.push({dataField: 'notes', text: 'Note', sort: false})
+    columns.push({
+        dataField: 'color',
+        editable: false,
+        isDummyField: true,
+        text: 'Display Color',
+        formatter: tagColumnFormatter,
+        events: {
+            onClick: colEvent
+        },
+    })
 
     useEffect(() => {
         console.log("Start");
