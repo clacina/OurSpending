@@ -11,7 +11,7 @@ import FormInput from "../form-input/form-input.component";
 import Button from "../button/button-component";
 import reactCSS from 'reactcss'
 
-import {SketchPicker} from 'react-color';
+import {SwatchesPicker} from 'react-color';
 
 
 const TagsComponent = () => {
@@ -42,7 +42,8 @@ const TagsComponent = () => {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     "value": row.value,
-                    "notes": row.notes
+                    "notes": row.notes ? row.notes : '',
+                    "color": row.color
                 })
             };
             const url = 'http://localhost:8000/resources/tags/' + row.id;
@@ -53,23 +54,45 @@ const TagsComponent = () => {
     })
 
     // ------------------- Color Picker Support -----------------------
-    const handleColorChange = (color) => {
+    const handleColorChange = async (color) => {
+        console.log("ColorChange")
         const newMap = tagsMap.map((item) => {
-            return(item.id === selectedTag ? {...item, color: color.rgb} : item)
+            return (item.id === selectedTag ? {...item, color: color.hex} : item)
         })
+
+        const updatedTag = tagsMap.find((item) => {
+            return (item.id === selectedTag);
+        });
+
+        const requestOptions = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                "value": updatedTag.value,
+                "notes": updatedTag.notes ? updatedTag.notes : "",
+                "color": color.hex
+            })
+        };
+        const url = 'http://localhost:8000/resources/tags/' + selectedTag;
+        const response = await fetch(url, requestOptions);
+        const str = await response.json();
+        console.log("Response: ", str);
         setTagsMap(newMap);
     };
 
     const handleColorClick = () => {
+        console.log("ColorClick")
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
+        console.log("ColorClose")
         setShowColorPicker(false);
         setSelectedTag(null);
     }
 
     const handleColorChangeComplete = (color, event) => {
+        console.log("ColorComplete")
         setShowColorPicker(false);
     }
 
@@ -81,7 +104,7 @@ const TagsComponent = () => {
                     width: '36px',
                     height: '14px',
                     borderRadius: '2px',
-                    background: `rgba(${ row.color.r }, ${ row.color.g }, ${ row.color.b }, ${ row.color.a })`,
+                    background: `${ row.color }`,
                 },
                 swatch: {
                     padding: '5px',
@@ -110,10 +133,11 @@ const TagsComponent = () => {
                 <div style={ styles.swatch } onClick={ handleColorClick }>
                     <div style={ styles.color } />
                 </div>
-                { showColorPicker &&
+                { showColorPicker && row.id === selectedTag &&
                     <div style={ styles.popover }>
                         <div style={ styles.cover } onClick={ handleColorClose }/>
-                        <SketchPicker
+                        <SwatchesPicker
+                            disableAlpha={true}
                             color={ row.color }
                             onChangeComplete={handleColorChangeComplete}
                             onChange={ handleColorChange } />
@@ -126,6 +150,7 @@ const TagsComponent = () => {
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
+            console.log("Setting selected tag: ", row.id);
             setSelectedTag(row.id);
         }
 
@@ -142,7 +167,7 @@ const TagsComponent = () => {
     columns.push({
         dataField: 'color',
         editable: false,
-        isDummyField: true,
+        // isDummyField: true,
         text: 'Display Color',
         formatter: tagColumnFormatter,
         events: {
@@ -192,6 +217,7 @@ const TagsComponent = () => {
 
     // --------------------------- Render ----------------------------------------
     if (isLoaded) {
+        console.log("Render");
         return (
             <div>
                 <Row>

@@ -24,7 +24,7 @@ class CategoryModel(SimpleLUTModel):
 
 class TagModel(SimpleLUTModel):
     notes: Optional[str]
-    color: str
+    color: Optional[str]
 
 
 class QualifierModel(SimpleLUTModel):

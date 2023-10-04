@@ -6,7 +6,9 @@ import json
 import logging
 from datetime import datetime
 from typing import Optional, List
+from typing import Annotated
 
+from fastapi import FastAPI, Path
 from pydantic import BaseConfig, BaseModel
 
 from fastapi import APIRouter, Query, HTTPException, status, Body, Request
@@ -366,13 +368,13 @@ async def add_tag(
     response_model=models.TagModel,
     status_code=status.HTTP_200_OK
 )
-async def add_tag(
-    tag_id: int,
+async def update_tag(
+    tag_id: Annotated[int, Path(title="Used to identify the Tag in question")],
     value: str = Body(...),
     notes: str = Body(...),
     color: str = Body(...),
 ):
-    logging.info(f"Updating Tag {tag_id}: {value} with {notes}")
+    logging.info(f"Updating Tag {tag_id}: {value} with {notes} and {color}")
     query_result = db_access.update_tag(tag_id=tag_id, value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(

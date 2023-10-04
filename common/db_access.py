@@ -602,14 +602,14 @@ def update_tag(tag_id: int, value: str, notes: str, color: str):
         logging.exception(f"Error searching for tag: {str(e)}")
         raise e
 
-    sql = """UPDATE tags SET value=%(value)s, notes=%(notes)s, color=$(color)s WHERE id=%(id)s"""
+    sql = """UPDATE tags SET value=%(value)s, notes=%(notes)s, color=%(color)s WHERE id=%(id)s"""
     query_params['notes'] = notes
     query_params['value'] = value
     query_params['color'] = color
     try:
         cur.execute(sql, query_params)
         conn.commit()
-        return tag_id, value, notes
+        return tag_id, value, notes, color
     except Exception as e:
         logging.exception(f"Error creating tag: {str(e)}")
         raise e
