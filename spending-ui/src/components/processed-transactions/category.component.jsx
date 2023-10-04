@@ -10,34 +10,62 @@ import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
+import {TagsContext} from "../../contexts/tags.context.jsx";
+
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
+
+import ColorizedMultiSelect from "../colorized-multi-select/colorized-multi-select.component.jsx";
 
 const CategoryComponent = ({category, display}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
+    const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
+    const uncategorized = category[0].template === null;
 
     useEffect(() => {
-        if(transactionDataDefinitions.length !== 0) {
+        if (transactionDataDefinitions.length !== 0) {
             setIsLoaded(true);
         } else {
             console.info("No definitions yet");
         }
     }, [transactionDataDefinitions.length]);
 
-    const uncategorized = category[0].template === null;
+    // Setup tags column as a multi-select
+    const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        return (<ColorizedMultiSelect tagsMap={tagsMap}/>);
+    }
+
+    const colEvent = (e, column, columnIndex, row, rowIndex) => {
+        if (columnIndex === 4) {  // tags column - its a drop down
+            e.stopPropagation();
+        }
+        console.log({e, column, columnIndex, row, rowIndex})
+    }
 
     // Define table columns
     const columns = []
-    if(!uncategorized) {
+    if (!uncategorized) {
         columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-        columns.push({dataField: 'template.hint', text: 'Template', editable: false})
-        columns.push({dataField: 'template.credit', text: 'Credit', editable: false})
-        columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false})
-        columns.push({dataField: 'transaction.transaction_date', text: 'Date', editable: false})
-        columns.push({dataField: 'transaction.tags', text: 'Tags'})
-        columns.push({dataField: 'transaction.notes', text: 'Notes'})
+        columns.push({dataField: 'template.hint', text: 'Template', editable: false, style: {cursor: 'pointer'}})
+        columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}})
+        columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+        columns.push({
+            dataField: 'transaction.transaction_date',
+            style: {cursor: 'pointer'},
+            text: 'Date',
+            editable: false})
+        columns.push({
+            dataField: 'transaction.tags',
+            text: 'Tags',
+            formatter: tagColumnFormatter,
+            events: {
+                onClick: colEvent
+            },
+            style: {cursor: 'pointer'}
+        })
+        columns.push({dataField: 'transaction.notes', text: 'Notes', style: {cursor: 'pointer'}})
         columns.push({dataField: 'transaction.id', text: '', hidden: true})
     } else {
         columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
@@ -65,25 +93,14 @@ const CategoryComponent = ({category, display}) => {
         }
     };
 
-    const handleOnExpand = (row, isExpand, rowIndex, e) => {
-        // console.log({row, isExpand, rowIndex, e});
-        // const curData = expanded;
-        // console.log('curData: ', curData);
-        // console.log("Row: ", row.keyid);
-    }
-
-    const handleTransAction = (event) => {
-        event.preventDefault();
-        alert("Hi");
-    }
-
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
+            console.log("Expanding: ", rowIndex);
             return(<TransactionDetailComponent row={row} />);
 
         },
-        onExpand: handleOnExpand
+        // onExpand: handleOnExpand
     }
 
     const showContext = (event, row) => {
@@ -96,6 +113,11 @@ const CategoryComponent = ({category, display}) => {
         });
     };
 
+    function rowStyle(row, rowIndex) {
+        // console.log("Style for row: ", row);
+        // console.log("--: ", rowIndex);
+    }
+
     // ----------------------------------------------------------------
     if(isLoaded) {
         return (
@@ -105,6 +127,7 @@ const CategoryComponent = ({category, display}) => {
                     data={category}
                     columns={columns}
                     rowEvents={rowEvents}
+                    rowStyle={rowStyle}
                     expandRow={expandRow}
                 />
                 <Menu id="context-menu" theme='dark'>

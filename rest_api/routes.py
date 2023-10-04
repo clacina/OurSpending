@@ -320,6 +320,7 @@ async def get_tags():
             id=q[0],
             value=q[1],
             notes=q[2],
+            color=q[3]
         )
         response.append(cat)
 
@@ -333,7 +334,7 @@ async def get_tags():
 )
 async def get_tag(tag_id: int):
     q = db_access.fetch_tag(tag_id)
-    cat = models.TagModel(id=q[0], value=q[1], notes=q[2])
+    cat = models.TagModel(id=q[0], value=q[1], notes=q[2], color=q[3])
 
     return cat
 
@@ -347,15 +348,16 @@ async def get_tag(tag_id: int):
 async def add_tag(
     value: str = Body(...),
     notes: str = Body(...),
+    color: str = Body(...),
 ):
     logging.info(f"Create Tag: {value} with {notes}")
-    query_result = db_access.create_tag(value=value, notes=notes)
+    query_result = db_access.create_tag(value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Specified Tag already exists.",
         )
-    return models.TagModel(id=query_result[0], value=query_result[1], notes=query_result[2])
+    return models.TagModel(id=query_result[0], value=query_result[1], notes=query_result[2], color=query_result[3])
 
 
 @router.put(
@@ -368,15 +370,16 @@ async def add_tag(
     tag_id: int,
     value: str = Body(...),
     notes: str = Body(...),
+    color: str = Body(...),
 ):
     logging.info(f"Updating Tag {tag_id}: {value} with {notes}")
-    query_result = db_access.update_tag(tag_id=tag_id, value=value, notes=notes)
+    query_result = db_access.update_tag(tag_id=tag_id, value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Specified Tag already exists.",
         )
-    return models.TagModel(id=query_result[0], value=query_result[1], notes=query_result[2])
+    return models.TagModel(id=query_result[0], value=query_result[1], notes=query_result[2], color=query_result[3])
 
 """ ---------- Transactions ----------------------------------------------------------------------"""
 

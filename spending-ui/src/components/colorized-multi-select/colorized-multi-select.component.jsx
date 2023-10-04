@@ -1,12 +1,8 @@
 import React from 'react';
 import chroma from 'chroma-js';
 
-import { ColourOption, colourOptions } from '../data';
+import { ColourOption, colourOptions } from './data.tsx';
 import Select, { StylesConfig } from 'react-select';
-
-const ColorizedMultiSelect = () => {
-    return(<div></div>);
-}
 
 
 const colourStyles: StylesConfig<ColourOption, true> = {
@@ -62,12 +58,44 @@ const colourStyles: StylesConfig<ColourOption, true> = {
     }),
 };
 
-export default () => (
-    <Select
-        closeMenuOnSelect={false}
-        defaultValue={[colourOptions[0], colourOptions[1]]}
-        isMulti
-        options={colourOptions}
-        styles={colourStyles}
-    />
-);
+
+const GetTagColor = () => {
+    const colors = [
+        { value: 'ocean', label: 'Ocean', color: '#00B8D9'},
+        { value: 'blue', label: 'Blue', color: '#0052CC'},
+        { value: 'purple', label: 'Purple', color: '#5243AA' },
+        { value: 'red', label: 'Red', color: '#FF5630'},
+        { value: 'orange', label: 'Orange', color: '#FF8B00' },
+        { value: 'yellow', label: 'Yellow', color: '#FFC400' },
+        { value: 'green', label: 'Green', color: '#36B37E' },
+        { value: 'forest', label: 'Forest', color: '#00875A' },
+        { value: 'slate', label: 'Slate', color: '#253858' },
+        { value: 'silver', label: 'Silver', color: '#666666' },
+    ]
+    return(colors[(Math.floor(Math.random() * colors.length))].color);
+}
+
+const ColorizedMultiSelect = ({tagsMap}) => {
+    const tagColourOptions = []
+    tagsMap.forEach((item) => {
+        const tagOption = {}
+        tagOption['value'] = item.id;
+        tagOption['label'] = item.value;
+        tagOption['color'] = item.color;
+        tagColourOptions.push(tagOption);
+    });
+
+    return (
+        <Select
+            closeMenuOnSelect={true}
+            defaultValue={[tagColourOptions[0], tagColourOptions[1]]}
+            isMulti
+            options={tagColourOptions}
+            styles={colourStyles}
+            menuPortalTarget={document.body}
+            menuPosition={'fixed'}
+        />
+    );
+}
+
+export default ColorizedMultiSelect;

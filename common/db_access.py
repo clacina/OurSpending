@@ -501,7 +501,7 @@ def query_tags_for_transaction(transaction_id: int):
 
 
 def load_tags():
-    sql = "SELECT id, value, notes FROM tags"
+    sql = "SELECT id, value, notes, color FROM tags"
     conn = connect_to_db()
     assert conn
     cur = conn.cursor()
@@ -515,7 +515,7 @@ def load_tags():
 
 
 def fetch_tag(tag_id: int):
-    sql = "SELECT id, value, notes FROM tags WHERE id=%(tag_id)s"
+    sql = "SELECT id, value, notes, color FROM tags WHERE id=%(tag_id)s"
     query_params = {"tag_id": tag_id}
     conn = connect_to_db()
     assert conn
@@ -530,7 +530,7 @@ def fetch_tag(tag_id: int):
 
 
 def fetch_tag_by_value(value: str):
-    sql = "SELECT id, value, notes FROM tags WHERE value=%(value)s"
+    sql = "SELECT id, value, notes, color FROM tags WHERE value=%(value)s"
     query_params = {"value": value}
     conn = connect_to_db()
     assert conn
@@ -558,7 +558,7 @@ def add_tag_to_transaction(transaction_id, tag_id):
         raise e
 
 
-def create_tag(value: str, notes: str):
+def create_tag(value: str, notes: str, color: str):
     conn = connect_to_db()
     assert conn
 
@@ -574,19 +574,19 @@ def create_tag(value: str, notes: str):
         logging.exception(f"Error searching for tag: {str(e)}")
         raise e
 
-    sql = "INSERT INTO tags (value, notes) VALUES (%(value)s, %(notes)s) RETURNING id"
+    sql = "INSERT INTO tags (value, notes, color) VALUES (%(value)s, %(notes)s, %(color)s) RETURNING id"
     query_params['notes'] = notes
     try:
         cur.execute(sql, query_params)
         row = cur.fetchone()
         conn.commit()
-        return row[0], value, notes
+        return row[0], value, notes, color
     except Exception as e:
         logging.exception(f"Error creating tag: {str(e)}")
         raise e
 
 
-def update_tag(tag_id: int, value: str, notes: str):
+def update_tag(tag_id: int, value: str, notes: str, color: str):
     conn = connect_to_db()
     assert conn
 
@@ -602,9 +602,10 @@ def update_tag(tag_id: int, value: str, notes: str):
         logging.exception(f"Error searching for tag: {str(e)}")
         raise e
 
-    sql = """UPDATE tags SET value=%(value)s, notes=%(notes)s WHERE id=%(id)s"""
+    sql = """UPDATE tags SET value=%(value)s, notes=%(notes)s, color=$(color)s WHERE id=%(id)s"""
     query_params['notes'] = notes
     query_params['value'] = value
+    query_params['color'] = color
     try:
         cur.execute(sql, query_params)
         conn.commit()

@@ -251,7 +251,7 @@ def parse_template_detail_record(row):
         tr.qualifiers.append(qm)
 
     if tag_id:
-        tm = TagModel(id=tag_id, value=tag_value)
+        tm = TagModel(id=tag_id, value=tag_value, color='black')
         tr.tags.append(tm)
 
     return tr
