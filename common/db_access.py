@@ -576,6 +576,7 @@ def create_tag(value: str, notes: str, color: str):
 
     sql = "INSERT INTO tags (value, notes, color) VALUES (%(value)s, %(notes)s, %(color)s) RETURNING id"
     query_params['notes'] = notes
+    query_params['color'] = color
     try:
         cur.execute(sql, query_params)
         row = cur.fetchone()

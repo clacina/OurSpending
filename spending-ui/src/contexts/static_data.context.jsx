@@ -31,7 +31,6 @@ export const StaticDataProvider = ({children}) => {
         const url = 'http://localhost:8000/resources/data_definitions'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
-        console.log("DD: ", str);
         return(str);
     };
 
