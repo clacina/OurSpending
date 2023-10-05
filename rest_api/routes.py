@@ -495,23 +495,19 @@ def parse_transaction_record(row):
     response_model=models.TransactionRecordModel,
 )
 async def get_transaction(transaction_id: int):
-    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
-    row = db_access.fetch_transaction(transaction_id=transaction_id)
-    tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
-    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
-
-    tr = models.TransactionRecordModel(
-        id=row[0],
-        batch_id=row[1],
-        institution_id=row[2],
-        transaction_date=row[3],
-        transaction_data=row[4],
-        description=row[5],
-        amount=row[6],
-        tags=tags,
-        notes=notes,
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
     )
-    return tr
+
+    transaction_list = []
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            transaction_list.append(model)
+        except Exception as e:
+            logging.info(f"Got exception: {str(e)}")
+
+    return transaction_list[0]
 
 
 @router.get(

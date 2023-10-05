@@ -5,8 +5,8 @@ import logging
 
 
 def connect_to_db():
-    # host = 'localhost'      # Local Server
-    host = '10.0.0.20'      # Ubuntu server
+    host = 'localhost'      # Local Server
+    # host = '10.0.0.20'      # Ubuntu server
 
     try:
         conn = psycopg2.connect(
@@ -64,26 +64,17 @@ def query_transactions_from_batch(batch_id, offset=0, limit=10):
 
 
 def fetch_transaction(transaction_id):
-    sql = """
-        SELECT
-               id, batch_id, institution_id, transaction_date, transaction_data, description, amount
-        FROM
-            transaction_records
-        WHERE
-            id=%(transaction_id)s
-
-    """
-    query_params = {"transaction_id": transaction_id}
     conn = connect_to_db()
     assert conn
+    sql = f"{TransactionSQl} WHERE TID=%(transaction_id)s"
+    query_params = {"transaction_id": transaction_id}
     cur = conn.cursor()
-
     try:
         cur.execute(sql, query_params)
-        row = cur.fetchone()
-        return row
+        result = cur.fetchall()
+        return result
     except Exception as e:
-        logging.exception(f"Error loading transaction {transaction_id}: {str(e)}")
+        logging.exception({"message": f"Error in transaction query: {str(e)}"})
         raise e
 
 
@@ -112,6 +103,7 @@ def delete_batch(batch_id):
     cur = conn.cursor()
     try:
         cur.execute(sql, query_params)
+        conn.commit()
     except Exception as e:
         logging.exception(f"Error: {str(e)}")
         raise e

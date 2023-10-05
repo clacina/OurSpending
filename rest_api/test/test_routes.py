@@ -7,6 +7,7 @@ import sys
 
 from starlette.testclient import TestClient
 from rest_api.app import app
+import logging
 
 client = TestClient(app)
 
@@ -67,7 +68,10 @@ def test_get_categories():
 
 
 def test_create_category():
-    test_category = f'Stuff for Nolia {random.randint(0, 100)}'
+    test_category = {
+        'value': f'Stuff for Nolia {random.randint(0, 100)}',
+        'notes': 'Category Notes'
+    }
     print(f"Creating {test_category}")
     response = client.post("/categories",
                            json=test_category,
@@ -75,8 +79,10 @@ def test_create_category():
     assert response.status_code == 201
 
     # try again with same value, should get a 422
-    # response = client.post("/categories", json="{'Value': test_category}")
-    # assert response.status_code == 422
+    response = client.post("/categories",
+                           json=test_category,
+                           headers={"Content-Type": "application/json"})
+    assert response.status_code == 422
 
 
 # def test_update_category():
@@ -146,8 +152,9 @@ def test_get_template():
     response = client.get("/template/23")
     assert response.status_code == 200, print(f"Error response: {response.status_code}: {response.json()}")
     entry = response.json()
-    assert "template_id" in entry
-    assert "institution_id" in entry
+    logging.info(f"Template Resp: {entry}")
+    assert "id" in entry
+    assert "institution" in entry
     assert "category" in entry
     assert "credit" in entry
     assert "tags" in entry
@@ -163,8 +170,8 @@ def test_get_templates():
     assert response.status_code == 200
     assert len(response.json()) > 1, f"Empty payload: {response.json()}"
     entry = response.json()[0]
-    assert "template_id" in entry
-    assert "institution_id" in entry
+    assert "id" in entry
+    assert "institution" in entry
     assert "category" in entry
     assert "credit" in entry
     assert "tags" in entry
@@ -183,7 +190,7 @@ def test_get_transaction():
 
 
 def test_get_transactions_from_batch():
-    response = client.get("/transactions?batch_id=3&limit=12")
+    response = client.get("/transactions?batch_id=9&limit=12")
     assert response.status_code == 200
     assert len(response.json()) >= 1, f"Empty payload: {response.json()}"
     assert len(response.json()) == 12, f"Wrong size payload returned: {response.json()}"
