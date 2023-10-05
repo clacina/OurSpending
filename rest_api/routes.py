@@ -6,7 +6,9 @@ import json
 import logging
 from datetime import datetime
 from typing import Optional, List
+from typing import Annotated
 
+from fastapi import FastAPI, Path
 from pydantic import BaseConfig, BaseModel
 
 from fastapi import APIRouter, Query, HTTPException, status, Body, Request
@@ -154,6 +156,7 @@ async def get_categories():
         cat = models.CategoryModel(
             id=q[0],
             value=q[1],
+            notes=q[2]
         )
         response.append(cat)
 
@@ -180,11 +183,10 @@ async def get_category(category_id: int):
     response_model=models.CategoryModel,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_category(
-    value: str = Body(...),
-):
-    logging.info(f"Create Category: {value}")
-    query_result = db_access.create_category(value=value)
+async def add_category(info: Request):
+    json_data = await info.json()
+    logging.info(f"Create Category: {json_data}")
+    query_result = db_access.create_category(value=json_data['value'], notes=json_data.get('notes'))
     if not query_result:  # category exists
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -201,16 +203,17 @@ async def add_category(
 async def update_category(
     category_id: int,
     value: str = Body(...),
+    notes: str = Body(...),
 ):
-    logging.info(f"Updating Category: {category_id} to {value}")
+    logging.info(f"Updating Category: {category_id} to {value} with {notes}")
     try:
-        db_access.update_category(category_id=category_id, value=value)
+        db_access.update_category(category_id=category_id, value=value, notes=notes)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Specified Category already exists.",
         )
-    return models.CategoryModel(id=category_id, value=value)
+    return models.CategoryModel(id=category_id, value=value, notes=notes)
 
 
 """ ---------- Institutions ----------------------------------------------------------------------"""
@@ -318,6 +321,8 @@ async def get_tags():
         cat = models.TagModel(
             id=q[0],
             value=q[1],
+            notes=q[2],
+            color=q[3]
         )
         response.append(cat)
 
@@ -331,7 +336,7 @@ async def get_tags():
 )
 async def get_tag(tag_id: int):
     q = db_access.fetch_tag(tag_id)
-    cat = models.TagModel(id=q[0], value=q[1])
+    cat = models.TagModel(id=q[0], value=q[1], notes=q[2], color=q[3])
 
     return cat
 
@@ -344,16 +349,39 @@ async def get_tag(tag_id: int):
 )
 async def add_tag(
     value: str = Body(...),
+    notes: str = Body(...),
+    color: str = Body(...),
 ):
-    logging.info(f"Create Tag: {value}")
-    query_result = db_access.create_tag(value=value)
+    logging.info(f"Create Tag: {value} with {notes}")
+    query_result = db_access.create_tag(value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Specified Tag already exists.",
         )
-    return models.TagModel(id=query_result[0], value=query_result[1])
+    return models.TagModel(id=query_result[0], value=query_result[1], notes=query_result[2], color=query_result[3])
 
+
+@router.put(
+    "/tags/{tag_id}",
+    summary="Update a tag value or note.",
+    response_model=models.TagModel,
+    status_code=status.HTTP_200_OK
+)
+async def update_tag(
+    tag_id: Annotated[int, Path(title="Used to identify the Tag in question")],
+    value: str = Body(...),
+    notes: str = Body(...),
+    color: str = Body(...),
+):
+    logging.info(f"Updating Tag {tag_id}: {value} with {notes} and {color}")
+    query_result = db_access.update_tag(tag_id=tag_id, value=value, notes=notes, color=color)
+    if not query_result:  # tag exists
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Specified Tag already exists.",
+        )
+    return models.TagModel(id=query_result[0], value=query_result[1], notes=query_result[2], color=query_result[3])
 
 """ ---------- Transactions ----------------------------------------------------------------------"""
 
@@ -421,7 +449,7 @@ def parse_transaction_record(row):
             value=row[10]
         ))
 
-    logging.info(f"Row: {row}")
+    # logging.info(f"Row: {row}")
     """
     (92, 
     1, 
@@ -455,7 +483,7 @@ def parse_transaction_record(row):
             notes=row[15],
             category=txn_category
         )
-        logging.info(f"TR complete: {tr}")
+        # logging.info(f"TR complete: {tr}")
     except Exception as e:
         logging.exception(f"Can't create model {str(e)}")
     return tr
@@ -512,7 +540,7 @@ async def add_tag_to_transaction(
     transaction_id: int,
     value: str = Body(...),
 ):
-    logging.info(f"Adding tag to transaction: {transaction_id} - {value}")
+    # logging.info(f"Adding tag to transaction: {transaction_id} - {value}")
 
     existing_tag = db_access.fetch_tag_by_value(value)
     if not existing_tag:

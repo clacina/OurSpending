@@ -130,3 +130,5 @@ idea/
 *.html
 debug.log
 processing/report_output/
+
+data_processing/datafiles/

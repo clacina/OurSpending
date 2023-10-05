@@ -1,10 +1,9 @@
-var express = require('express');
-var router = express.Router();
+import express from 'express';
+var reportsRouter = express.Router();
+import request from 'request';
 
-const request = require('request');
 
-
-router.get('/', (req, res, next) => {
+reportsRouter.get('/', (req, res, next) => {
   const url = 'http://localhost:8080/template/4';
 
   request(url, (error, response, body) => {
@@ -15,4 +14,4 @@ router.get('/', (req, res, next) => {
   });
 });
 
-module.exports = router;
+export default reportsRouter;

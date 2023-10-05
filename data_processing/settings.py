@@ -122,8 +122,9 @@ def configure_processor(institution_name, datafile, processor, config):
     return inst_proc
 
 
-def create_configs_with_data(source="../datafiles"):
+def create_configs_with_data(source="./datafiles"):
     all_processors = list()
+    cwd = os.getcwd()
     # -------------------
     if debug_processors:
         if os.path.isfile(f"{source}/CapitalOne.csv"):

@@ -2,6 +2,7 @@
   "name": "processor",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "proxy": "http://localhost:3000/",
   "scripts": {
     "start": "node ./bin/www",
@@ -12,6 +13,7 @@
     "cors": "^2.8.5",
     "debug": "~2.6.9",
     "express": "~4.16.1",
+    "got": "^13.0.0",
     "morgan": "~1.9.1",
     "request": "^2.88.2"
   },

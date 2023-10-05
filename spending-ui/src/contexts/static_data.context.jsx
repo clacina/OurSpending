@@ -69,15 +69,15 @@ export const StaticDataProvider = ({children}) => {
 
     const value = {
         transactionDataDefinitions,
-        setTransactionDataDefinitions,
+        // setTransactionDataDefinitions,
         institutions,
-        setInstitutions,
+        // setInstitutions,
         batches,
-        setBatches,
+        // setBatches,
         qualifiers,
         setQualifiers,
         processedBatches,
-        setProcessedBatches
+        // setProcessedBatches
     };
     return <StaticDataContext.Provider value={value}>{children}</StaticDataContext.Provider>
 };

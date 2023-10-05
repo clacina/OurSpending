@@ -3,7 +3,6 @@ import {Col, Row} from "react-bootstrap";
 import {useParams} from "react-router-dom";
 
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
-import Button from "../button/button-component.jsx";
 
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
@@ -37,17 +36,18 @@ const ProcessedTransactions = () => {
 
     const getTransactions = async () => {
         const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
+        console.log("URL: ", url);
         const data = await fetch(url, {method: 'GET'})
         const str = await data.json();
         return (str);
     };
 
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
-
     useEffect(() => {
         if (transactionsMap.length === 0) {
             console.log("Start - getting transactions");
             getTransactions().then((res) => setTransactionsMap(res));
+            console.log("Got transactions: ", transactionsMap.length);
             setTransactionResourcesLoaded(true);
         }
     }, [transactionsMap.length]);
@@ -55,6 +55,8 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // Group transactions by institution
         console.log("Grouping Transactions by Institution: ", transactionsMap.length);
+        console.log("--with templates: ", templatesMap.length);
+        console.log("--and ", transactionResourcesLoaded);
         if (transactionResourcesLoaded && transactionsMap.length && templatesMap.length) {
             const institution_groups = {};
             transactionsMap.forEach((t) => {
@@ -70,9 +72,13 @@ const ProcessedTransactions = () => {
                 institution_groups[t.institution_id].push(t);
             })
             setInstitutionGroups(institution_groups);
+            console.log("Unleash the Kraken!");
             setInstitutionsLoaded(true);
+        } else {
+            console.log("No definitions yet");
         }
-    }, [transactionResourcesLoaded, transactionsMap.length, templatesMap.length]);
+
+    }, [transactionResourcesLoaded, transactionsMap.length, templatesMap.length, transactionsMap, templatesMap]);
 
     useEffect(() => {
         // This is triggered when setInstitutionGroups() is called
@@ -87,7 +93,7 @@ const ProcessedTransactions = () => {
 
             setCategoryGroups(groupTransactionsByCategory());
         }
-    }, [institutionsLoaded]);
+    }, [institutionGroups, institutionsLoaded]);
 
     useEffect(() => {
         if (templatesGrouped) {
@@ -100,11 +106,11 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // We're ready, so allow rendering
         if (!entityMapCreated && entityMap.length && !isLoaded) {
-            // console.log("Setting isLoaded to True - ", entityMap);
+            console.log("Setting isLoaded to True - ", entityMap);
             setIsLoaded(true);
             setEntityMapCreated(true);
         }
-    }, [entityMap, entityMapCreated]);
+    }, [entityMap, entityMapCreated, isLoaded]);
 
     useEffect(() => {
         // Triggered when setUsingGroup() is called
@@ -146,10 +152,10 @@ const ProcessedTransactions = () => {
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-        // console.log("transactionsMap: ", transactionsMap);
-        // console.log("institutionGroups: ", institutionGroups);
-        // console.log("templateGroups: ", templateGroups);
-        // console.log("templatesMap: ", templatesMap);
+        console.log("transactionsMap: ", transactionsMap);
+        console.log("institutionGroups: ", institutionGroups);
+        console.log("templateGroups: ", templateGroups);
+        console.log("templatesMap: ", templatesMap);
 
         // Key is bank, value is list of processed transactions
         categoryEntries['-1'] = []

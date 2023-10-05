@@ -34,6 +34,7 @@ CREATE TABLE tags
     id    SERIAL PRIMARY KEY,
     value TEXT,
     notes TEXT DEFAULT NULL,
+    color VARCHAR(10) DEFAULT '#0052CC',
     unique (value)
 );
 
@@ -227,23 +228,22 @@ VALUES ('Return');
 INSERT INTO categories(value)
 VALUES ('Rent');
 
-
-INSERT INTO tags(value)
-VALUES ('Cable Addition');
-INSERT INTO tags(value)
-VALUES ('Concert');
-INSERT INTO tags(value)
-VALUES ('Interest Payment');
-INSERT INTO tags(value)
-VALUES ('Recurring');
-INSERT INTO tags(value)
-VALUES ('Credit Card');
-INSERT INTO tags(value)
-VALUES ('Gas');
-INSERT INTO tags(value)
-VALUES ('Loan');
-INSERT INTO tags(value)
-VALUES ('Transfer');
+INSERT INTO tags(value, color)
+VALUES ('Cable Addition', '#00B8D9');
+INSERT INTO tags(value, color)
+VALUES ('Concert', '#0052CC');
+INSERT INTO tags(value, color)
+VALUES ('Interest Payment', '#5243AA');
+INSERT INTO tags(value, color)
+VALUES ('Recurring', '#FF5630');
+INSERT INTO tags(value, color)
+VALUES ('Credit Card', '#FF8B00');
+INSERT INTO tags(value, color)
+VALUES ('Gas', '#36B37E');
+INSERT INTO tags(value, color)
+VALUES ('Loan', '#00875A');
+INSERT INTO tags(value, color)
+VALUES ('Transfer', '#253858');
 
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users
