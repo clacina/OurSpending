@@ -34,11 +34,11 @@ const CategoryComponent = ({category, display}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<ColorizedMultiSelect tagsMap={tagsMap}/>);
+        return (<ColorizedMultiSelect tagsMap={tagsMap} transaction={category}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 4) {  // tags column - its a drop down
+        if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
         }
         console.log({e, column, columnIndex, row, rowIndex})

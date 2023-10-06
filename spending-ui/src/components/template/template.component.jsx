@@ -19,7 +19,7 @@ import {TagsContext} from "../../contexts/tags.context";
             "key": "WF",
             "name": "Wells Fargo"
         },
-        "category": {
+        "transaction": {
             "id": 34,
             "value": "Fee"
         },
@@ -42,7 +42,7 @@ import {TagsContext} from "../../contexts/tags.context";
 
    {
         "institution_id": 1,
-        "category": "Interest",
+        "transaction": "Interest",
         "credit": false,
         "tags": [],
         "qualifiers": [
@@ -63,7 +63,7 @@ const templateData = {
     credit: "",
     tags: [],
     institution: "",
-    category: ""
+    transaction: ""
 }
 
 const Template = ({template}) => {
@@ -79,7 +79,7 @@ const Template = ({template}) => {
 
     function updateCategory(event) {
         const existingCategory = categoriesMap.find((item) => event.value === item.value);
-        setTemplateFields({...templateFields, 'category': existingCategory});
+        setTemplateFields({...templateFields, 'transaction': existingCategory});
     }
 
     function addTag(event) {
@@ -126,7 +126,7 @@ const Template = ({template}) => {
             <p>{templateFields.qualifiers.map((item) => item.value)}</p>
             <p>{templateFields.credit}</p>
             <p>{templateFields.tags.map((item) => item.value)}</p>
-            <p>Category: {templateFields.category.value}</p>
+            <p>Category: {templateFields.transaction.value}</p>
             <p>{templateFields.notes}</p>
 
             <form onSubmit={handleSubmit}>

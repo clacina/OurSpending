@@ -1,19 +1,19 @@
-import React from "react";
-import {useContext, useState} from "react";
-import cellEditFactory from "react-bootstrap-table2-editor";
-
-import Collapsible from 'react-collapsible';
+import {nanoid} from 'nanoid';
+import React, {useContext, useState} from "react";
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 
-import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
+import Collapsible from 'react-collapsible';
+
+import {contextMenu, Item, Menu, Separator, Submenu} from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 
-import {nanoid} from 'nanoid';
-
 import {StaticDataContext} from "../../contexts/static_data.context";
+import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
+
+import ColorizedMultiSelect from "../colorized-multi-select/colorized-multi-select.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     /*
@@ -23,6 +23,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
      */
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {templatesMap} = useContext(TemplatesContext);
+    const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
 
     const templateId = templateTransactions[0];
@@ -35,20 +36,20 @@ const TemplateComponent = ({bank, templateTransactions}) => {
 
     // pull transactions from templates
     templateList.forEach((i) => {
-        if(i.transaction) {
+        if (i.transaction) {
             const newTrans = i.transaction;
             // Create unique keyid per row
             newTrans.keyid = nanoid();
             transactions.push(i.transaction);
-            if(typeof i.template === "undefined" || i.template === null) {
+            if (typeof i.template === "undefined" || i.template === null) {
                 return;
             }
 
-            if(i.template.category === null) {
+            if (i.template.category === null) {
                 categoryBreakdown[-1].push(i);
                 return;
             }
-            if(!categoryBreakdown.hasOwnProperty(i.template.category.id)) {
+            if (!categoryBreakdown.hasOwnProperty(i.template.category.id)) {
                 categoryBreakdown[i.template.category.id] = []
             }
             categoryBreakdown[i.template.category.id].push(i);
@@ -70,83 +71,73 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     // Create column definitions for this institution
     const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(bank));
     const columns = [];
+    console.log("DD: ", dataDefinition);
     dataDefinition.forEach((x) => {
-        if(x.data_id) {
+        if (x.data_id) {
             columns.push({
-                dataField: x.data_id,
-                text: x.column_name,
-                sort: true
+                dataField: x.data_id, text: x.column_name, sort: true, editable: false
             });
         }
     });
 
-    columns.push({dataField: 'tags', text: 'Tags'})
+    const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        return (<ColorizedMultiSelect tagsMap={tagsMap} transaction={row}/>);
+    }
+
+    const colEvent = (e, column, columnIndex, row, rowIndex) => {
+        if (columnIndex === 3) {  // tags column - it's a drop down
+            e.stopPropagation();
+        }
+        console.log({e, column, columnIndex, row, rowIndex})
+    }
+
+    columns.push({
+        dataField: 'transaction.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'}
+    })
+
     columns.push({dataField: 'notes', text: 'Notes'})
     columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
 
-    const rowStyle = (row) => {
-        if (row === activeRow) {
-            return {
-                backgroundColor: "lightcyan",
-                border: "solid 2px grey",
-                color: "purple"
-            };
-        }
-    };
-
+    console.log(columns)
     const showContext = (event, row) => {
         console.log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({
-            id: "context-menu",
-            event: event
+            id: "context-menu", event: event
         });
     };
 
     const rowEvents = {
         onClick: (e, row, index) => {
             setActiveRow(row);
-        },
-        onContextMenu: (e, row, index) => {
+        }, onContextMenu: (e, row, index) => {
             showContext(e, row);
         }
     };
 
-    const cellEdit = cellEditFactory({
-        mode: 'click',
-        afterSaveCell: (oldValue, newValue, row, column) => {
-            console.log("Save Cell ", [oldValue, newValue, row, column]);
-        }
-    })
-
-    return (
-        <Collapsible trigger={title}>
+    return (<Collapsible trigger={title}>
             <BootstrapTable
                 keyField='keyid'
                 data={transactions}
                 columns={columns}
-                cellEdit={cellEdit}
+                // cellEdit={cellEdit}
                 rowEvents={rowEvents}
-                rowStyle={rowStyle}
             />
             <Menu id="context-menu" theme='dark'>
-                {activeRow && (
-                    <>
+                {activeRow && (<>
                         <Item className="text-center">Header row {activeRow.id}</Item>
-                        <Separator />
-                        {["Google", "Apple"].includes("Google") && (
-                            <Submenu label="Contact" arrow=">">
+                        <Separator/>
+                        {["Google", "Apple"].includes("Google") && (<Submenu label="Contact" arrow=">">
                                 <Item>Phone</Item>
                                 <Item>Email</Item>
-                            </Submenu>
-                        )}
+                            </Submenu>)}
                         <Item disabled={true}>Add to Cart</Item>
-                    </>
-                )}
+                    </>)}
             </Menu>
-        </Collapsible>
-    )
+        </Collapsible>)
 }
 
 export default TemplateComponent;

@@ -15,9 +15,9 @@ Based on settings, it either displays a List of BankComponent(s) or a List of Ca
 #### TemplateComponent - template.component.jsx
 
 
-### CategoryComponent - category.component.jsx
+### CategoryComponent - transaction.component.jsx
 
-Displays a list of transactions per category
+Displays a list of transactions per transaction
 
     Bank, Amount, Date, Tags, Notes
 

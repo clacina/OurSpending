@@ -211,6 +211,7 @@ const ProcessedTransactions = () => {
                     })}
                 {!useGrouping &&
                     entityMap.map((bank) => {
+                        // console.log("Cat: ", bank[1]);
                         return (<BankComponent key={bank[0]} bankData={bank}/>)
                     })
                 }

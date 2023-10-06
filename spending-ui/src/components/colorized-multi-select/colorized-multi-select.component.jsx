@@ -75,7 +75,8 @@ const GetTagColor = () => {
     return(colors[(Math.floor(Math.random() * colors.length))].color);
 }
 
-const ColorizedMultiSelect = ({tagsMap}) => {
+const ColorizedMultiSelect = ({tagsMap, transaction}) => {
+    console.log("Display transaction: ", transaction);
     const tagColourOptions = []
     tagsMap.forEach((item) => {
         const tagOption = {}
@@ -85,10 +86,21 @@ const ColorizedMultiSelect = ({tagsMap}) => {
         tagColourOptions.push(tagOption);
     });
 
+    const assigned = []
+    // transaction.forEach((t) => {
+    //     t.transaction.tags.forEach((tag) => {
+    //         assigned.push(tagColourOptions.find((item) => {
+    //             return (item['value'] === tag.id)
+    //         }))
+    //     })
+    // })
+
+    // console.log("Using tags for transaction: ", assigned);
+
     return (
         <Select
             closeMenuOnSelect={true}
-            defaultValue={[tagColourOptions[0], tagColourOptions[1]]}
+            // defaultValue={assigned}
             isMulti
             options={tagColourOptions}
             styles={colourStyles}
@@ -99,3 +111,17 @@ const ColorizedMultiSelect = ({tagsMap}) => {
 }
 
 export default ColorizedMultiSelect;
+
+
+/**
+ *
+ id               | 1378
+ batch_id         | 2
+ institution_id   | 10
+ transaction_date | 2023-05-03
+ transaction_data | ["5/03/2023", "Loan Advance Credit Card Credit Card MCDONALD'S F35934 TACOMA WA", "Loan Advance Credit Card Credit Card MCDONALD'S F35934 TACOMA WA", "19.95", "debit", "Fast Food", "SELECT VISA", "", ""]
+ description      | Loan Advance Credit Card Credit Card MCDONALD'S F35934 TACOMA WA
+ amount           | 19.9500
+
+ *
+ */
