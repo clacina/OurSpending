@@ -10,9 +10,7 @@ import reactCSS from 'reactcss'
 
 import {SwatchesPicker} from 'react-color';
 
-import jslogger from '../../utils/jslogger.js';
-jslogger.setLevelToVerbose(false);
-jslogger.setUseTimestamp(false);
+import jsLogger from '../../utils/jslogger.js';
 
 const TagFormComponent = () => {
     const [showColorPicker, setShowColorPicker] = useState(false);
@@ -20,6 +18,10 @@ const TagFormComponent = () => {
     const [newEntry, setNewEntry] = useState("");
     const [newNotes, setNewNotes] = useState("");
     const [newColor, setNewColor] = useState("#888888");
+
+    const log = (...args) => {
+        jsLogger.custom('tag-form', args, 2);
+    }
 
     const resetFormFields = () => {
         setNewEntry("");
@@ -29,21 +31,21 @@ const TagFormComponent = () => {
 
     // ------------------- Color Picker Support -----------------------
     const handleColorChange = async (color) => {
-        jslogger.debug('tags-table', "ColorChange")
+        log('tags-table', "ColorChange")
     };
 
     const handleColorClick = () => {
-        jslogger.debug('tags-table', "ColorClick")
+        log('tags-table', "ColorClick")
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
-        jslogger.debug('tags-table', "ColorClose")
+        log('tags-table', "ColorClose")
         setShowColorPicker(false);
     }
 
     const handleColorChangeComplete = (color, event) => {
-        jslogger.debug('tags-table', "ColorComplete")
+        log('tags-table', "ColorComplete")
         setNewColor(color.hex);
         setShowColorPicker(false);
     }
@@ -91,8 +93,8 @@ const TagFormComponent = () => {
 
     async function handleSubmit(event) {
         event.preventDefault();  // don't have form clear screen
-        jslogger.debug('tags-table', "handleSubmit: ", event);
-        jslogger.debug('tags-table', "Adding new entry: ", newEntry);
+        log('tags-table', "handleSubmit: ", event);
+        log('tags-table', "Adding new entry: ", newEntry);
 
         const requestOptions = {
             method: 'POST',
@@ -107,12 +109,12 @@ const TagFormComponent = () => {
         const url = 'http://localhost:8000/resources/tags';
         const response = await fetch(url, requestOptions);
         const str = await response.json();
-        jslogger.debug('tags-table', "Response: ", str);
+        log('tags-table', "Response: ", str);
         resetFormFields();
     }
 
     // --------------------------- Render ----------------------------------------
-    jslogger.debug('tags-table', "Render");
+    log("Render");
     return (
         <div>
             <Row>

@@ -17,6 +17,9 @@ import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 import ColorizedMultiSelect from "../colorized-multi-select/colorized-multi-select.component.jsx";
 
+import jsLogger from '../../utils/jslogger.js';
+
+
 const CategoryComponent = ({category, display}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
@@ -24,11 +27,15 @@ const CategoryComponent = ({category, display}) => {
     const [activeRow, setActiveRow] = useState(0);
     const uncategorized = category[0].template === null;
 
+    const log = (...args) => {
+        jsLogger.custom('category-component', args, 6);
+    }
+
     useEffect(() => {
         if (transactionDataDefinitions.length !== 0) {
             setIsLoaded(true);
         } else {
-            console.info("No definitions yet");
+            log("No definitions yet");
         }
     }, [transactionDataDefinitions.length]);
 
@@ -41,7 +48,7 @@ const CategoryComponent = ({category, display}) => {
         if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
         }
-        console.log({e, column, columnIndex, row, rowIndex})
+        log({e, column, columnIndex, row, rowIndex})
     }
 
     // Define table columns
@@ -96,7 +103,7 @@ const CategoryComponent = ({category, display}) => {
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
-            console.log("Expanding: ", rowIndex);
+            log("Expanding: ", rowIndex);
             return(<TransactionDetailComponent row={row} />);
 
         },
@@ -104,7 +111,7 @@ const CategoryComponent = ({category, display}) => {
     }
 
     const showContext = (event, row) => {
-        console.log("showContext: ", event);
+        log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({
@@ -114,8 +121,8 @@ const CategoryComponent = ({category, display}) => {
     };
 
     function rowStyle(row, rowIndex) {
-        // console.log("Style for row: ", row);
-        // console.log("--: ", rowIndex);
+        // log("Style for row: ", row);
+        // log("--: ", rowIndex);
     }
 
     // ----------------------------------------------------------------

@@ -15,6 +15,8 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 import ColorizedMultiSelect from "../colorized-multi-select/colorized-multi-select.component.jsx";
 
+import jsLogger from '../../utils/jslogger.js';
+
 const TemplateComponent = ({bank, templateTransactions}) => {
     /*
         templateTransactions is an array
@@ -25,6 +27,10 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     const {templatesMap} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
+
+    const log = (...args) => {
+        jsLogger.custom('template-component', args, 2);
+    }
 
     const templateId = templateTransactions[0];
     const templateList = templateTransactions[1];
@@ -55,7 +61,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
             categoryBreakdown[i.template.category.id].push(i);
 
         } else {
-            // console.log("Got missing transaction: ", i);
+            // log("Got missing transaction: ", i);
         }
     })
 
@@ -71,7 +77,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     // Create column definitions for this institution
     const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(bank));
     const columns = [];
-    console.log("DD: ", dataDefinition);
+    log("DD: ", dataDefinition);
     dataDefinition.forEach((x) => {
         if (x.data_id) {
             columns.push({
@@ -88,7 +94,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
         }
-        console.log({e, column, columnIndex, row, rowIndex})
+        log({e, column, columnIndex, row, rowIndex})
     }
 
     columns.push({
@@ -100,9 +106,9 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     columns.push({dataField: 'notes', text: 'Notes'})
     columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
 
-    console.log(columns)
+    log(columns)
     const showContext = (event, row) => {
-        console.log("showContext: ", event);
+        log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({

@@ -17,6 +17,37 @@ const utc = (now) =>
     ":" +
     ("0" + now.getSeconds()).slice(-2);
 
+/*
+
+import jslogger from '../../utils/jslogger.js';
+jslogger.setLevelToVerbose(false);
+jslogger.setUseTimestamp(false);
+
+
+try {
+    jslogger.info(process, message);
+    jslogger.warning(process, message);
+    jslogger.error(process, message);
+    jslogger.success(process, message);
+    jslogger.internal(process, message);
+    jslogger.debug(process, message);
+} catch (err) {
+  console.error(err);
+}
+
+jslogger.setLevelToVerbose(true);
+
+jslogger.internal('Authentication', 'User with email su****************.com just logged in.');
+
+jslogger.downloadLogs()
+
+    const log = (...args) => {
+        jsLogger.info('category-component', args);
+    }
+
+
+ */
+
 
 /*
     Colors: https://www.w3schools.com/tags/ref_colornames.asp
@@ -38,8 +69,25 @@ const utc = (now) =>
     BurlyWood #DEB887
  */
 
+const ColorDefinitions = [
+    {"name": "BlueViolet",  "value": "#812be2"},
+    {"name": "CadetBlue",  "value": "#5f9ea0"},
+    {"name": "DarkCyan",  "value": "#008B8B"},
+    {"name": "DaryGray",  "value": "#A9a9a9"},
+    {"name": "DarkKhaki",  "value": "#Bdb76b"},
+    {"name": "DarkOrange",  "value": "#FF8c00"},
+    {"name": "DarkOrchid",  "value": "#9932cc"},
+    {"name": "DarkSeaGreen",  "value": "#8fbc8f"},
+    {"name": "DarkSlateGray",  "value": "#2f4f4f"},
+    {"name": "DogerBlue",  "value": "#1e90ff"},
+    {"name": "FireBrick",  "value": "#b22222"},
+    {"name": "GreenYellow",  "value": "#Adff2f"},
+    {"name": "MediumPurple",  "value": "#9370db"},
+    {"name": "MidnightBlue",  "value": "#191970"},
+    {"name": "BurlyWood",  "value": "#DEB887"},
+]
 
-const jslogger = {
+const jsLogger = {
     VERBOSE: false,
     appName: 'JSLOGGER',
     objLogs: '',
@@ -56,21 +104,34 @@ const jslogger = {
 
         const printLogOrig = `${utc(new Date())} | ${this.appName} | [${process}] :: ${message}`;
         var printLog = `${utc(new Date())} | ${process} :: ${message}`;
-        if(!this.useTimestamp) {
+        if (!this.useTimestamp) {
             printLog = `${process} :: ${message}`;
         }
         this.objLogs += printLog + "\n";
 
+        var useColor = '';
+        if(typeof level === "string") {
+            useColor = colorLevel[level];
+        } else {
+            useColor = ColorDefinitions[level]["value"];
+        }
+
         if (typeof console.log === "function") {
             if (typeof console.log.apply === "function") {
-                console.log.apply(console, [`%c ${printLog}`, `color:${colorLevel[level]}`]);
+                console.log.apply(console, [`%c ${printLog}`, `color:${useColor}`]);
             } else {
-                console.log(`%c ${printLog}`, `color:${colorLevel[level]}`);
+                console.log(`%c ${printLog}`, `color:${useColor}`);
             }
         }
     },
 
+    custom(process, message, color_index) {
+        // console.log("Custom: ", color_index)
+        this._log(process, message, parseInt(color_index));
+    },
+
     info(process, message) {
+        // console.log("Info")
         this._log(process, message, "info");
     },
 
@@ -131,11 +192,11 @@ const jslogger = {
 
 try {
     if (navigator.appName === "Microsoft Internet Explorer" || !!(navigator.userAgent.match(/Trident/) || navigator.userAgent.match(/rv 11/))) {
-        jslogger.useIE11 = true;
-        jslogger.warning("Initialize ", "Internet Explorer 11 detected. You need to load ES6-shim in order to work (IE11-compat)");
+        jsLogger.useIE11 = true;
+        jsLogger.warning("Initialize ", "Internet Explorer 11 detected. You need to load ES6-shim in order to work (IE11-compat)");
     }
 } catch (err) {
     console.log("Please ignore it...", err);
 }
 
-export default jslogger;
+export default jsLogger;

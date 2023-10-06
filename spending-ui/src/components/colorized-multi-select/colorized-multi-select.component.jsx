@@ -87,15 +87,13 @@ const ColorizedMultiSelect = ({tagsMap, transaction}) => {
     });
 
     const assigned = []
-    // transaction.forEach((t) => {
-    //     t.transaction.tags.forEach((tag) => {
-    //         assigned.push(tagColourOptions.find((item) => {
-    //             return (item['value'] === tag.id)
-    //         }))
-    //     })
-    // })
+    transaction.tags.forEach((tag) => {
+        assigned.push(tagColourOptions.find((item) => {
+            return (item['value'] === tag.id)
+        }))
+    })
 
-    // console.log("Using tags for transaction: ", assigned);
+    console.log("Using tags for transaction: ", assigned);
 
     return (
         <Select

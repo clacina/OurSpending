@@ -10,15 +10,17 @@ import TableBaseComponent from '../table-base/table-base.component.jsx';
 import reactCSS from 'reactcss'
 import {SwatchesPicker} from 'react-color';
 
-import jslogger from '../../utils/jslogger.js';
-jslogger.setLevelToVerbose(false);
-jslogger.setUseTimestamp(false);
+import jsLogger from '../../utils/jslogger.js';
 
 const TagsTableComponent = () => {
     const {tagsMap, setTagsMap} = useContext(TagsContext);
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [selectedTag, setSelectedTag] = useState();
 
+    const log = (...args) => {
+        jsLogger.info('tag-table', args);
+    }
+    
     // -------------------- Event handlers for Tag Edit ---------------------
     const cellEdit = cellEditFactory({
         mode: 'click',
@@ -35,7 +37,7 @@ const TagsTableComponent = () => {
             const url = 'http://localhost:8000/resources/tags/' + row.id;
             const response = await fetch(url, requestOptions);
             const str = await response.json();
-            jslogger.debug('tags-table', "Response: ", str);
+            log('tags-table', "Response: ", str);
         }
     })
 
@@ -61,23 +63,23 @@ const TagsTableComponent = () => {
         const url = 'http://localhost:8000/resources/tags/' + selectedTag;
         const response = await fetch(url, requestOptions);
         const str = await response.json();
-        jslogger.debug('tags-table', "Response: ", str);
+        log("Response: ", str);
         setTagsMap(newMap);
     };
 
     const handleColorClick = () => {
-        jslogger.debug('tags-table', "ColorClick")
+        log("ColorClick")
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
-        jslogger.debug('tags-table', "ColorClose")
+        log("ColorClose")
         setShowColorPicker(false);
         setSelectedTag(null);
     }
 
     const handleColorChangeComplete = (color, event) => {
-        jslogger.debug('tags-table', "ColorComplete")
+        log("ColorComplete")
         setShowColorPicker(false);
     }
 
@@ -135,7 +137,7 @@ const TagsTableComponent = () => {
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
-            jslogger.debug('tags-table', "Setting selected tag: ", row.id);
+            log('tags-table', "Setting selected tag: ", row.id);
             setSelectedTag(row.id);
         }
 
@@ -161,7 +163,7 @@ const TagsTableComponent = () => {
     })
 
     // --------------------------- Render ----------------------------------------
-    jslogger.debug('tags-table', "Render");
+    log("Render");
     return (
         <Row>
             <TableBaseComponent
