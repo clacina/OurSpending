@@ -1,7 +1,7 @@
 import React from 'react';
-import chroma from 'chroma-js';
 
-import { ColourOption, colourOptions } from './data.tsx';
+import chroma from 'chroma-js';
+import { ColourOption } from './data.tsx';
 import Select, { StylesConfig } from 'react-select';
 
 import jsLogger from '../../utils/jslogger.js';
@@ -60,13 +60,13 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
     }),
 };
 
-
-const ColorizedMultiSelect = ({tagsMap, transaction}) => {
+const TagSelectorForCategories = ({tagsMap, transaction}) => {
     const log = (...args) => {
-        jsLogger.custom('multi-select', 7, args);
+        // jsLogger.custom('tag-selector-categories', 4, args);
     }
 
     log("Display transaction: ", transaction);
+
     const tagColourOptions = []
     tagsMap.forEach((item) => {
         const tagOption = {}
@@ -76,19 +76,21 @@ const ColorizedMultiSelect = ({tagsMap, transaction}) => {
         tagColourOptions.push(tagOption);
     });
 
-    // const assigned = []
-    // transaction.tags.forEach((tag) => {
-    //     assigned.push(tagColourOptions.find((item) => {
-    //         return (item['value'] === tag.id)
-    //     }))
-    // })
-    //
-    // log("Using tags for transaction: ", assigned);
+    const assigned = []
+    transaction.forEach((trans) => {
+        trans.transaction.tags.forEach((tag) => {
+            assigned.push(tagColourOptions.find((item) => {
+                return (item['value'] === tag.id)
+            }))
+        })
+    })
+
+    log("Using tags for transaction: ", assigned);
 
     return (
         <Select
             closeMenuOnSelect={true}
-            // defaultValue={assigned}
+            defaultValue={assigned}
             isMulti
             options={tagColourOptions}
             styles={colourStyles}
@@ -98,7 +100,7 @@ const ColorizedMultiSelect = ({tagsMap, transaction}) => {
     );
 }
 
-export default ColorizedMultiSelect;
+export default TagSelectorForCategories;
 
 
 /**

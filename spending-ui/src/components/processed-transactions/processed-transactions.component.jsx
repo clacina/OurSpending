@@ -206,11 +206,12 @@ const ProcessedTransactions = () => {
                 </Row>
                 {useGrouping &&
                     categoriesMap.map((bank) => {
-                        // console.log("Cat: ", bank[1]);
-                        return(<CategoryComponent category={bank[1]} display={categorized}/>)
+                        console.log("Cat: ", bank);
+                        return ( bank[1].length > 0 && <CategoryComponent category={bank[1]} display={categorized}/>)
                     })}
                 {!useGrouping &&
                     entityMap.map((bank) => {
+                        // console.log("Cat: ", bank[1]);
                         return (<BankComponent key={bank[0]} bankData={bank}/>)
                     })
                 }

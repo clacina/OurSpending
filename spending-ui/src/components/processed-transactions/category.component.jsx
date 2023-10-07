@@ -11,37 +11,43 @@ import "react-contexify/dist/ReactContexify.css";
 
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-
+import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
-import ColorizedMultiSelect from "../colorized-multi-select/colorized-multi-select.component.jsx";
+import jsLogger from '../../utils/jslogger.js';
+
 
 const CategoryComponent = ({category, display}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
+    console.log("category: ", category);
     const uncategorized = category[0].template === null;
+
+    const log = (...args) => {
+        // jsLogger.custom('category-component', 6, args);
+    }
 
     useEffect(() => {
         if (transactionDataDefinitions.length !== 0) {
             setIsLoaded(true);
         } else {
-            console.info("No definitions yet");
+            log("No definitions yet");
         }
     }, [transactionDataDefinitions.length]);
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<ColorizedMultiSelect tagsMap={tagsMap}/>);
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap} transaction={category}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 4) {  // tags column - its a drop down
+        if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
         }
-        console.log({e, column, columnIndex, row, rowIndex})
+        log({e, column, columnIndex, row, rowIndex})
     }
 
     // Define table columns
@@ -96,7 +102,7 @@ const CategoryComponent = ({category, display}) => {
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
-            console.log("Expanding: ", rowIndex);
+            log("Expanding: ", rowIndex);
             return(<TransactionDetailComponent row={row} />);
 
         },
@@ -104,7 +110,7 @@ const CategoryComponent = ({category, display}) => {
     }
 
     const showContext = (event, row) => {
-        console.log("showContext: ", event);
+        log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({
@@ -114,8 +120,8 @@ const CategoryComponent = ({category, display}) => {
     };
 
     function rowStyle(row, rowIndex) {
-        // console.log("Style for row: ", row);
-        // console.log("--: ", rowIndex);
+        // log("Style for row: ", row);
+        // log("--: ", rowIndex);
     }
 
     // ----------------------------------------------------------------
