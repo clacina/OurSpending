@@ -78,6 +78,12 @@ class ProcessedTransactionRecordModel(BaseModel):
     template_id: Optional[int]
     institution_id: int
 
+    def update(self, transaction: TransactionRecordModel):
+        if transaction.transaction.tags:
+            [self.transaction.tags.append(x) for x in transaction.transaction.tags]
+        if transaction.transaction.notes:
+            [self.transaction.notes.append(x) for x in transaction.transaction.notes]
+
 
 class TransactionDescriptionModel(BaseModel):
     id: int

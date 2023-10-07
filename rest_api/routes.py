@@ -396,6 +396,7 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     for tr in transactions:
         try:
             model = parse_transaction_record(tr)
+            logging.info(f"tranaction id: {model.id}")
             transaction_list.append(model)
         except Exception as e:
             logging.info(f"Got exception: {str(e)}")
@@ -640,9 +641,10 @@ SELECT   processed_transaction_records.id as PID,
          processed_transaction_records.institution_id,
          processed_transaction_records.template_id, processed_transaction_records.transaction_id,
     """
-    transaction_list = []
+    transaction_list = {}
     if transactions:
         for row in transactions:
+            logging.info(f"from trans: {row[0]}")
             tr = models.ProcessedTransactionRecordModel(
                 id=row[0],
                 processed_batch_id=batch_id,
@@ -651,13 +653,17 @@ SELECT   processed_transaction_records.id as PID,
                 institution_id=row[2],
                 transaction=parse_transaction_record(row[5:])
             )
-            transaction_list.append(tr)
+            if row[0] not in transaction_list:
+                transaction_list[row[0]] = tr
+            else:
+                transaction_list[row[0]].update(tr)
     else:
         logging.info(
             {"message": f"No transactions found for processed batch {batch_id}"}
         )
 
-    return transaction_list
+    logging.info(f"Sending back: {transaction_list.values()}")
+    return list(transaction_list.values())
 
 
 @router.get(

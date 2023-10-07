@@ -57,6 +57,7 @@ def query_transactions_from_batch(batch_id, offset=0, limit=10):
     try:
         cur.execute(sql, query_params)
         result = cur.fetchall()
+        # logging.info(f"Fetched transactions: {result}")
         return result
     except Exception as e:
         logging.exception({"message": f"Error in transaction query: {str(e)}"})
