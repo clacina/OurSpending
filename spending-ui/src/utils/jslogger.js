@@ -93,7 +93,7 @@ const jsLogger = {
     objLogs: '',
     useTimestamp: true,
 
-    _log(process, message, level) {
+    _log(process, level, message) {
         const colorLevel = {
             "info": "BurlyWood",
             "debug": "DarkSeaGreen",
@@ -120,31 +120,32 @@ const jsLogger = {
             if (typeof console.log.apply === "function") {
                 console.log.apply(console, [`%c ${printLog}`, `color:${useColor}`]);
             } else {
-                console.log(`%c ${printLog}`, `color:${useColor}`);
+                console.log(message);
+                console.log(`%c ${message}`, `color:${useColor}`);
             }
         }
     },
 
-    custom(process, message, color_index) {
-        // console.log("Custom: ", color_index)
-        this._log(process, message, parseInt(color_index));
+    custom(process, color_index, ...message) {
+        // this._log(process, parseInt(color_index), message);
+        console.log(Array.prototype.slice.call(arguments[2]));
     },
 
     info(process, message) {
         // console.log("Info")
-        this._log(process, message, "info");
+        this._log(process, "info", message);
     },
 
     error(process, message) {
-        this._log(process, message, "error");
+        this._log(process, "error", message);
     },
 
     success(process, message) {
-        this._log(process, message, "success");
+        this._log(process, "success", message);
     },
 
     warning(process, message) {
-        this._log(process, message, "warning");
+        this._log(process, "warning", message);
     },
 
     internal(process, message) {

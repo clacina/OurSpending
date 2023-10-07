@@ -18,7 +18,7 @@ const TagsTableComponent = () => {
     const [selectedTag, setSelectedTag] = useState();
 
     const log = (...args) => {
-        jsLogger.info('tag-table', args);
+        jsLogger.custom('tag-table', 8, args);
     }
     
     // -------------------- Event handlers for Tag Edit ---------------------

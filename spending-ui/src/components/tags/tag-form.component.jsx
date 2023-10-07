@@ -20,7 +20,7 @@ const TagFormComponent = () => {
     const [newColor, setNewColor] = useState("#888888");
 
     const log = (...args) => {
-        jsLogger.custom('tag-form', args, 2);
+        jsLogger.custom('tag-form', 2, ...args);
     }
 
     const resetFormFields = () => {

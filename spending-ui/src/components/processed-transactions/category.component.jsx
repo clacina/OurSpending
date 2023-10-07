@@ -11,11 +11,9 @@ import "react-contexify/dist/ReactContexify.css";
 
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-
+import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
-
-import ColorizedMultiSelect from "../colorized-multi-select/colorized-multi-select.component.jsx";
 
 import jsLogger from '../../utils/jslogger.js';
 
@@ -25,10 +23,11 @@ const CategoryComponent = ({category, display}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
+    console.log("category: ", category);
     const uncategorized = category[0].template === null;
 
     const log = (...args) => {
-        jsLogger.custom('category-component', args, 6);
+        // jsLogger.custom('category-component', 6, args);
     }
 
     useEffect(() => {
@@ -41,7 +40,7 @@ const CategoryComponent = ({category, display}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<ColorizedMultiSelect tagsMap={tagsMap} transaction={category}/>);
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap} transaction={category}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {

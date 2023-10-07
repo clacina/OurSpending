@@ -13,9 +13,9 @@ import {StaticDataContext} from "../../contexts/static_data.context";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
-import ColorizedMultiSelect from "../colorized-multi-select/colorized-multi-select.component.jsx";
 
 import jsLogger from '../../utils/jslogger.js';
+import TagSelector from "../tag-selector/tag-selector.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     /*
@@ -29,7 +29,8 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     const [activeRow, setActiveRow] = useState(0);
 
     const log = (...args) => {
-        jsLogger.custom('template-component', args, 2);
+        // jsLogger.custom('template-component', 2, ...args);
+        console.log(...args);
     }
 
     const templateId = templateTransactions[0];
@@ -77,17 +78,16 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     // Create column definitions for this institution
     const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(bank));
     const columns = [];
-    log("DD: ", dataDefinition);
     dataDefinition.forEach((x) => {
         if (x.data_id) {
             columns.push({
-                dataField: x.data_id, text: x.column_name, sort: true, editable: false
+                dataField: x.data_id, text: x.column_name, sort: true, editable: true
             });
         }
     });
 
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<ColorizedMultiSelect tagsMap={tagsMap} transaction={row}/>);
+        return (<TagSelector tagsMap={tagsMap} transaction={row}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
@@ -106,7 +106,6 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     columns.push({dataField: 'notes', text: 'Notes'})
     columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
 
-    log(columns)
     const showContext = (event, row) => {
         log("showContext: ", event);
         setActiveRow(row);
