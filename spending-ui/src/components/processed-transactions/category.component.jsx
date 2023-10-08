@@ -38,9 +38,30 @@ const CategoryComponent = ({category, display}) => {
         }
     }, [transactionDataDefinitions.length]);
 
+    const changeTag = async (transaction_id, tag_list) => {
+        // event contains an array of active entries in the select
+        console.log("Tags for: ", transaction_id);
+        console.log("        : ", tag_list);
+        var tag_id_list = []
+        tag_list.forEach((item) => {
+            tag_id_list.push(item.value);
+        })
+
+        const requestOptions = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(tag_id_list)
+        };
+
+        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
+        const response = await fetch(url, requestOptions);
+        const str = await response.json();
+        log('tags-table', "Response: ", str);
+    }
+
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} transaction={category}/>);
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap} transaction={row} onChange={changeTag}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
@@ -89,6 +110,7 @@ const CategoryComponent = ({category, display}) => {
     })
 
     // ----------------------- On Click Handlers ------------------------------
+
     const rowEvents = {
         // onClick: (e, row, index) => {
         //     setActiveRow(row);

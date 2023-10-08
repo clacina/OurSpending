@@ -27,6 +27,4 @@ Selecting a transaction displays a transaction detail - TransactionDetailCompone
 
 Allows:
 - Assign Category
-- Edit Tags
-- Edit Notes
 - Create Template

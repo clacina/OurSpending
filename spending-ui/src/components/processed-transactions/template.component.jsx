@@ -86,15 +86,36 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     });
 
+    const changeTag = async (transaction_id, tag_list) => {
+        // event contains an array of active entries in the select
+        console.log("Tags for: ", transaction_id);
+        console.log("        : ", tag_list);
+        var tag_id_list = []
+        tag_list.forEach((item) => {
+            tag_id_list.push(item.value);
+        })
+
+        const requestOptions = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(tag_id_list)
+        };
+
+        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
+        const response = await fetch(url, requestOptions);
+        const str = await response.json();
+        log('tags-table', "Response: ", str);
+    }
+
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<TagSelector tagsMap={tagsMap} transaction={row}/>);
+        return (<TagSelector tagsMap={tagsMap} transaction={row} onChange={changeTag}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
         }
-        log({e, column, columnIndex, row, rowIndex})
+        console.log({e, column, columnIndex, row, rowIndex})
     }
 
     columns.push({
@@ -107,7 +128,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
 
     const showContext = (event, row) => {
-        log("showContext: ", event);
+        console.log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({

@@ -48,8 +48,6 @@ const TransactionDetailComponent = ({row}) => {
         <div>
             <h2>{row.transaction.institution.name}</h2>
             <span><button onClick={showModal}>Assign Category</button></span>
-            <span><button>Edit Tags</button></span>
-            <span><button onClick={showNotes}>Edit Notes</button></span>
             <span><button>Create Template</button></span>
             <ItemTable>
                 <thead>

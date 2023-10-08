@@ -70,6 +70,13 @@ class TransactionRecordModel(BaseModel):
     notes: Optional[List[str]] = []
     category: Optional[CategoryModel]
 
+    def update(self, transaction):
+        logging.info(f"In update: {transaction}")
+        if transaction.tags:
+            [self.tags.append(x) for x in transaction.tags]
+        if transaction.notes:
+            [self.notes.append(x) for x in transaction.notes]
+
 
 class ProcessedTransactionRecordModel(BaseModel):
     id: int

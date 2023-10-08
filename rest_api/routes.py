@@ -496,19 +496,26 @@ def parse_transaction_record(row):
     response_model=models.TransactionRecordModel,
 )
 async def get_transaction(transaction_id: int):
+    logging.info(f"Fetching transaction with id: {transaction_id}")
     transaction = db_access.fetch_transaction(
         transaction_id=transaction_id
     )
-
+    logging.info(f"Got transaction: {transaction}")
     transaction_list = []
     for tr in transaction:
         try:
             model = parse_transaction_record(tr)
-            transaction_list.append(model)
+            if len(transaction_list):
+                logging.info(f"calling update: {transaction_list[0]}")
+                transaction_list[0].update(model)
+            else:
+                transaction_list.append(model)
         except Exception as e:
             logging.info(f"Got exception: {str(e)}")
 
-    return transaction_list[0]
+    return_data = transaction_list[0]
+    logging.info(f"Type: {type(return_data)}")
+    return return_data
 
 
 @router.get(
@@ -530,25 +537,47 @@ async def get_transaction_tags(transaction_id: int):
 
 @router.put(
     "/transaction/{transaction_id}/tags",
-    summary="Get details for a specific transaction",
+    summary="Reset the tags for a given transaction",
     response_model=models.TransactionRecordModel,
 )
-async def add_tag_to_transaction(
+async def reset_transaction_tags(
     transaction_id: int,
-    value: str = Body(...),
+    tag_ids: List[int] = None,
 ):
-    # logging.info(f"Adding tag to transaction: {transaction_id} - {value}")
+    sql = 'delete from transaction_tags where transaction_id=%(transaction_id)s'
+    query_params = {'transaction_id': transaction_id}
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
 
-    existing_tag = db_access.fetch_tag_by_value(value)
-    if not existing_tag:
-        query_result = db_access.create_tag(value=value)
-        tag_id = query_result[0]
-    else:
-        tag_id = existing_tag[0]
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        logging.exception(f"Error removing transaction tags {transaction_id}: {str(e)}")
+        raise e
 
-    db_access.add_tag_to_transaction(transaction_id, tag_id)
+    for tag in tag_ids:
+        logging.info(f"adding tag: {tag}")
+        db_access.add_tag_to_transaction(transaction_id, tag)
 
-    return get_transaction(transaction_id)
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
+    )
+
+    transaction_list = []
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            if len(transaction_list):
+                transaction_list[0].update(model)
+            else:
+                transaction_list.append(model)
+        except Exception as e:
+            logging.exception(f"Got exception: {str(e)}")
+
+    return_data = transaction_list[0]
+    return return_data
 
 
 @router.get(
