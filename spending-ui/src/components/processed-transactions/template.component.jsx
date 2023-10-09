@@ -1,5 +1,5 @@
 import {nanoid} from 'nanoid';
-import React, {useContext, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
@@ -14,7 +14,7 @@ import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 
-import jsLogger from '../../utils/jslogger.js';
+import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelector from "../tag-selector/tag-selector.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
@@ -26,70 +26,124 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {templatesMap} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
-    const [activeRow, setActiveRow] = useState(0);
 
-    const log = (...args) => {
-        // jsLogger.custom('template-component', 2, ...args);
-        console.log(...args);
-    }
+    const [activeRow, setActiveRow] = useState(0);
+    const [openNotes, setOpenNotes] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    const [title, setTitle] = useState("");
+    const [columns, setColumns] = useState([]);
+    const [transactions, setTransactions] = useState([]);
 
     const templateId = templateTransactions[0];
     const templateList = templateTransactions[1];
-
-    const transactions = [];
-
     const categoryBreakdown = {}
     categoryBreakdown[-1] = []
 
-    // pull transactions from templates
-    templateList.forEach((i) => {
-        if (i.transaction) {
-            const newTrans = i.transaction;
-            // Create unique keyid per row
-            newTrans.keyid = nanoid();
-            transactions.push(i.transaction);
-            if (typeof i.template === "undefined" || i.template === null) {
-                return;
-            }
+    useEffect(() => {
+        if(templateList.length > 0) {
+            // pull transactions from templates
+            const trans = []
+            templateList.forEach((i) => {
+                if (i.transaction) {
+                    const newTrans = i.transaction;
+                    // Create unique keyid per row
+                    newTrans.keyid = nanoid();
+                    trans.push(i.transaction);
+                    if (typeof i.template === "undefined" || i.template === null) {
+                        return;
+                    }
 
-            if (i.template.category === null) {
-                categoryBreakdown[-1].push(i);
-                return;
-            }
-            if (!categoryBreakdown.hasOwnProperty(i.template.category.id)) {
-                categoryBreakdown[i.template.category.id] = []
-            }
-            categoryBreakdown[i.template.category.id].push(i);
+                    if (i.template.category === null) {
+                        categoryBreakdown[-1].push(i);
+                        return;
+                    }
+                    if (!categoryBreakdown.hasOwnProperty(i.template.category.id)) {
+                        categoryBreakdown[i.template.category.id] = []
+                    }
+                    categoryBreakdown[i.template.category.id].push(i);
 
-        } else {
-            // log("Got missing transaction: ", i);
+                } else {
+                    // log("Got missing transaction: ", i);
+                }
+            })
+            setTransactions(trans)
+
+            // Build our title string
+            const workingTemplate = templatesMap.find((i) => Number(i.id) === Number(templateId));
+            var title = "Template Transactions"
+            if (workingTemplate) {
+                title = `${workingTemplate.hint} - Template Id: ${templateId}, ${transactions.length} Transactions (${workingTemplate.category.value} )`;
+            }
+            setTitle(title);
+
+            //-------------- Configure our table -----------------------------
+            // Create column definitions for this institution
+            const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(bank));
+            const cols = [];
+            dataDefinition.forEach((x) => {
+                if (x.data_id) {
+                    cols.push({
+                        dataField: x.data_id, text: x.column_name, sort: true, editable: true
+                    });
+                }
+            });
+
+            cols.push({
+                dataField: 'transaction.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
+                    onClick: colEvent
+                }, style: {cursor: 'pointer'}
+            })
+
+            cols.push({
+                dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+                    onClick: colNoteEvent
+                }, style: {cursor: 'pointer'}
+            })
+            cols.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
+            setColumns(cols);
+            setIsLoaded(true);
         }
-    })
+    }, [templateList])
 
-
-    // Build our title string
-    const workingTemplate = templatesMap.find((i) => Number(i.id) === Number(templateId));
-    var title = "Template Transactions"
-    if (workingTemplate) {
-        title = `${workingTemplate.hint} - Template Id: ${templateId}, ${transactions.length} Transactions (${workingTemplate.category.value} )`;
+    const showNotes = (row) => {
+        setActiveRow(row);
+        setOpenNotes(true);
     }
 
-    //-------------- Configure our table -----------------------------
-    // Create column definitions for this institution
-    const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(bank));
-    const columns = [];
-    dataDefinition.forEach((x) => {
-        if (x.data_id) {
-            columns.push({
-                dataField: x.data_id, text: x.column_name, sort: true, editable: true
-            });
+    const closeModal = async (note) => {
+        console.log("Closed with: ", typeof note);
+        if (openNotes) {
+            setOpenNotes(false);
+            if (typeof note === 'string') {
+                const requestOptions = {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({note})
+                };
+
+                const url = 'http://localhost:8000/resources/transaction/' + activeRow.id + '/notes';
+                const response = await fetch(url, requestOptions);
+                const str = await response.json();
+                console.log('tags-table', "Response: ", str);
+                // Update local
+                var curTrans = transactions.find((id) => {
+                    console.log('id: ', id.id)
+                    console.log("tid: ", str['id'])
+                    return(id.id === str['id'])
+                });
+                curTrans['notes'] = str['notes'];
+                setActiveRow(str);
+
+                setTransactions(transactions)
+            }
         }
-    });
+    }
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
-        console.log("        : ", tag_list);
+        // console.log("Tags for: ", transaction_id);
+        // console.log("        : ", tag_list);
         var tag_id_list = []
         tag_list.forEach((item) => {
             tag_id_list.push(item.value);
@@ -104,28 +158,34 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
         const response = await fetch(url, requestOptions);
         const str = await response.json();
-        log('tags-table', "Response: ", str);
+        console.log('tags-table', "Response: ", str);
     }
 
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
         return (<TagSelector tagsMap={tagsMap} transaction={row} onChange={changeTag}/>);
     }
 
-    const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 3) {  // tags column - it's a drop down
-            e.stopPropagation();
-        }
-        console.log({e, column, columnIndex, row, rowIndex})
+    const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        // console.log({cell, row, rowIndex, formatExtraData})
+        const note_list = row.notes.map((note) => {
+            return(note.note + " ");
+        })
+        return (<div>{note_list}</div>);
     }
 
-    columns.push({
-        dataField: 'transaction.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
-            onClick: colEvent
-        }, style: {cursor: 'pointer'}
-    })
+    const colEvent = (e, column, columnIndex, row, rowIndex) => {
+        if (columnIndex === 3) {  // tags column - it's a drop down
+            console.log("ColEvent: ", column);
+        }
+    }
 
-    columns.push({dataField: 'notes', text: 'Notes'})
-    columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
+    const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
+        if (columnIndex === 4) {  // Notes column
+            console.log("colNoteEvent: ", column);
+            e.stopPropagation();
+            showNotes(row)
+        }
+    }
 
     const showContext = (event, row) => {
         console.log("showContext: ", event);
@@ -144,26 +204,32 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     };
 
-    return (<Collapsible trigger={title}>
-            <BootstrapTable
-                keyField='keyid'
-                data={transactions}
-                columns={columns}
-                // cellEdit={cellEdit}
-                rowEvents={rowEvents}
-            />
-            <Menu id="context-menu" theme='dark'>
-                {activeRow && (<>
-                        <Item className="text-center">Header row {activeRow.id}</Item>
-                        <Separator/>
-                        {["Google", "Apple"].includes("Google") && (<Submenu label="Contact" arrow=">">
+    if(isLoaded) {
+        return (
+            <div>
+                <Collapsible trigger={title}>
+                    <BootstrapTable
+                        keyField='keyid'
+                        data={transactions}
+                        columns={columns}
+                        rowEvents={rowEvents}
+                    />
+                    <Menu id="context-menu" theme='dark'>
+                        {activeRow && (<>
+                            <Item className="text-center">Header row {activeRow.id}</Item>
+                            <Separator/>
+                            {["Google", "Apple"].includes("Google") && (<Submenu label="Contact" arrow=">">
                                 <Item>Phone</Item>
                                 <Item>Email</Item>
                             </Submenu>)}
-                        <Item disabled={true}>Add to Cart</Item>
-                    </>)}
-            </Menu>
-        </Collapsible>)
+                            <Item disabled={true}>Add to Cart</Item>
+                        </>)}
+                    </Menu>
+                </Collapsible>
+                {openNotes && <NoteEditDialog closeHandler={closeModal}/>}
+            </div>
+        )
+    }
 }
 
 export default TemplateComponent;

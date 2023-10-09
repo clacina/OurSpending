@@ -26,7 +26,7 @@ def connect_to_db():
 def query_notes_for_transaction(transaction_id):
     sql = """
         SELECT
-               note
+               id, note
         FROM
             transaction_notes
         WHERE
@@ -42,6 +42,27 @@ def query_notes_for_transaction(transaction_id):
         cur.execute(sql, query_params)
         rows = cur.fetchall()
         return rows
+    except Exception as e:
+        logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
+        raise e
+
+
+def add_note_to_transaction(transaction_id, note):
+    sql = """
+        INSERT INTO transaction_notes (transaction_id, note)
+        VALUES (%(transaction_id)s, %(note)s)           
+    """
+    query_params = {
+        'transaction_id': transaction_id,
+        'note': note
+    }
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
     except Exception as e:
         logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
         raise e
@@ -374,7 +395,7 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
          , t.id as tag_id, t.value as tag_value 
          , tt.transaction_id, tt.tag_id
          , c.id as category_id, c.value as category_value 
-         , tn.note
+         , tn.id, tn.note
          FROM transaction_records
          JOIN institutions bank on transaction_records.institution_id = bank.id
          full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
@@ -397,7 +418,7 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id,
          , t.id as tag_id, t.value as tag_value 
          , tt.transaction_id, tt.tag_id
          , c.id as category_id, c.value as category_value 
-         , tn.note
+         , tn.id, tn.note
          FROM transaction_records
          JOIN institutions bank on transaction_records.institution_id = bank.id
          full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id

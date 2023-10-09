@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import {Row} from "react-bootstrap";
 import ReactModal from "react-modal";
 import {CButton} from "../processed-transactions/transaction_detail.component.styles.jsx";
+import EditableList from "../editable-list/editable-list.component.jsx";
 
 const NoteEditDialog = ({closeHandler}) => {
     const [selection, setSelection] = useState('');
@@ -31,15 +32,11 @@ const NoteEditDialog = ({closeHandler}) => {
                     <h2>Add a Note</h2>
                 </Row>
                 <Row>
-                    <textarea
-                        rows={4}
-                        cols={40}
-                        value={selection}
-                        onChange={e => setSelection(e.target.value)} />
+                    <EditableList/>
                 </Row>
                 <Row>
-                    <CButton
-                        onClick={assignNote}>Assign</CButton>
+                    <CButton onClick={assignNote}>Done</CButton>
+                    <CButton onClick={closeHandler(-1)}>Cancel</CButton>
                 </Row>
             </ReactModal>
 

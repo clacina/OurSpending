@@ -64,11 +64,23 @@ const CategoryComponent = ({category, display}) => {
         return (<TagSelectorCategoryComponent tagsMap={tagsMap} transaction={row} onChange={changeTag}/>);
     }
 
+    const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        console.log({cell, row, rowIndex, formatExtraData})
+        return (<div>cell</div>);
+    }
+
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
         }
         log({e, column, columnIndex, row, rowIndex})
+    }
+
+    const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
+        if (columnIndex === 4) {  // Notes column
+            e.stopPropagation();
+        }
+        console.log({e, column, columnIndex, row, rowIndex})
     }
 
     // Define table columns
@@ -92,7 +104,10 @@ const CategoryComponent = ({category, display}) => {
             },
             style: {cursor: 'pointer'}
         })
-        columns.push({dataField: 'transaction.notes', text: 'Notes', style: {cursor: 'pointer'}})
+        columns.push({dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+                onClick: colNoteEvent
+            }, style: {cursor: 'pointer'}
+        })
         columns.push({dataField: 'transaction.id', text: '', hidden: true})
     } else {
         columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})

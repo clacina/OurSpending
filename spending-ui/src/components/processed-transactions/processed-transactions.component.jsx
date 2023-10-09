@@ -152,10 +152,10 @@ const ProcessedTransactions = () => {
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-        console.log("transactionsMap: ", transactionsMap);
-        console.log("institutionGroups: ", institutionGroups);
-        console.log("templateGroups: ", templateGroups);
-        console.log("templatesMap: ", templatesMap);
+        // console.log("transactionsMap: ", transactionsMap);
+        // console.log("institutionGroups: ", institutionGroups);
+        // console.log("templateGroups: ", templateGroups);
+        // console.log("templatesMap: ", templatesMap);
 
         // Key is bank, value is list of processed transactions
         categoryEntries['-1'] = []

@@ -58,6 +58,12 @@ class ProcessedTransactionBatchModel(TransactionBatchModel):
     transaction_batch_id: int
 
 
+class TransactionNoteModel(BaseModel):
+    id: int
+    note: str
+    transaction_id: int
+
+
 class TransactionRecordModel(BaseModel):
     id: int
     batch_id: int
@@ -67,15 +73,19 @@ class TransactionRecordModel(BaseModel):
     tags: Optional[List[TagModel]]
     description: Optional[str]
     amount: Optional[float]
-    notes: Optional[List[str]] = []
+    notes: Optional[List[TransactionNoteModel]] = []
     category: Optional[CategoryModel]
 
     def update(self, transaction):
         logging.info(f"In update: {transaction}")
         if transaction.tags:
-            [self.tags.append(x) for x in transaction.tags]
+            for t in transaction.tags:
+                if t not in self.tags:
+                    self.tags.append(t)
         if transaction.notes:
-            [self.notes.append(x) for x in transaction.notes]
+            for n in transaction.notes:
+                if n not in self.notes:
+                    self.notes.append(n)
 
 
 class ProcessedTransactionRecordModel(BaseModel):
@@ -87,9 +97,13 @@ class ProcessedTransactionRecordModel(BaseModel):
 
     def update(self, transaction: TransactionRecordModel):
         if transaction.transaction.tags:
-            [self.transaction.tags.append(x) for x in transaction.transaction.tags]
+            for t in transaction.transaction.tags:
+                if t not in self.transaction.tags:
+                    self.transaction.tags.append(t)
         if transaction.transaction.notes:
-            [self.transaction.notes.append(x) for x in transaction.transaction.notes]
+            for n in transaction.transaction.notes:
+                if n not in self.transaction.notes:
+                    self.transaction.notes.append(n)
 
 
 class TransactionDescriptionModel(BaseModel):

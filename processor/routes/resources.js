@@ -256,4 +256,27 @@ resourcesRouter.put('/transaction/:id/tags', async function(req, res, next) {
 });
 
 
+resourcesRouter.put('/transaction/:id/notes', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.body);
+  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/notes';
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.put(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    // console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
+
 export default resourcesRouter;

@@ -392,16 +392,19 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
         batch_id=batch_id, offset=offset, limit=limit
     )
 
-    transaction_list = []
+    transaction_set = {}
     for tr in transactions:
         try:
             model = parse_transaction_record(tr)
             logging.info(f"tranaction id: {model.id}")
-            transaction_list.append(model)
+            if model.id not in transaction_set:
+                transaction_set[model.id] = model
+            else:
+                transaction_set[model.id].update(model)
         except Exception as e:
             logging.info(f"Got exception: {str(e)}")
 
-    return transaction_list
+    return list(transaction_set.values())
 
 
 def parse_transaction_record(row):
@@ -439,6 +442,7 @@ def parse_transaction_record(row):
     """
     txn_category = None
     txn_tags = []
+    txn_notes = []
     if row[13] is not None:
         txn_category = models.CategoryModel(
             id=row[13],
@@ -448,6 +452,12 @@ def parse_transaction_record(row):
         txn_tags.append(models.TagModel(
             id=row[9],
             value=row[10]
+        ))
+    if row[15] is not None:
+        txn_notes.append(models.TransactionNoteModel(
+            transaction_id=row[0],
+            id=row[15],
+            note=row[16]
         ))
 
     # logging.info(f"Row: {row}")
@@ -481,13 +491,13 @@ def parse_transaction_record(row):
             tags=txn_tags,
             description=row[5],
             amount=row[6],
-            notes=row[15],
+            notes=txn_notes,
             category=txn_category
         )
-        # logging.info(f"TR complete: {tr}")
+        return tr
     except Exception as e:
         logging.exception(f"Can't create model {str(e)}")
-    return tr
+        raise e
 
 
 @router.get(
@@ -519,20 +529,50 @@ async def get_transaction(transaction_id: int):
 
 
 @router.get(
-    "/transaction/{transaction_id}/tags",
-    summary="Get tags for a specific transaction",
-    response_model=List[models.TagModel],
+    "/transaction/{transaction_id}/notes",
+    summary="Get notes for a specific transaction",
+    response_model=List[models.TransactionNoteModel],
 )
-async def get_transaction_tags(transaction_id: int):
-    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
-    row = db_access.fetch_transaction(transaction_id=transaction_id)
-    tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
+async def get_transaction_notes(transaction_id: int):
+    tags = db_access.query_notes_for_transaction(transaction_id=transaction_id)
 
-    tag_list = []
+    note_list = []
     for t in tags:
-        tt = models.TagModel(id=t[0], value=t[1])
-        tag_list.append(tt)
-    return tag_list
+        tt = models.TransactionNoteModel(id=t[0], note=t[1], transaction_id=transaction_id)
+        note_list.append(tt)
+    return note_list
+
+
+@router.put(
+    "/transaction/{transaction_id}/notes",
+    summary="Add a note to the given transaction",
+    response_model=models.TransactionRecordModel,
+)
+async def add_transaction_note(transaction_id, info: Request):
+    logging.info(f"Request: {info}")
+    json_data = await info.json()
+    logging.info(f"Data: {json_data}")
+
+    logging.info(f"Input {transaction_id}, {json_data['note']}")
+    db_access.add_note_to_transaction(transaction_id, json_data['note'])
+
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
+    )
+
+    transaction_list = []
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            if len(transaction_list):
+                transaction_list[0].update(model)
+            else:
+                transaction_list.append(model)
+        except Exception as e:
+            logging.exception(f"Got exception: {str(e)}")
+
+    return_data = transaction_list[0]
+    return return_data
 
 
 @router.put(
@@ -578,6 +618,23 @@ async def reset_transaction_tags(
 
     return_data = transaction_list[0]
     return return_data
+
+
+@router.get(
+    "/transaction/{transaction_id}/tags",
+    summary="Get tags for a specific transaction",
+    response_model=List[models.TagModel],
+)
+async def get_transaction_tags(transaction_id: int):
+    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
+    row = db_access.fetch_transaction(transaction_id=transaction_id)
+    tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
+
+    tag_list = []
+    for t in tags:
+        tt = models.TagModel(id=t[0], value=t[1])
+        tag_list.append(tt)
+    return tag_list
 
 
 @router.get(
@@ -670,6 +727,7 @@ SELECT   processed_transaction_records.id as PID,
          processed_transaction_records.institution_id,
          processed_transaction_records.template_id, processed_transaction_records.transaction_id,
     """
+
     transaction_list = {}
     if transactions:
         for row in transactions:
