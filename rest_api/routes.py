@@ -548,7 +548,7 @@ async def get_transaction_notes(transaction_id: int):
     summary="Add a note to the given transaction",
     response_model=models.TransactionRecordModel,
 )
-async def add_transaction_note(transaction_id, info: Request):
+async def add_transaction_note(transaction_id: int, info: Request):
     logging.info(f"Request: {info}")
     json_data = await info.json()
     logging.info(f"Data: {json_data}")
@@ -572,6 +572,44 @@ async def add_transaction_note(transaction_id, info: Request):
             logging.exception(f"Got exception: {str(e)}")
 
     return_data = transaction_list[0]
+    return return_data
+
+
+@router.post(
+    "/transaction/{transaction_id}/notes",
+    summary="Reset notes for the given transaction",
+    response_model=models.TransactionRecordModel,
+)
+async def reset_transaction_notes(transaction_id: int, info: Request):
+    """
+    Expects a list of notes:
+    {
+        id - if id > 1696979343781 then new note
+        text - new or updated note text
+    }
+    """
+    json_data = await info.json()
+
+    db_access.clear_transaction_notes(transaction_id=transaction_id)
+    for note in json_data:
+        db_access.add_note_to_transaction(transaction_id, note['text'])
+
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
+    )
+
+    result_transaction = None
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            if result_transaction:
+                result_transaction.update(model)
+            else:
+                result_transaction = model
+        except Exception as e:
+            logging.exception(f"Got exception: {str(e)}")
+
+    return_data = result_transaction
     return return_data
 
 

@@ -1,12 +1,10 @@
 import './editable-list.component.styles.css';
 
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 const Item = ({
                   text,
-                  completed,
                   id,
-                  updateCompleted,
                   deleteTodo,
                   updateText
               }) => {
@@ -15,15 +13,9 @@ const Item = ({
 
     return (
         <div className="item">
-            <div class="circle" onClick={() => updateCompleted(id)}>
-                {completed ? <span>&#10003;</span> : ""}
-            </div>
             <div
-                className={completed ? "strike" : ""}
                 onDoubleClick={() => {
-                    if (!completed) {
-                        setEdit(true);
-                    }
+                    setEdit(true);
                 }}
             >
                 {edit ? (
@@ -42,7 +34,7 @@ const Item = ({
                     text
                 )}
             </div>
-            <div class="close" onClick={() => deleteTodo(id)}>
+            <div className="close" onClick={() => deleteTodo(id)}>
                 X
             </div>
         </div>
@@ -50,37 +42,35 @@ const Item = ({
 };
 
 
-const EditableList = () => {
+const EditableList = ({transaction}) => {
     const [todos, setTodos] = useState([]);
     const inputRef = useRef();
 
+    useEffect(() => {
+        const ourNotes = transaction.current.map((note) => {
+            return ({"id": note.id, "text": note.note})
+        })
+        setTodos(ourNotes)
+    }, [transaction])
+
     const handleKeyPress = (e) => {
         if (e.key === "Enter") {
-            setTodos([
-                ...todos,
-                { text: e.target.value, completed: false, id: Date.now() }
-            ]);
-            inputRef.current.value = "";
-        }
-    };
-
-    // toggle completed
-    const handleCompleted = (id) => {
-        const updatedList = todos.map((e) => {
-            if (e.id === id) {
-                e.completed = !e.completed;
+            if(e.target.value.length) {
+                console.log("Enter Key:, ", e.target.value);
+                const newList = [...todos, {text: e.target.value, id: Date.now()}];
+                setTodos(newList);
+                transaction.current = newList
+                console.log('New list: ', transaction.current);
+                inputRef.current.value = "";
             }
-
-            return e;
-        });
-
-        setTodos(updatedList);
+        }
     };
 
     // delete item
     const handleDelete = (id) => {
         const filter = todos.filter((e) => e.id !== id);
         setTodos(filter);
+        transaction.current = filter;
     };
 
     // handle text update
@@ -94,6 +84,7 @@ const EditableList = () => {
         });
 
         setTodos(updatedList);
+        transaction.current = updatedList;
     };
 
     return (
@@ -103,7 +94,6 @@ const EditableList = () => {
                 <Item
                     {...e}
                     key={e.id}
-                    updateCompleted={handleCompleted}
                     deleteTodo={handleDelete}
                     updateText={handleUpdateText}
                 />

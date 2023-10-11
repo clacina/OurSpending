@@ -11,6 +11,7 @@ import "react-contexify/dist/ReactContexify.css";
 
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
+import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
@@ -23,6 +24,8 @@ const CategoryComponent = ({category, display}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
+    const [openNotes, setOpenNotes] = useState(false);
+
     console.log("category: ", category);
     const uncategorized = category[0].template === null;
 
@@ -37,6 +40,32 @@ const CategoryComponent = ({category, display}) => {
             log("No definitions yet");
         }
     }, [transactionDataDefinitions.length]);
+
+    const closeModal = async (note) => {
+        console.log("Closed with: ", typeof note);
+        if (openNotes) {
+            setOpenNotes(false);
+            console.log("Got notes: ", note);
+            if (note) {
+                const requestOptions = {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                };
+
+                var note_list = []
+                note.forEach((item) => {
+                    note_list.push({"id": item.id, "text": item.text})
+                })
+
+                requestOptions["body"] = JSON.stringify(note_list);
+
+                const url = 'http://localhost:8000/resources/transaction/' + activeRow.id + '/notes';
+                const response = await fetch(url, requestOptions);
+                const str = await response.json();
+                console.log('tags-table', "Response: ", str);
+            }
+        }
+    }
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
@@ -64,11 +93,6 @@ const CategoryComponent = ({category, display}) => {
         return (<TagSelectorCategoryComponent tagsMap={tagsMap} transaction={row} onChange={changeTag}/>);
     }
 
-    const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        console.log({cell, row, rowIndex, formatExtraData})
-        return (<div>cell</div>);
-    }
-
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
@@ -76,11 +100,21 @@ const CategoryComponent = ({category, display}) => {
         log({e, column, columnIndex, row, rowIndex})
     }
 
+    const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        console.log("Row: ", row);
+        const note_list = row.transaction.notes.map((note) => {
+            return(note.note + " ");
+        })
+        return (<div>{note_list}</div>);
+    }
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
+        setActiveRow(row);
         if (columnIndex === 4) {  // Notes column
+            e.preventDefault();
+            console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();
+            setOpenNotes(true);
         }
-        console.log({e, column, columnIndex, row, rowIndex})
     }
 
     // Define table columns
@@ -164,31 +198,34 @@ const CategoryComponent = ({category, display}) => {
     // ----------------------------------------------------------------
     if(isLoaded) {
         return (
-            <Collapsible trigger={<CategoryTitleComponent category={category}/>}>
-                <BootstrapTable
-                    keyField='keyid'
-                    data={category}
-                    columns={columns}
-                    rowEvents={rowEvents}
-                    rowStyle={rowStyle}
-                    expandRow={expandRow}
-                />
-                <Menu id="context-menu" theme='dark'>
-                    {activeRow && (
-                        <>
-                            <Item className="text-center">Header row {activeRow.id}</Item>
-                            <Separator/>
-                            {["Google", "Apple"].includes("Google") && (
-                                <Submenu label="Contact" arrow=">">
-                                    <Item>Phone</Item>
-                                    <Item>Email</Item>
-                                </Submenu>
-                            )}
-                            <Item disabled={true}>Add to Cart</Item>
-                        </>
-                    )}
-                </Menu>
-            </Collapsible>
+            <div>
+                <Collapsible trigger={<CategoryTitleComponent category={category}/>}>
+                    <BootstrapTable
+                        keyField='keyid'
+                        data={category}
+                        columns={columns}
+                        rowEvents={rowEvents}
+                        rowStyle={rowStyle}
+                        expandRow={expandRow}
+                    />
+                    <Menu id="context-menu" theme='dark'>
+                        {activeRow && (
+                            <>
+                                <Item className="text-center">Header row {activeRow.id}</Item>
+                                <Separator/>
+                                {["Google", "Apple"].includes("Google") && (
+                                    <Submenu label="Contact" arrow=">">
+                                        <Item>Phone</Item>
+                                        <Item>Email</Item>
+                                    </Submenu>
+                                )}
+                                <Item disabled={true}>Add to Cart</Item>
+                            </>
+                        )}
+                    </Menu>
+                </Collapsible>
+                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} transaction={activeRow}/>}
+            </div>
         )
     }
 }

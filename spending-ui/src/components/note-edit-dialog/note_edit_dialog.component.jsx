@@ -1,11 +1,12 @@
-import React, {useState} from "react";
-import {Row} from "react-bootstrap";
+import React, {useRef, useState} from "react";
+import {Col, Row} from "react-bootstrap";
 import ReactModal from "react-modal";
-import {CButton} from "../processed-transactions/transaction_detail.component.styles.jsx";
 import EditableList from "../editable-list/editable-list.component.jsx";
+import {footer} from "./note_edit_dialog.component.styles.jsx";
 
-const NoteEditDialog = ({closeHandler}) => {
-    const [selection, setSelection] = useState('');
+const NoteEditDialog = ({closeHandler, transaction}) => {
+    const notesRef = useRef(transaction.notes);
+    const [isOpen, setIsOpen] = useState(true);
 
     const customStyles = {
         content: {
@@ -17,26 +18,35 @@ const NoteEditDialog = ({closeHandler}) => {
     };
 
     const assignNote = () => {
-        closeHandler(selection);
+        closeHandler(notesRef.current);
+    }
+
+    const cancelNote = () => {
+        setIsOpen(false);
+        closeHandler(null);
     }
 
     return (
         <div>
             <ReactModal
-                isOpen={true}
-                onRequestClose={closeHandler}
+                isOpen={isOpen}
+                onRequestClose={cancelNote}
                 shouldCloseOnOverlayClick={true}
                 style={customStyles}
             >
                 <Row>
-                    <h2>Add a Note</h2>
+                    <h2>Manage Notes</h2>
                 </Row>
                 <Row>
-                    <EditableList/>
+                    <EditableList transaction={notesRef}/>
                 </Row>
-                <Row>
-                    <CButton onClick={assignNote}>Done</CButton>
-                    <CButton onClick={closeHandler(-1)}>Cancel</CButton>
+                <Row className={footer}>
+                    <Col>
+                        <button onClick={assignNote}>Done</button>
+                    </Col>
+                    <Col>
+                        <button onClick={cancelNote}>Cancel</button>
+                    </Col>
                 </Row>
             </ReactModal>
 

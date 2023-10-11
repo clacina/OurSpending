@@ -91,7 +91,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
 
             cols.push({
                 dataField: 'transaction.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
-                    onClick: colEvent
+                    // onClick: colEvent
                 }, style: {cursor: 'pointer'}
             })
 
@@ -106,36 +106,29 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     }, [templateList])
 
-    const showNotes = (row) => {
-        setActiveRow(row);
-        setOpenNotes(true);
-    }
 
     const closeModal = async (note) => {
         console.log("Closed with: ", typeof note);
         if (openNotes) {
             setOpenNotes(false);
-            if (typeof note === 'string') {
+            console.log("Got notes: ", note);
+            if (note) {
                 const requestOptions = {
-                    method: 'PUT',
+                    method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({note})
                 };
+
+                var note_list = []
+                note.forEach((item) => {
+                    note_list.push({"id": item.id, "text": item.text})
+                })
+
+                requestOptions["body"] = JSON.stringify(note_list);
 
                 const url = 'http://localhost:8000/resources/transaction/' + activeRow.id + '/notes';
                 const response = await fetch(url, requestOptions);
                 const str = await response.json();
                 console.log('tags-table', "Response: ", str);
-                // Update local
-                var curTrans = transactions.find((id) => {
-                    console.log('id: ', id.id)
-                    console.log("tid: ", str['id'])
-                    return(id.id === str['id'])
-                });
-                curTrans['notes'] = str['notes'];
-                setActiveRow(str);
-
-                setTransactions(transactions)
             }
         }
     }
@@ -166,24 +159,19 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        // console.log({cell, row, rowIndex, formatExtraData})
         const note_list = row.notes.map((note) => {
             return(note.note + " ");
         })
         return (<div>{note_list}</div>);
     }
 
-    const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 3) {  // tags column - it's a drop down
-            console.log("ColEvent: ", column);
-        }
-    }
-
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
+        setActiveRow(row);
         if (columnIndex === 4) {  // Notes column
-            console.log("colNoteEvent: ", column);
+            e.preventDefault();
+            console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();
-            showNotes(row)
+            setOpenNotes(true);
         }
     }
 
@@ -197,9 +185,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     };
 
     const rowEvents = {
-        onClick: (e, row, index) => {
-            setActiveRow(row);
-        }, onContextMenu: (e, row, index) => {
+        onContextMenu: (e, row, index) => {
             showContext(e, row);
         }
     };
@@ -226,7 +212,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
                         </>)}
                     </Menu>
                 </Collapsible>
-                {openNotes && <NoteEditDialog closeHandler={closeModal}/>}
+                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} transaction={activeRow}/>}
             </div>
         )
     }

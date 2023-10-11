@@ -47,6 +47,23 @@ def query_notes_for_transaction(transaction_id):
         raise e
 
 
+def clear_transaction_notes(transaction_id):
+    sql = """
+        DELETE FROM transaction_notes WHERE transaction_id = %(transaction_id)s
+    """
+    query_params = {"transaction_id": transaction_id}
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
+        raise e
+
+
 def add_note_to_transaction(transaction_id, note):
     sql = """
         INSERT INTO transaction_notes (transaction_id, note)
