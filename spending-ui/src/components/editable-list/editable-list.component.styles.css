@@ -1,0 +1,30 @@
+.EditableList {
+    font-family: sans-serif;
+    text-align: left;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+.close {
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.item:hover .close {
+    opacity: 1;
+}
+
+input {
+    width: 100%;
+    padding: 5px;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}

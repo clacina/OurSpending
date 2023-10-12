@@ -107,6 +107,7 @@ CREATE TABLE transaction_records
 DROP TABLE IF EXISTS transaction_notes CASCADE;
 CREATE TABLE transaction_notes
 (
+    id             SERIAL PRIMARY KEY,
     transaction_id INTEGER REFERENCES transaction_records (id) ON DELETE CASCADE NOT NULL,
     note           TEXT
 );

@@ -26,7 +26,7 @@ def connect_to_db():
 def query_notes_for_transaction(transaction_id):
     sql = """
         SELECT
-               note
+               id, note
         FROM
             transaction_notes
         WHERE
@@ -47,6 +47,44 @@ def query_notes_for_transaction(transaction_id):
         raise e
 
 
+def clear_transaction_notes(transaction_id):
+    sql = """
+        DELETE FROM transaction_notes WHERE transaction_id = %(transaction_id)s
+    """
+    query_params = {"transaction_id": transaction_id}
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
+        raise e
+
+
+def add_note_to_transaction(transaction_id, note):
+    sql = """
+        INSERT INTO transaction_notes (transaction_id, note)
+        VALUES (%(transaction_id)s, %(note)s)           
+    """
+    query_params = {
+        'transaction_id': transaction_id,
+        'note': note
+    }
+    conn = connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
+        raise e
+
+
 def query_transactions_from_batch(batch_id, offset=0, limit=10):
     conn = connect_to_db()
     assert conn
@@ -57,6 +95,7 @@ def query_transactions_from_batch(batch_id, offset=0, limit=10):
     try:
         cur.execute(sql, query_params)
         result = cur.fetchall()
+        # logging.info(f"Fetched transactions: {result}")
         return result
     except Exception as e:
         logging.exception({"message": f"Error in transaction query: {str(e)}"})
@@ -72,6 +111,7 @@ def fetch_transaction(transaction_id):
     try:
         cur.execute(sql, query_params)
         result = cur.fetchall()
+        logging.info(f"returning transaction: {result} ")
         return result
     except Exception as e:
         logging.exception({"message": f"Error in transaction query: {str(e)}"})
@@ -372,7 +412,7 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
          , t.id as tag_id, t.value as tag_value 
          , tt.transaction_id, tt.tag_id
          , c.id as category_id, c.value as category_value 
-         , tn.note
+         , tn.id, tn.note
          FROM transaction_records
          JOIN institutions bank on transaction_records.institution_id = bank.id
          full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
@@ -395,7 +435,7 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id,
          , t.id as tag_id, t.value as tag_value 
          , tt.transaction_id, tt.tag_id
          , c.id as category_id, c.value as category_value 
-         , tn.note
+         , tn.id, tn.note
          FROM transaction_records
          JOIN institutions bank on transaction_records.institution_id = bank.id
          full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
@@ -479,7 +519,9 @@ def query_templates_by_institution(institution_id):
 
 def query_tags_for_transaction(transaction_id: int):
     tags = []
-    sql = "SELECT tag_id FROM transaction_tags WHERE transaction_id=%(transaction_id)s"
+    sql = """SELECT tag_id, t.id, t.value, t.notes, t.color FROM transaction_tags
+             full OUTER JOIN tags t on t.id = tag_id
+             WHERE transaction_id=%(transaction_id)s"""
     query_params = {"transaction_id": transaction_id}
     conn = connect_to_db()
     cur = conn.cursor()

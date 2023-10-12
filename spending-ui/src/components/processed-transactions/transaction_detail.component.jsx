@@ -29,7 +29,7 @@ const TransactionDetailComponent = ({row}) => {
     }
 
     const closeModal = (props) => {
-        console.log("Closed with: ", typeof props);
+        console.log("Closed with: ", props);
         if(openCategories) {
             setOpenCategories(false);
             if (typeof props === 'number') {
@@ -38,6 +38,7 @@ const TransactionDetailComponent = ({row}) => {
             }
         } else if(openNotes) {
             setOpenNotes(false);
+            console.log(props);
             if (typeof props === 'string') {
                 console.log("Add note: ", props);
             }
@@ -48,8 +49,6 @@ const TransactionDetailComponent = ({row}) => {
         <div>
             <h2>{row.transaction.institution.name}</h2>
             <span><button onClick={showModal}>Assign Category</button></span>
-            <span><button>Edit Tags</button></span>
-            <span><button onClick={showNotes}>Edit Notes</button></span>
             <span><button>Create Template</button></span>
             <ItemTable>
                 <thead>

@@ -60,12 +60,13 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
     }),
 };
 
-const TagSelectorForCategories = ({tagsMap, transaction}) => {
-    const log = (...args) => {
-        // jsLogger.custom('tag-selector-categories', 4, args);
+const TagSelectorForCategories = ({tagsMap, transaction, onChange}) => {
+    const changeTag = (event) => {
+        // update transaction tags list
+        transaction.tags = event
+        // console.log("Change Tag: ", event);
+        onChange(transaction.id, event);
     }
-
-    log("Display transaction: ", transaction);
 
     const tagColourOptions = []
     tagsMap.forEach((item) => {
@@ -75,23 +76,21 @@ const TagSelectorForCategories = ({tagsMap, transaction}) => {
         tagOption['color'] = item.color;
         tagColourOptions.push(tagOption);
     });
-
+    // console.log("Transaction: ", transaction);
     const assigned = []
-    transaction.forEach((trans) => {
-        trans.transaction.tags.forEach((tag) => {
-            assigned.push(tagColourOptions.find((item) => {
-                return (item['value'] === tag.id)
-            }))
-        })
+    transaction.transaction.tags.forEach((tag) => {
+        assigned.push(tagColourOptions.find((item) => {
+            return (item['value'] === tag.id)
+        }))
     })
-
-    log("Using tags for transaction: ", assigned);
+    // console.log("Setting assinged to: ", assigned);
 
     return (
         <Select
             closeMenuOnSelect={true}
             defaultValue={assigned}
             isMulti
+            onChange={changeTag}
             options={tagColourOptions}
             styles={colourStyles}
             menuPortalTarget={document.body}

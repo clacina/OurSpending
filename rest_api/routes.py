@@ -392,15 +392,19 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
         batch_id=batch_id, offset=offset, limit=limit
     )
 
-    transaction_list = []
+    transaction_set = {}
     for tr in transactions:
         try:
             model = parse_transaction_record(tr)
-            transaction_list.append(model)
+            logging.info(f"tranaction id: {model.id}")
+            if model.id not in transaction_set:
+                transaction_set[model.id] = model
+            else:
+                transaction_set[model.id].update(model)
         except Exception as e:
             logging.info(f"Got exception: {str(e)}")
 
-    return transaction_list
+    return list(transaction_set.values())
 
 
 def parse_transaction_record(row):
@@ -438,6 +442,7 @@ def parse_transaction_record(row):
     """
     txn_category = None
     txn_tags = []
+    txn_notes = []
     if row[13] is not None:
         txn_category = models.CategoryModel(
             id=row[13],
@@ -447,6 +452,12 @@ def parse_transaction_record(row):
         txn_tags.append(models.TagModel(
             id=row[9],
             value=row[10]
+        ))
+    if row[15] is not None:
+        txn_notes.append(models.TransactionNoteModel(
+            transaction_id=row[0],
+            id=row[15],
+            note=row[16]
         ))
 
     # logging.info(f"Row: {row}")
@@ -480,13 +491,13 @@ def parse_transaction_record(row):
             tags=txn_tags,
             description=row[5],
             amount=row[6],
-            notes=row[15],
+            notes=txn_notes,
             category=txn_category
         )
-        # logging.info(f"TR complete: {tr}")
+        return tr
     except Exception as e:
         logging.exception(f"Can't create model {str(e)}")
-    return tr
+        raise e
 
 
 @router.get(
@@ -495,6 +506,56 @@ def parse_transaction_record(row):
     response_model=models.TransactionRecordModel,
 )
 async def get_transaction(transaction_id: int):
+    logging.info(f"Fetching transaction with id: {transaction_id}")
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
+    )
+    logging.info(f"Got transaction: {transaction}")
+    transaction_list = []
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            if len(transaction_list):
+                logging.info(f"calling update: {transaction_list[0]}")
+                transaction_list[0].update(model)
+            else:
+                transaction_list.append(model)
+        except Exception as e:
+            logging.info(f"Got exception: {str(e)}")
+
+    return_data = transaction_list[0]
+    logging.info(f"Type: {type(return_data)}")
+    return return_data
+
+
+@router.get(
+    "/transaction/{transaction_id}/notes",
+    summary="Get notes for a specific transaction",
+    response_model=List[models.TransactionNoteModel],
+)
+async def get_transaction_notes(transaction_id: int):
+    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
+
+    note_list = []
+    for t in notes:
+        tt = models.TransactionNoteModel(id=t[0], note=t[1], transaction_id=transaction_id)
+        note_list.append(tt)
+    return note_list
+
+
+@router.put(
+    "/transaction/{transaction_id}/notes",
+    summary="Add a note to the given transaction",
+    response_model=models.TransactionRecordModel,
+)
+async def add_transaction_note(transaction_id: int, info: Request):
+    logging.info(f"Request: {info}")
+    json_data = await info.json()
+    logging.info(f"Data: {json_data}")
+
+    logging.info(f"Input {transaction_id}, {json_data['note']}")
+    db_access.add_note_to_transaction(transaction_id, json_data['note'])
+
     transaction = db_access.fetch_transaction(
         transaction_id=transaction_id
     )
@@ -503,11 +564,99 @@ async def get_transaction(transaction_id: int):
     for tr in transaction:
         try:
             model = parse_transaction_record(tr)
-            transaction_list.append(model)
+            if len(transaction_list):
+                transaction_list[0].update(model)
+            else:
+                transaction_list.append(model)
         except Exception as e:
-            logging.info(f"Got exception: {str(e)}")
+            logging.exception(f"Got exception: {str(e)}")
 
-    return transaction_list[0]
+    return_data = transaction_list[0]
+    return return_data
+
+
+@router.post(
+    "/transaction/{transaction_id}/notes",
+    summary="Reset notes for the given transaction",
+    response_model=models.TransactionRecordModel,
+)
+async def reset_transaction_notes(transaction_id: int, info: Request):
+    """
+    Expects a list of notes:
+    {
+        id - if id > 1696979343781 then new note
+        text - new or updated note text
+    }
+    """
+    json_data = await info.json()
+    logging.info(f"Got json data of: {json_data}")
+
+    db_access.clear_transaction_notes(transaction_id=transaction_id)
+    for note in json_data:
+        db_access.add_note_to_transaction(transaction_id, note['text'])
+
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
+    )
+
+    result_transaction = None
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            if result_transaction:
+                result_transaction.update(model)
+            else:
+                result_transaction = model
+        except Exception as e:
+            logging.exception(f"Got exception: {str(e)}")
+
+    return_data = result_transaction
+    return return_data
+
+
+@router.put(
+    "/transaction/{transaction_id}/tags",
+    summary="Reset the tags for a given transaction",
+    response_model=models.TransactionRecordModel,
+)
+async def reset_transaction_tags(
+    transaction_id: int,
+    tag_ids: List[int] = None,
+):
+    sql = 'delete from transaction_tags where transaction_id=%(transaction_id)s'
+    query_params = {'transaction_id': transaction_id}
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        logging.exception(f"Error removing transaction tags {transaction_id}: {str(e)}")
+        raise e
+
+    for tag in tag_ids:
+        logging.info(f"adding tag: {tag}")
+        db_access.add_tag_to_transaction(transaction_id, tag)
+
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
+    )
+
+    transaction_list = []
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            if len(transaction_list):
+                transaction_list[0].update(model)
+            else:
+                transaction_list.append(model)
+        except Exception as e:
+            logging.exception(f"Got exception: {str(e)}")
+
+    return_data = transaction_list[0]
+    return return_data
 
 
 @router.get(
@@ -522,32 +671,10 @@ async def get_transaction_tags(transaction_id: int):
 
     tag_list = []
     for t in tags:
-        tt = models.TagModel(id=t[0], value=t[1])
+        # sql = """SELECT tag_id, t.id, t.value, t.notes, t.color FROM transaction_tags
+        tt = models.TagModel(id=t[0], value=t[2], notes=t[3], color=t[4])
         tag_list.append(tt)
     return tag_list
-
-
-@router.put(
-    "/transaction/{transaction_id}/tags",
-    summary="Get details for a specific transaction",
-    response_model=models.TransactionRecordModel,
-)
-async def add_tag_to_transaction(
-    transaction_id: int,
-    value: str = Body(...),
-):
-    # logging.info(f"Adding tag to transaction: {transaction_id} - {value}")
-
-    existing_tag = db_access.fetch_tag_by_value(value)
-    if not existing_tag:
-        query_result = db_access.create_tag(value=value)
-        tag_id = query_result[0]
-    else:
-        tag_id = existing_tag[0]
-
-    db_access.add_tag_to_transaction(transaction_id, tag_id)
-
-    return get_transaction(transaction_id)
 
 
 @router.get(
@@ -640,7 +767,8 @@ SELECT   processed_transaction_records.id as PID,
          processed_transaction_records.institution_id,
          processed_transaction_records.template_id, processed_transaction_records.transaction_id,
     """
-    transaction_list = []
+
+    transaction_list = {}
     if transactions:
         for row in transactions:
             tr = models.ProcessedTransactionRecordModel(
@@ -651,13 +779,17 @@ SELECT   processed_transaction_records.id as PID,
                 institution_id=row[2],
                 transaction=parse_transaction_record(row[5:])
             )
-            transaction_list.append(tr)
+            if row[0] not in transaction_list:
+                transaction_list[row[0]] = tr
+            else:
+                transaction_list[row[0]].update(tr)
     else:
         logging.info(
             {"message": f"No transactions found for processed batch {batch_id}"}
         )
 
-    return transaction_list
+    logging.info(f"Sending back: {transaction_list.values()}")
+    return list(transaction_list.values())
 
 
 @router.get(

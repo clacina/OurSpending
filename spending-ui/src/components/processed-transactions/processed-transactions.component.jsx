@@ -47,16 +47,15 @@ const ProcessedTransactions = () => {
         if (transactionsMap.length === 0) {
             console.log("Start - getting transactions");
             getTransactions().then((res) => setTransactionsMap(res));
-            console.log("Got transactions: ", transactionsMap.length);
             setTransactionResourcesLoaded(true);
         }
     }, [transactionsMap.length]);
 
     useEffect(() => {
         // Group transactions by institution
-        console.log("Grouping Transactions by Institution: ", transactionsMap.length);
-        console.log("--with templates: ", templatesMap.length);
-        console.log("--and ", transactionResourcesLoaded);
+        // console.log("Grouping Transactions by Institution: ", transactionsMap.length);
+        // console.log("--with templates: ", templatesMap.length);
+        // console.log("--and ", transactionResourcesLoaded);
         if (transactionResourcesLoaded && transactionsMap.length && templatesMap.length) {
             const institution_groups = {};
             transactionsMap.forEach((t) => {
@@ -72,7 +71,7 @@ const ProcessedTransactions = () => {
                 institution_groups[t.institution_id].push(t);
             })
             setInstitutionGroups(institution_groups);
-            console.log("Unleash the Kraken!");
+            // console.log("Unleash the Kraken!");
             setInstitutionsLoaded(true);
         } else {
             console.log("No definitions yet");
@@ -83,7 +82,7 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
-            console.log("Updating template groups");
+            // console.log("Updating template groups");
             const template_groups = {};
             for (const [key, value] of Object.entries(institutionGroups)) {
                 template_groups[key] = groupTransactionsByTemplate(value);
@@ -97,7 +96,7 @@ const ProcessedTransactions = () => {
 
     useEffect(() => {
         if (templatesGrouped) {
-            console.log("Setting entity map with templateGroups");
+            // console.log("Setting entity map with templateGroups");
             // This is triggered when setTemplateGroups() is called
             setEntityMap(Object.entries(templateGroups));
         }
@@ -106,7 +105,7 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // We're ready, so allow rendering
         if (!entityMapCreated && entityMap.length && !isLoaded) {
-            console.log("Setting isLoaded to True - ", entityMap);
+            // console.log("Setting isLoaded to True - ", entityMap);
             setIsLoaded(true);
             setEntityMapCreated(true);
         }
@@ -115,7 +114,7 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // Triggered when setUsingGroup() is called
         if (useGrouping) {
-            console.log("Set entity map with categories");
+            // console.log("Set entity map with categories");
             if(!categorized) {
                 // console.log("Filtering: ", categoryGroups);
                 setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
@@ -129,7 +128,7 @@ const ProcessedTransactions = () => {
             }
             setGroupByCategoryButtonTitle("Group by Institution");
         } else {
-            console.log("Set entity map with template groups");
+            // console.log("Set entity map with template groups");
             setEntityMap(Object.entries(templateGroups));
             setGroupByCategoryButtonTitle("Group by Category");
         }
@@ -138,7 +137,7 @@ const ProcessedTransactions = () => {
     // ----------------------------------------------------------------
 
     const groupTransactionsByTemplate = (entries) => {
-        console.log("groupTransactionsByTemplate");
+        // console.log("groupTransactionsByTemplate");
         const templateEntries = {};
 
         entries.forEach((item) => {
@@ -152,10 +151,10 @@ const ProcessedTransactions = () => {
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-        console.log("transactionsMap: ", transactionsMap);
-        console.log("institutionGroups: ", institutionGroups);
-        console.log("templateGroups: ", templateGroups);
-        console.log("templatesMap: ", templatesMap);
+        // console.log("transactionsMap: ", transactionsMap);
+        // console.log("institutionGroups: ", institutionGroups);
+        // console.log("templateGroups: ", templateGroups);
+        // console.log("templatesMap: ", templatesMap);
 
         // Key is bank, value is list of processed transactions
         categoryEntries['-1'] = []
@@ -206,7 +205,7 @@ const ProcessedTransactions = () => {
                 </Row>
                 {useGrouping &&
                     categoriesMap.map((bank) => {
-                        console.log("Cat: ", bank);
+                        // console.log("Cat: ", bank);
                         return ( bank[1].length > 0 && <CategoryComponent category={bank[1]} display={categorized}/>)
                     })}
                 {!useGrouping &&
