@@ -47,7 +47,6 @@ const ProcessedTransactions = () => {
         if (transactionsMap.length === 0) {
             console.log("Start - getting transactions");
             getTransactions().then((res) => setTransactionsMap(res));
-            // console.log("Got transactions: ", transactionsMap.length);
             setTransactionResourcesLoaded(true);
         }
     }, [transactionsMap.length]);

@@ -534,10 +534,10 @@ async def get_transaction(transaction_id: int):
     response_model=List[models.TransactionNoteModel],
 )
 async def get_transaction_notes(transaction_id: int):
-    tags = db_access.query_notes_for_transaction(transaction_id=transaction_id)
+    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
 
     note_list = []
-    for t in tags:
+    for t in notes:
         tt = models.TransactionNoteModel(id=t[0], note=t[1], transaction_id=transaction_id)
         note_list.append(tt)
     return note_list
@@ -589,6 +589,7 @@ async def reset_transaction_notes(transaction_id: int, info: Request):
     }
     """
     json_data = await info.json()
+    logging.info(f"Got json data of: {json_data}")
 
     db_access.clear_transaction_notes(transaction_id=transaction_id)
     for note in json_data:
@@ -670,7 +671,8 @@ async def get_transaction_tags(transaction_id: int):
 
     tag_list = []
     for t in tags:
-        tt = models.TagModel(id=t[0], value=t[1])
+        # sql = """SELECT tag_id, t.id, t.value, t.notes, t.color FROM transaction_tags
+        tt = models.TagModel(id=t[0], value=t[2], notes=t[3], color=t[4])
         tag_list.append(tt)
     return tag_list
 
@@ -769,7 +771,6 @@ SELECT   processed_transaction_records.id as PID,
     transaction_list = {}
     if transactions:
         for row in transactions:
-            logging.info(f"from trans: {row[0]}")
             tr = models.ProcessedTransactionRecordModel(
                 id=row[0],
                 processed_batch_id=batch_id,

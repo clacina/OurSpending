@@ -519,7 +519,9 @@ def query_templates_by_institution(institution_id):
 
 def query_tags_for_transaction(transaction_id: int):
     tags = []
-    sql = "SELECT tag_id FROM transaction_tags WHERE transaction_id=%(transaction_id)s"
+    sql = """SELECT tag_id, t.id, t.value, t.notes, t.color FROM transaction_tags
+             full OUTER JOIN tags t on t.id = tag_id
+             WHERE transaction_id=%(transaction_id)s"""
     query_params = {"transaction_id": transaction_id}
     conn = connect_to_db()
     cur = conn.cursor()

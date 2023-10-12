@@ -16,7 +16,7 @@ import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
-import jsLogger from '../../utils/jslogger.js';
+import send from "../../utils/http_client.js";
 
 
 const CategoryComponent = ({category, display}) => {
@@ -26,7 +26,7 @@ const CategoryComponent = ({category, display}) => {
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
 
-    console.log("category: ", category);
+    // console.log("category: ", category);
     const uncategorized = category[0].template === null;
 
     const log = (...args) => {
@@ -47,22 +47,16 @@ const CategoryComponent = ({category, display}) => {
             setOpenNotes(false);
             console.log("Got notes: ", note);
             if (note) {
-                const requestOptions = {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                };
-
-                var note_list = []
+                var body = []
                 note.forEach((item) => {
-                    note_list.push({"id": item.id, "text": item.text})
+                    body.push({"id": item.id, "text": item.text})
                 })
 
-                requestOptions["body"] = JSON.stringify(note_list);
-
+                const headers = {'Content-Type': 'application/json'}
                 const url = 'http://localhost:8000/resources/transaction/' + activeRow.id + '/notes';
-                const response = await fetch(url, requestOptions);
-                const str = await response.json();
-                console.log('tags-table', "Response: ", str);
+                const method = 'POST'
+                const request = await send({url}, {method}, {headers}, {body});
+                console.log("Response: ", request);
             }
         }
     }
@@ -71,21 +65,16 @@ const CategoryComponent = ({category, display}) => {
         // event contains an array of active entries in the select
         console.log("Tags for: ", transaction_id);
         console.log("        : ", tag_list);
-        var tag_id_list = []
+        var body = []
         tag_list.forEach((item) => {
-            tag_id_list.push(item.value);
+            body.push(item.value);
         })
 
-        const requestOptions = {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(tag_id_list)
-        };
-
+        const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
-        const response = await fetch(url, requestOptions);
-        const str = await response.json();
-        log('tags-table', "Response: ", str);
+        const method = 'PUT'
+        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Response: ", request);
     }
 
     // Setup tags column as a multi-select
@@ -101,15 +90,15 @@ const CategoryComponent = ({category, display}) => {
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        console.log("Row: ", row);
+        // console.log("Row: ", row);
         const note_list = row.transaction.notes.map((note) => {
             return(note.note + " ");
         })
         return (<div>{note_list}</div>);
     }
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
-        setActiveRow(row);
-        if (columnIndex === 4) {  // Notes column
+        setActiveRow(row.transaction);
+        if (columnIndex === 5) {  // Notes column
             e.preventDefault();
             console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();

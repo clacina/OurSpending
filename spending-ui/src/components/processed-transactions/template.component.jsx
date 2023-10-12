@@ -16,6 +16,7 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelector from "../tag-selector/tag-selector.component.jsx";
+import send from "../../utils/http_client.js";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     /*
@@ -106,29 +107,23 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     }, [templateList])
 
-
     const closeModal = async (note) => {
         console.log("Closed with: ", typeof note);
         if (openNotes) {
             setOpenNotes(false);
             console.log("Got notes: ", note);
-            if (note) {
-                const requestOptions = {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                };
-
-                var note_list = []
+            if (note !== undefined) {
+                console.log("Processing note...")
+                var body = []
                 note.forEach((item) => {
-                    note_list.push({"id": item.id, "text": item.text})
+                    body.push({"id": item.id, "text": item.text})
                 })
 
-                requestOptions["body"] = JSON.stringify(note_list);
-
+                const headers = {'Content-Type': 'application/json'}
                 const url = 'http://localhost:8000/resources/transaction/' + activeRow.id + '/notes';
-                const response = await fetch(url, requestOptions);
-                const str = await response.json();
-                console.log('tags-table', "Response: ", str);
+                const method = 'POST';
+                const request = await send({url}, {method}, {headers}, {body});
+                console.log("Response: ", request);
             }
         }
     }
@@ -137,21 +132,16 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         // event contains an array of active entries in the select
         // console.log("Tags for: ", transaction_id);
         // console.log("        : ", tag_list);
-        var tag_id_list = []
+        var body = []
         tag_list.forEach((item) => {
-            tag_id_list.push(item.value);
+            body.push(item.value);
         })
 
-        const requestOptions = {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(tag_id_list)
-        };
-
+        const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
-        const response = await fetch(url, requestOptions);
-        const str = await response.json();
-        console.log('tags-table', "Response: ", str);
+        const method = 'PUT'
+        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Response: ", request);
     }
 
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
