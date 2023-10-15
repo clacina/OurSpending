@@ -4,7 +4,7 @@ import chroma from 'chroma-js';
 import { ColourOption, colourOptions } from './data.tsx';
 import Select, { StylesConfig } from 'react-select';
 
-import jsLogger from '../../utils/jslogger.js';
+// import jsLogger from '../../utils/jslogger.js';
 
 
 export const colourStyles: StylesConfig<ColourOption, true> = {
@@ -62,11 +62,7 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
 
 
 const ColorizedMultiSelect = ({tagsMap, transaction}) => {
-    const log = (...args) => {
-        jsLogger.custom('multi-select', 7, args);
-    }
-
-    log("Display transaction: ", transaction);
+    console.log("Display transaction: ", transaction);
     const tagColourOptions = []
     tagsMap.forEach((item) => {
         const tagOption = {}

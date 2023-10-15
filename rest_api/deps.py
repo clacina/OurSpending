@@ -8,10 +8,11 @@ from jose import jwt
 from pydantic import ValidationError
 
 from rest_api.schemas import TokenPayload, SystemUser
-from common import db_access
+from common.db_access import DBAccess
 from .utils import ALGORITHM, JWT_SECRET_KEY
 
 reuseable_oauth = OAuth2PasswordBearer(tokenUrl="/login", scheme_name="JWT")
+db_access = DBAccess()
 
 
 async def get_current_user(token: str = Depends(reuseable_oauth)) -> SystemUser:

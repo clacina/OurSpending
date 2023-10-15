@@ -1,9 +1,15 @@
-from common import db_access
-from test import helpers
+import random
 
+from common.db_access import DBAccess
+from rest_api.test import helpers
+import pytest
+
+
+db_access = DBAccess()
 
 def test_fetch_transaction():
-    transaction_id = 24
+    tids = helpers.get_transaction_ids()
+    transaction_id = random.choice(tids)
     transaction = db_access.fetch_transaction(
         transaction_id=transaction_id
     )
@@ -23,7 +29,7 @@ def test_list_batches():
      (9, datetime.datetime(2023, 10, 4, 15, 59, 33, 843547), '11 Processors, 758 Transactions')
     ]
     """
-    result = db_access.list_batches()
+    result = helpers.list_batches()
     assert result
     assert len(result) > 0
     assert len(result[0]) == 3
@@ -34,48 +40,49 @@ def test_fetch_batch():
     (1, datetime.datetime(2023, 10, 4, 15, 6, 14, 384050), '0 Processors, 0 Transactions')
     """
     batch_list = helpers.get_batch_ids()
-    result = db_access.fetch_batch(batch_id=batch_list[0])
+    result = helpers.fetch_batch(batch_id=batch_list[0])
     assert result
     assert len(result) == 3
 
 
+@pytest.mark.skip(reason="Destructive so skipping")
 def test_delete_batch():
     batch_list = helpers.get_batch_ids()
-    db_access.delete_batch(batch_id=batch_list[0])
-    new_batch_list = db_access.list_batches()
+    helpers.delete_batch(batch_id=batch_list[0])
+    new_batch_list = helpers.list_batches()
     assert len(new_batch_list) == len(batch_list) - 1
 
 
 def test_load_categories():
-    result = db_access.load_categories()
+    result = helpers.load_categories()
     assert result
     assert len(result) > 0
     assert len(result[0]) == 3
 
 
 def test_load_institutions():
-    result = db_access.load_institutions()
+    result = helpers.load_institutions()
     assert result
     assert len(result) > 0
     assert len(result[0]) == 4
 
 
 def test_load_tags():
-    result = db_access.load_tags()
+    result = helpers.load_tags()
     assert result
     assert len(result) > 0
     assert len(result[0]) == 4
 
 
 def test_load_qualifiers():
-    result = db_access.load_qualifiers()
+    result = helpers.load_qualifiers()
     assert result
     assert len(result) > 0
     assert len(result[0]) == 3
 
 
 def test_load_transaction_data_descriptions():
-    result = db_access.load_transaction_data_descriptions()
+    result = helpers.load_transaction_data_descriptions()
     assert result
     assert len(result) > 1
 

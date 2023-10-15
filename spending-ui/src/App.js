@@ -15,9 +15,9 @@ import TemplateList from "./components/template-list/template-list.component";
 import TransactionsList from "./components/transaction/transactions-list.component.jsx";
 
 // Setup Logger
-import jsLogger from './utils/jslogger.js';
-jsLogger.setLevelToVerbose(false);
-jsLogger.setUseTimestamp(false);
+// import jsLogger from './utils/jslogger.js';
+// jsLogger.setLevelToVerbose(false);
+// jsLogger.setUseTimestamp(false);
 
 function App() {
     return (

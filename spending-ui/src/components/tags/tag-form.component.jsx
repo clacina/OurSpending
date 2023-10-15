@@ -10,18 +10,12 @@ import reactCSS from 'reactcss'
 
 import {SwatchesPicker} from 'react-color';
 
-import jsLogger from '../../utils/jslogger.js';
-
 const TagFormComponent = () => {
     const [showColorPicker, setShowColorPicker] = useState(false);
 
     const [newEntry, setNewEntry] = useState("");
     const [newNotes, setNewNotes] = useState("");
     const [newColor, setNewColor] = useState("#888888");
-
-    const log = (...args) => {
-        jsLogger.custom('tag-form', 2, ...args);
-    }
 
     const resetFormFields = () => {
         setNewEntry("");
@@ -31,21 +25,21 @@ const TagFormComponent = () => {
 
     // ------------------- Color Picker Support -----------------------
     const handleColorChange = async (color) => {
-        log('tags-table', "ColorChange")
+        console.log("ColorChange")
     };
 
     const handleColorClick = () => {
-        log('tags-table', "ColorClick")
+        console.log("ColorClick")
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
-        log('tags-table', "ColorClose")
+        console.log("ColorClose")
         setShowColorPicker(false);
     }
 
     const handleColorChangeComplete = (color, event) => {
-        log('tags-table', "ColorComplete")
+        console.log("ColorComplete")
         setNewColor(color.hex);
         setShowColorPicker(false);
     }
@@ -93,8 +87,8 @@ const TagFormComponent = () => {
 
     async function handleSubmit(event) {
         event.preventDefault();  // don't have form clear screen
-        log('tags-table', "handleSubmit: ", event);
-        log('tags-table', "Adding new entry: ", newEntry);
+        console.log("handleSubmit: ", event);
+        console.log("Adding new entry: ", newEntry);
 
         const requestOptions = {
             method: 'POST',
@@ -109,12 +103,12 @@ const TagFormComponent = () => {
         const url = 'http://localhost:8000/resources/tags';
         const response = await fetch(url, requestOptions);
         const str = await response.json();
-        log('tags-table', "Response: ", str);
+        console.log("Response: ", str);
         resetFormFields();
     }
 
     // --------------------------- Render ----------------------------------------
-    log("Render");
+    console.log("Render");
     return (
         <div>
             <Row>

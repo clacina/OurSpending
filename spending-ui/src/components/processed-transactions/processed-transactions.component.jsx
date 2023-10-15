@@ -1,11 +1,13 @@
 import {useContext, useEffect, useState} from "react";
 import {Col, Row} from "react-bootstrap";
+import Container from "react-bootstrap/Container";
 import {useParams} from "react-router-dom";
 
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
+import HeaderComponent from "./header.component.jsx";
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
@@ -33,6 +35,19 @@ const ProcessedTransactions = () => {
     const [entityMapCreated, setEntityMapCreated] = useState(false);
 
     const routeParams = useParams();
+
+    const [filterParams, setFilterParams] = useState({
+        'hideUncategorized': false,
+        'useDateRange': false,
+        'useTags': false,
+        'useCategories': false,
+        'useInstitutions': false
+    });
+
+    const [displayParams, setDisplayParams] = useState({
+        'templateView': true,
+        'categoryView': false,
+    });
 
     const getTransactions = async () => {
         const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
@@ -186,35 +201,21 @@ const ProcessedTransactions = () => {
     if (isLoaded) {
         return (
             <div key='pb'>
-                <Row>
-                    <Col>
-                        <h1>Processed Transactions</h1>
-                        {useGrouping && <p>Grouped by Category</p>}
-                        {useGrouping && categorized && <p>Show All</p>}
-                        {useGrouping && !categorized && <p>List Uncategorized</p>}
-                        {!useGrouping && <p>Grouped by Bank</p>}
-                    </Col>
-                    <Col>
-                        <button id='set_grouping'
-                                onClick={updateGrouping}>{groupByCategoryButtonTitle}</button>
-                        {useGrouping &&
-                            <button id='set_categorized'
-                                    onClick={updateCategorized}>{categorizedButtonTitle}</button>
-                        }
-                    </Col>
-                </Row>
-                {useGrouping &&
-                    categoriesMap.map((bank) => {
-                        // console.log("Cat: ", bank);
-                        return ( bank[1].length > 0 && <CategoryComponent category={bank[1]} display={categorized}/>)
-                    })}
-                {!useGrouping &&
-                    entityMap.map((bank) => {
-                        // console.log("Cat: ", bank[1]);
-                        return (<BankComponent key={bank[0]} bankData={bank}/>)
-                    })
-                }
-
+                <h1>Processed Transactions</h1>
+                <HeaderComponent />
+                <div>
+                    {useGrouping &&
+                        categoriesMap.map((bank) => {
+                            // console.log("Cat: ", bank);
+                            return ( bank[1].length > 0 && <CategoryComponent category={bank[1]} display={categorized}/>)
+                        })}
+                    {!useGrouping &&
+                        entityMap.map((bank) => {
+                            // console.log("Cat: ", bank[1]);
+                            return (<BankComponent key={bank[0]} bankData={bank}/>)
+                        })
+                    }
+                </div>
             </div>
         )
     }

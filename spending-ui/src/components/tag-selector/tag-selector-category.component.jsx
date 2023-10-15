@@ -4,8 +4,6 @@ import chroma from 'chroma-js';
 import { ColourOption } from './data.tsx';
 import Select, { StylesConfig } from 'react-select';
 
-import jsLogger from '../../utils/jslogger.js';
-
 
 export const colourStyles: StylesConfig<ColourOption, true> = {
     control: (styles) => ({ ...styles, backgroundColor: 'white' }),

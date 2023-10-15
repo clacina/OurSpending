@@ -8,7 +8,7 @@ import data_processing.db_utils as db_utils
 """ -------------------------- Entry Point ----------------------------- """
 
 
-debug_processors = True
+debug_processors = False
 
 
 class ConfigurationData:

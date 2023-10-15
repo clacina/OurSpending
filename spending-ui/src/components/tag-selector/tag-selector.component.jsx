@@ -91,7 +91,7 @@ const TagSelector = ({tagsMap, transaction, onChange}) => {
             options={tagColourOptions}
             styles={colourStyles}
             menuPortalTarget={document.body}
-            menuPosition={'fixed'}
+            // menuPosition={'fixed'}
         />
     );
 }

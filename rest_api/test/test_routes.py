@@ -1,8 +1,8 @@
 import random
-import sys
+from rest_api.test import helpers
+import pytest
 
-# append the path of the
-# parent directory
+# append the path of the parent directory
 # sys.path.append("..")
 
 from starlette.testclient import TestClient
@@ -23,7 +23,8 @@ def test_ping():
 
 
 def test_get_batch():
-    response = client.get("/batch/1")
+    batch_ids = helpers.get_batch_ids()
+    response = client.get(f"/batch/{random.choice(batch_ids)}")
     assert response.status_code == 200
     entry = response.json()
     assert "id" in entry
@@ -32,7 +33,7 @@ def test_get_batch():
 
 
 def test_get_bad_batch():
-    response = client.get("/batch/99")
+    response = client.get("/batch/9999")
     assert response.status_code == 404
 
 
@@ -165,6 +166,11 @@ def test_get_template():
     assert isinstance(entry["qualifiers"], list)
 
 
+def test_get_template_nonexistent():
+    response = client.get("/template/33323")
+    assert response.status_code == 404, print(f"Error response: {response.status_code}: {response.json()}")
+
+
 def test_get_templates():
     response = client.get("/templates")
     assert response.status_code == 200
@@ -183,16 +189,176 @@ def test_get_templates():
 
 
 def test_get_transaction():
-    response = client.get("/transaction/43")
+    tid = random.choice(helpers.get_transaction_ids())
+    response = client.get(f"/transaction/{tid}")
     assert response.status_code == 200
     entry = response.json()
     assert "id" in entry
 
 
 def test_get_transactions_from_batch():
-    response = client.get("/transactions?batch_id=9&limit=12")
+    bid = random.choice(helpers.get_batch_ids())
+    response = client.get(f"/transactions?batch_id={bid}&limit=12")
     assert response.status_code == 200
     assert len(response.json()) >= 1, f"Empty payload: {response.json()}"
     assert len(response.json()) == 12, f"Wrong size payload returned: {response.json()}"
     entry = response.json()[0]
     assert "id" in entry
+
+
+@pytest.mark.skip(reason="NYI")
+def test_add_template():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_update_template():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_update_category():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_create_institution():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_add_qualifier():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_add_tag_existing_tag():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_update_tag_error():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_get_transaction_notes():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_add_transaction_note():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_reset_transaction_notes():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_reset_transaction_tags():
+    pass
+
+
+@pytest.mark.skip(reason="NYI")
+def test_get_transaction_tags():
+    pass
+
+
+def test_get_transaction_descriptions():
+    response = client.get(f"/transactions_descriptions")
+    assert response.status_code == 200
+    entry = response.json()[0]
+    assert "id" in entry
+    assert "column_name" in entry
+    assert "data_id" in entry
+    assert "institution_id" in entry
+
+
+def test_get_processed_batches():
+    response = client.get(f"/processed_batches")
+    assert response.status_code == 200
+    entry = response.json()[0]
+    assert "id" in entry
+    assert "run_date" in entry
+    assert "notes" in entry
+    assert "transaction_batch_id" in entry
+
+
+def test_get_processed_batch():
+    bid = random.choice(helpers.get_processed_batch_ids_with_transactions())
+    response = client.get(f"/processed_batch/{bid}")
+    assert response.status_code == 200
+    print(f"Batch id {bid}")
+    entry = response.json()
+    assert "id" in entry
+    assert "run_date" in entry
+    assert "notes" in entry
+    assert "transaction_batch_id" in entry
+
+
+def test_get_processed_batch_non_existent():
+    response = client.get(f"/processed_batch/9999999")
+    assert response.status_code == 404
+
+
+def test_get_processed_transactions():
+    bid = random.choice(helpers.get_processed_batch_ids_with_transactions())
+    print(f"Calling with batch id {bid}")
+    response = client.get(f"/processed_transactions?batch_id={bid}")
+    assert response.status_code == 200
+    print(f"Batch id {bid}")
+    entry = response.json()
+    assert type(entry) == list
+    for e in entry:
+        assert "id" in e
+        assert "processed_batch_id" in e
+        assert "transaction" in e
+
+
+def test_get_processed_transactions_bad_batch():
+    response = client.get(f"/processed_transactions?batch_id=99999")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_get_processed_transaction():
+    bid = random.choice(helpers.get_processed_batch_ids_with_transactions())
+    transaction_id = random.choice(helpers.get_transaction_ids_from_batch(bid))
+    print(f"Using bid of {transaction_id}")
+    response = client.get(f"/transaction/{transaction_id}")
+    assert response.status_code == 200, f"Error fetching processed_transactions for {transaction_id}"
+    entry = response.json()
+    print(entry)
+    assert type(entry) == dict
+    assert "id" in entry
+    assert "batch_id" in entry
+    assert "transaction_data" in entry
+    assert "institution" in entry
+
+
+def test_get_processed_transaction_non_existent():
+    response = client.get(f"/transaction/-1")
+    assert response.status_code == 404
+
+
+"""
+add_template
+update_template
+update_category
+create_institution
+add_qualifier
+add_tag - existing tag
+update_tag - error
+get_transaction_notes
+add_transaction_note
+reset_transaction_notes
+reset_transaction_tags
+get_transaction_tags
+get_transaction_descriptions
+get_processed_batches
+get_batch
+get_processed_transactions
+get_processed_transaction
+"""
