@@ -723,6 +723,7 @@ async def get_processed_batches():
             run_date=row[1],
             notes=row[2],
             transaction_batch_id=row[3],
+            transaction_count=row[4]
         )
         response.append(entry)
     return response
@@ -741,6 +742,7 @@ async def get_batch(batch_id: int):
             run_date=query_result[1],
             notes=query_result[2],
             transaction_batch_id=query_result[3],
+            transaction_count=query_result[4],
         )
         return response
     raise HTTPException(

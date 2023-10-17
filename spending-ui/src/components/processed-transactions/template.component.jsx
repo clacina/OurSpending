@@ -17,6 +17,7 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelector from "../tag-selector/tag-selector.component.jsx";
 import send from "../../utils/http_client.js";
+import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     /*
@@ -162,6 +163,8 @@ const TemplateComponent = ({bank, templateTransactions}) => {
             console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();
             setOpenNotes(true);
+        } else if(columnIndex === 3) {  // Tags column
+            e.stopPropagation();
         }
     }
 
@@ -180,6 +183,53 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     };
 
+    const expandRow = {
+        onlyOneExpanding: false,
+        renderer: (row, rowIndex) => {
+            /*
+            {
+                const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === row.institution_id);
+                    line.value = row.transaction.transaction_data[i];
+
+
+                "id": 817,
+                "batch_id": 5,
+                "institution": {
+                    "id": 3,
+                        "key": "CONE_VISA",
+                        "name": "Capital One Visa",
+                        "notes": null
+                },
+                "transaction_date": "2023-01-02",
+                "transaction_data": [
+                    "2023-01-02",
+                    "2023-01-03",
+                    "7776",
+                    "Amazon web services",
+                    "Other Services",
+                    "1.76",
+                    ""
+                ],
+                "tags": [],
+                "description": "Amazon web services",
+                "amount": -1.76,
+                "notes": [],
+                "category": null,
+                "keyid": "UKxBr_dbR9TOjkIGVMBjp"
+            }
+            */
+            const transaction = {}
+            transaction.institution_id = row.institution.id;
+            transaction.transaction = row;
+
+            console.log("Expanding: ", rowIndex);
+            console.log("Row: ", row);
+            return(<TransactionDetailComponent row={transaction} />);
+
+        },
+        // onExpand: handleOnExpand
+    }
+
     if(isLoaded) {
         return (
             <div>
@@ -189,6 +239,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
                         data={transactions}
                         columns={columns}
                         rowEvents={rowEvents}
+                        expandRow={expandRow}
                     />
                     <Menu id="context-menu" theme='dark'>
                         {activeRow && (<>

@@ -240,7 +240,10 @@ class DBAccess:
     def list_processed_batches(self):
         conn = self.connect_to_db()
         assert conn
-        sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch"
+        sql = """SELECT id, run_date, notes, transaction_batch_id, COALESCE(tr.cnt, 0) as tr_cnt FROM processed_transaction_batch
+                left join (select batch_id, count(batch_id) as cnt from transaction_records group by batch_id) tr
+                ON transaction_batch_id = tr.batch_id
+              """
         cur = conn.cursor()
         try:
             cur.execute(sql)

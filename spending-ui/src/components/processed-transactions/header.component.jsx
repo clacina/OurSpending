@@ -7,79 +7,26 @@ import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import TagSelectorComponent from "../tag-selector/tag-selector.component.jsx";
 import './header.component.styles.css';
+import Form from 'react-bootstrap/Form';
 
-/*
-    const [filterParams, setFilterParams] = useState({
-        'hideUncategorized': false,
-        'useDateRange': false,
-        'useTags': false,
-        'useCategories': false,
-        'useInstitutions': false
-    });
 
-    const [displayParams, setDisplayParams] = useState({
-        'templateView': true,
-        'categoryView': false,
-    });
-
-    const [useGrouping, setUseGrouping] = useState(false);
-    const [categorized, setCategorized]= useState(true);
-
-    {useGrouping && <p>Grouped by Category</p>}
-    {useGrouping && categorized && <p>Show All</p>}
-    {useGrouping && !categorized && <p>List Uncategorized</p>}
-    {!useGrouping && <p>Grouped by Bank</p>}
-
-*/
-
-const HeaderComponent = () => {
-    const [templateView, setTemplateView] = useState(true);
+const HeaderComponent = ({eventHandler}) => {
     const {tagsMap} = useContext(TagsContext);
     const {categoriesMap} = useContext(CategoriesContext);
     const [searchText, setSearchText] = useState("") ;
 
-    const handleSelect = (eventKey) => {
-        alert(`selected ${eventKey}`);
-        switch (eventKey) {
-            case 'templateView':
-                setTemplateView(!templateView);
-                break;
-            case 'categoryView':
-                break;
-            case 'hideUncategorized':
-                break;
-            case 'useTagFilter':
-                break;
-            case 'useCategoryFilter':
-                break;
-            case 'useInstitutionFilter':
-                break;
-            default: console.log("Unknown eventKey: ", eventKey);
-        }
-    }
+    // Hack for tag selector
     const transaction = {
         "tags": []
     }
 
-    const changeTag = async (transaction_id, tag_list) => {
-        // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
-        console.log("        : ", tag_list);
-    }
-
-    // Format list
+    // Format categories selector
     const options = []
     categoriesMap.forEach((item) => {
         options.push({value: item.id, label: item.value});
     })
 
-    const updateCategory = (event) => {
-        event.forEach((item) => {
-            console.log("Cat: ", item.value);
-        });
-    }
-
-    // Sort comparator
+    // Sort comparators
     function compareCategories(a, b) {
         return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
     }
@@ -88,16 +35,39 @@ const HeaderComponent = () => {
         return ('' + a.value.toLowerCase()).localeCompare(b.value.toLowerCase());
     }
 
-    const onSearch = (event) => {
-        console.log("Search for: ", searchText);
+    // Event Handlers
+    const handleSelect = (eventKey) => {
+        eventHandler(eventKey);
+    }
+
+    const changeTag = async (transaction_id, tag_list) => {
+        // event contains an array of active entries in the select
+        eventHandler({'transaction_id': transaction_id, 'tag_list': tag_list})
+    }
+
+    const updateCategory = (event) => {
+        // event contains an array of active entries in the select
+        const categories = []
+        event.forEach((item) => {
+            categories.push(item.value);
+        });
+        eventHandler({'categories': categories});
+    }
+
+    const onSearch = () => {
+        eventHandler({'searchString': searchText})
     }
 
     const onChangeSearch = (event) => {
         setSearchText(event.target.value);
     }
 
-    const changeView = (event) => {
-        console.log(event);
+    const changeAllTags = () => {
+        eventHandler('matchAllTags');
+    }
+
+    const changeAllCategories = () => {
+        eventHandler('matchAllCategories');
     }
 
     return(
@@ -111,13 +81,19 @@ const HeaderComponent = () => {
                          justify-content="space-between"
                          activeKey="1"
                          onSelect={handleSelect}>
-                        <Nav.Link eventKey="1">Group by Template</Nav.Link>
-                        <Nav.Link eventKey="2">Group by Category</Nav.Link>
+                        <Nav.Link eventKey="templateview">Group by Template</Nav.Link>
+                        <Nav.Link eventKey="categoryview">Group by Category</Nav.Link>
                         <Nav.Link as={TagSelectorComponent}
                                   id="tagSelection"
                                   tagsMap={tagsMap.sort(compareTags)}
                                   transaction={transaction}
                                   onChange={changeTag} />
+                        <Form.Check
+                            type="switch"
+                            id="allTags"
+                            label="Match ALL Tags"
+                            onChange={changeAllTags}
+                        />
                         <Nav.Link as={Select}
                                   id="categorySelection"
                                   closeMenuOnSelect={true}
@@ -126,6 +102,12 @@ const HeaderComponent = () => {
                                   menuPortalTarget={document.body}
                                   menuPosition={'fixed'}
                                   onChange={updateCategory}/>
+                        <Form.Check
+                            type="switch"
+                            id="allCategories"
+                            label="Match ALL Categories"
+                            onChange={changeAllCategories}
+                        />
                         <input id="search-input" type="text" onChange={onChangeSearch}/>
                         <button onClick={onSearch} value={searchText}>Search</button>
                     </Nav>

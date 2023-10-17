@@ -29,15 +29,11 @@ const CategoryComponent = ({category, display}) => {
     // console.log("category: ", category);
     const uncategorized = category[0].template === null;
 
-    const log = (...args) => {
-        // jsLogger.custom('category-component', 6, args);
-    }
-
     useEffect(() => {
         if (transactionDataDefinitions.length !== 0) {
             setIsLoaded(true);
         } else {
-            log("No definitions yet");
+            console.log("No definitions yet");
         }
     }, [transactionDataDefinitions.length]);
 
@@ -86,7 +82,7 @@ const CategoryComponent = ({category, display}) => {
         if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
         }
-        log({e, column, columnIndex, row, rowIndex})
+        console.log({e, column, columnIndex, row, rowIndex})
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -162,7 +158,7 @@ const CategoryComponent = ({category, display}) => {
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
-            log("Expanding: ", rowIndex);
+            console.log("Expanding: ", rowIndex);
             return(<TransactionDetailComponent row={row} />);
 
         },
@@ -170,7 +166,7 @@ const CategoryComponent = ({category, display}) => {
     }
 
     const showContext = (event, row) => {
-        log("showContext: ", event);
+        console.log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({

@@ -56,6 +56,7 @@ class TransactionBatchModel(BaseModel):
 
 class ProcessedTransactionBatchModel(TransactionBatchModel):
     transaction_batch_id: int
+    transaction_count: int
 
 
 class TransactionNoteModel(BaseModel):

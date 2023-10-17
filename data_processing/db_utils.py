@@ -4,10 +4,11 @@ import sys
 # parent directory
 sys.path.append("..")
 
-from common import db_access
+from common.db_access import DBAccess
 from data_processing.data_models import *
 import json
 from typing import Optional
+db_access = DBAccess()
 
 
 def load_templates(institution_id: Optional[int] = -1):

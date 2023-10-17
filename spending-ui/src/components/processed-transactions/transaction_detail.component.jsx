@@ -5,7 +5,6 @@ import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import {ItemTable} from './transaction_detail.component.styles.jsx';
 import 'react-dropdown/style.css';
 
-
 const TransactionDetailComponent = ({row}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const [openCategories, setOpenCategories] = useState(false);

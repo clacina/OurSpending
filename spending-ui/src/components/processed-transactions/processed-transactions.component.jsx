@@ -24,8 +24,15 @@ const ProcessedTransactions = () => {
     const [groupByCategoryButtonTitle, setGroupByCategoryButtonTitle] = useState('Group by Category');
 
     // UI Display Flags
-    const [useGrouping, setUseGrouping] = useState(false);
+    const [categoryView, setCategoryView] = useState(false);
     const [categorized, setCategorized]= useState(true);
+
+    // UI Filters
+    const [tagsFilter, setTagsFilter] = useState([]);
+    const [categoriesFilter, setCategoriexFilter] = useState([]);
+    const [searchString, setSearchString] = useState("");
+    const [matchAllTags, setMatchAllTags] = useState(false);
+    const [matchAllCategories, setMatchAllCategories] = useState(false);
 
     // Data Loading Flags
     const [isLoaded, setIsLoaded] = useState(false);
@@ -35,19 +42,6 @@ const ProcessedTransactions = () => {
     const [entityMapCreated, setEntityMapCreated] = useState(false);
 
     const routeParams = useParams();
-
-    const [filterParams, setFilterParams] = useState({
-        'hideUncategorized': false,
-        'useDateRange': false,
-        'useTags': false,
-        'useCategories': false,
-        'useInstitutions': false
-    });
-
-    const [displayParams, setDisplayParams] = useState({
-        'templateView': true,
-        'categoryView': false,
-    });
 
     const getTransactions = async () => {
         const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
@@ -95,9 +89,12 @@ const ProcessedTransactions = () => {
     }, [transactionResourcesLoaded, transactionsMap.length, templatesMap.length, transactionsMap, templatesMap]);
 
     useEffect(() => {
+        //  Populate our two data sets - one organized by template, the other organized by category
+        //  - Apply any / all filters inside the two grouping routines.
+
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
-            // console.log("Updating template groups");
+            console.log("Updating template groups");
             const template_groups = {};
             for (const [key, value] of Object.entries(institutionGroups)) {
                 template_groups[key] = groupTransactionsByTemplate(value);
@@ -105,9 +102,10 @@ const ProcessedTransactions = () => {
             setTemplateGroups(template_groups);
             setTemplatesGrouped(true);
 
+            console.log("Updating category groups");
             setCategoryGroups(groupTransactionsByCategory());
         }
-    }, [institutionGroups, institutionsLoaded]);
+    }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, matchAllTags, matchAllCategories]);
 
     useEffect(() => {
         if (templatesGrouped) {
@@ -128,7 +126,7 @@ const ProcessedTransactions = () => {
 
     useEffect(() => {
         // Triggered when setUsingGroup() is called
-        if (useGrouping) {
+        if (categoryView) {
             // console.log("Set entity map with categories");
             if(!categorized) {
                 // console.log("Filtering: ", categoryGroups);
@@ -147,19 +145,41 @@ const ProcessedTransactions = () => {
             setEntityMap(Object.entries(templateGroups));
             setGroupByCategoryButtonTitle("Group by Category");
         }
-    }, [useGrouping, categorized]);
+    }, [categoryView, categorized]);
 
     // ----------------------------------------------------------------
 
     const groupTransactionsByTemplate = (entries) => {
-        // console.log("groupTransactionsByTemplate");
         const templateEntries = {};
 
         entries.forEach((item) => {
-            if (!templateEntries.hasOwnProperty(item.template_id)) {
-                templateEntries[item.template_id] = [];
+            // item.transaction.tags
+            // item.template.category.id
+            // item.transaction.category.id - probably null
+            var processTransaction = true;
+            if(tagsFilter && tagsFilter.length > 0) {
+                console.log("Tags: ", tagsFilter);
+                processTransaction = false;
+
+                if(matchAllTags) {
+
+                }
+                // processTransaction =
+
+                item.transaction.tags.forEach((tag) => {
+                    console.log("---Tag: ", tag);
+                    if(tagsFilter.includes(tag)) {
+                        processTransaction = true;
+                    }
+                })
             }
-            templateEntries[item.template_id].push(item);
+
+            if(processTransaction) {
+                if (!templateEntries.hasOwnProperty(item.template_id)) {
+                    templateEntries[item.template_id] = [];
+                }
+                templateEntries[item.template_id].push(item);
+            }
         })
         return templateEntries;
     }
@@ -190,26 +210,52 @@ const ProcessedTransactions = () => {
         return (categoryEntries);
     }
 
-    const updateGrouping = (event) => {
-        setUseGrouping(!useGrouping);
-    }
+    const headerEventHandler = (event) => {
+        console.log("PT - event: ", event);
+        console.log("---: ", typeof event);
+        if(typeof event === "string") {
+            switch(event) {
+                case 'templateview':
+                    setCategoryView(false);
+                    break;
+                case 'categoryview':
+                    setCategoryView(true);
+                    break;
+                default:
+                    console.log("Unknown string event: ", event);
+            }
+        } else {
+            // eventHandler({'transaction_id': transaction_id, 'tag_list': tag_list})
+            // eventHandler({'categories': categories});
+            // eventHandler({'searchString': searchText})
+            if(event.hasOwnProperty('transaction_id')) {
+                setTagsFilter(event['tag_list']);
+            } else if(event.hasOwnProperty('categories')) {
 
-    const updateCategorized = (event) => {
-        setCategorized(!categorized);
+            } else if(event.hasOwnProperty('searchString')) {
+
+            } else if(event.hasOwnProperty('matchAllTags')) {
+                setMatchAllTags(!matchAllTags);
+            } else if(event.hasOwnProperty('matchAllCategories')) {
+                setMatchAllCategories(!matchAllCategories);
+            } else {
+                console.error("Unknown event: ", event);
+            }
+        }
     }
 
     if (isLoaded) {
         return (
             <div key='pb'>
                 <h1>Processed Transactions</h1>
-                <HeaderComponent />
+                <HeaderComponent eventHandler={headerEventHandler}/>
                 <div>
-                    {useGrouping &&
+                    {categoryView &&
                         categoriesMap.map((bank) => {
                             // console.log("Cat: ", bank);
                             return ( bank[1].length > 0 && <CategoryComponent category={bank[1]} display={categorized}/>)
                         })}
-                    {!useGrouping &&
+                    {!categoryView &&
                         entityMap.map((bank) => {
                             // console.log("Cat: ", bank[1]);
                             return (<BankComponent key={bank[0]} bankData={bank}/>)
