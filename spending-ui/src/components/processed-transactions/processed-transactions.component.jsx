@@ -29,10 +29,12 @@ const ProcessedTransactions = () => {
 
     // UI Filters
     const [tagsFilter, setTagsFilter] = useState([]);
-    const [categoriesFilter, setCategoriexFilter] = useState([]);
+    const [categoriesFilter, setCategoriesFilter] = useState([]);
     const [searchString, setSearchString] = useState("");
     const [matchAllTags, setMatchAllTags] = useState(false);
     const [matchAllCategories, setMatchAllCategories] = useState(false);
+    const [institutionFilter, setInstitutionFilter] = useState([]);
+    const [matchAllInstitutions, setMatchAllInstitutions] = useState(false);
 
     // Data Loading Flags
     const [isLoaded, setIsLoaded] = useState(false);
@@ -105,7 +107,10 @@ const ProcessedTransactions = () => {
             console.log("Updating category groups");
             setCategoryGroups(groupTransactionsByCategory());
         }
-    }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, matchAllTags, matchAllCategories, searchString]);
+    }, [institutionGroups, institutionsLoaded,
+        tagsFilter, categoriesFilter, institutionFilter,
+        matchAllTags, matchAllCategories, matchAllInstitutions,
+        searchString]);
 
     useEffect(() => {
         if (templatesGrouped) {
@@ -152,11 +157,15 @@ const ProcessedTransactions = () => {
     const groupTransactionsByTemplate = (entries) => {
         const templateEntries = {};
 
+        // Apply all filters
+
         entries.forEach((item) => {
             // item.transaction.tags
             // item.template.category.id
             // item.transaction.category.id - probably null
             var processTransaction = true;
+
+            // Tags
             if(tagsFilter && tagsFilter.length > 0) {
                 processTransaction = false;
                 if(matchAllTags) {
@@ -173,6 +182,7 @@ const ProcessedTransactions = () => {
                 }
             }
 
+            // Categories
             if(processTransaction && categoriesFilter && categoriesFilter.length > 0) {
                 processTransaction = false;
 
@@ -194,6 +204,12 @@ const ProcessedTransactions = () => {
                 }
             }
 
+            // Banks
+            if(processTransaction && institutionFilter && institutionFilter.length > 0) {
+                processTransaction = institutionFilter.includes(item.transaction.institution.id);
+            }
+
+            // Search String
             if(processTransaction && searchString && searchString.length > 0) {
                 processTransaction = !!item.transaction.description.toUpperCase().includes(searchString.toUpperCase());
             }
@@ -251,6 +267,9 @@ const ProcessedTransactions = () => {
                 case 'matchAllCategories':
                     setMatchAllCategories(!matchAllCategories);
                     break;
+                case 'matchAllInstitutions':
+                    setMatchAllInstitutions(!matchAllInstitutions);
+                    break;
                 default:
                     console.log("Unknown string event: ", event);
             }
@@ -258,9 +277,12 @@ const ProcessedTransactions = () => {
             if(event.hasOwnProperty('transaction_id')) {
                 setTagsFilter(event['tag_list']);
             } else if(event.hasOwnProperty('categories')) {
-                setCategoriexFilter(event['categories']);
+                setCategoriesFilter(event['categories']);
             } else if(event.hasOwnProperty('searchString')) {
                 setSearchString(event['searchString']);
+            } else if(event.hasOwnProperty('banks')) {
+                console.log(event);
+                setInstitutionFilter(event['banks']);
             } else {
                 console.error("Unknown event: ", event);
             }
