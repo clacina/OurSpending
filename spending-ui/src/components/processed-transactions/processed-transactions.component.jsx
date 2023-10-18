@@ -105,7 +105,7 @@ const ProcessedTransactions = () => {
             console.log("Updating category groups");
             setCategoryGroups(groupTransactionsByCategory());
         }
-    }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, matchAllTags, matchAllCategories]);
+    }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, matchAllTags, matchAllCategories, searchString]);
 
     useEffect(() => {
         if (templatesGrouped) {
@@ -173,6 +173,31 @@ const ProcessedTransactions = () => {
                 }
             }
 
+            if(processTransaction && categoriesFilter && categoriesFilter.length > 0) {
+                processTransaction = false;
+
+                // check transaction level category first.  If it exists use it over the template category
+                // -- Could be we just wanted this transaction grouped here
+                if(item.transaction.category) {
+                    categoriesFilter.forEach((cat_id) => {
+                        if (cat_id === item.template.category.id) {
+                            processTransaction = true;
+                        }
+                    })
+                } else if(item.template && item.template.category) {
+                    // array of ids
+                    categoriesFilter.forEach((cat_id) => {
+                        if (cat_id === item.template.category.id) {
+                            processTransaction = true;
+                        }
+                    })
+                }
+            }
+
+            if(processTransaction && searchString && searchString.length > 0) {
+                processTransaction = !!item.transaction.description.toUpperCase().includes(searchString.toUpperCase());
+            }
+
             if(processTransaction) {
                 if (!templateEntries.hasOwnProperty(item.template_id)) {
                     templateEntries[item.template_id] = [];
@@ -235,7 +260,7 @@ const ProcessedTransactions = () => {
             } else if(event.hasOwnProperty('categories')) {
                 setCategoriexFilter(event['categories']);
             } else if(event.hasOwnProperty('searchString')) {
-                // perform search of event['searchString']
+                setSearchString(event['searchString']);
             } else {
                 console.error("Unknown event: ", event);
             }
