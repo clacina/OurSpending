@@ -20,8 +20,8 @@ const ProcessedTransactions = () => {
     // Content for display
     const [entityMap, setEntityMap] = useState([]);
     const [categoriesMap, setCategoriesMap] = useState([]);
-    const [categorizedButtonTitle, setCategorizedButtonTitle] = useState('Hide Categorized');
-    const [groupByCategoryButtonTitle, setGroupByCategoryButtonTitle] = useState('Group by Category');
+    // const [categorizedButtonTitle, setCategorizedButtonTitle] = useState('Hide Categorized');
+    // const [groupByCategoryButtonTitle, setGroupByCategoryButtonTitle] = useState('Group by Category');
 
     // UI Display Flags
     const [categoryView, setCategoryView] = useState(false);
@@ -134,16 +134,16 @@ const ProcessedTransactions = () => {
                     // console.log(item[1][0]);
                     return(item[1][0].template === null);
                 }));
-                setCategorizedButtonTitle("Show Categorized");
+                // setCategorizedButtonTitle("Show Categorized");
             } else {
                 setCategoriesMap(Object.entries(categoryGroups));
-                setCategorizedButtonTitle("Hide Categorized");
+                // setCategorizedButtonTitle("Hide Categorized");
             }
-            setGroupByCategoryButtonTitle("Group by Institution");
+            // setGroupByCategoryButtonTitle("Group by Institution");
         } else {
             // console.log("Set entity map with template groups");
             setEntityMap(Object.entries(templateGroups));
-            setGroupByCategoryButtonTitle("Group by Category");
+            // setGroupByCategoryButtonTitle("Group by Category");
         }
     }, [categoryView, categorized]);
 
@@ -158,20 +158,19 @@ const ProcessedTransactions = () => {
             // item.transaction.category.id - probably null
             var processTransaction = true;
             if(tagsFilter && tagsFilter.length > 0) {
-                console.log("Tags: ", tagsFilter);
                 processTransaction = false;
-
                 if(matchAllTags) {
 
+                } else {
+                    // if none of the search tags are in the transaction tags, processTransaction is False
+                    item.transaction.tags.forEach((tag) => {
+                        tagsFilter.forEach((filter) => {
+                            if(tag.id === filter.value) {
+                                processTransaction = true;
+                            }
+                        })
+                    })
                 }
-                // processTransaction =
-
-                item.transaction.tags.forEach((tag) => {
-                    console.log("---Tag: ", tag);
-                    if(tagsFilter.includes(tag)) {
-                        processTransaction = true;
-                    }
-                })
             }
 
             if(processTransaction) {
@@ -221,23 +220,22 @@ const ProcessedTransactions = () => {
                 case 'categoryview':
                     setCategoryView(true);
                     break;
+                case 'matchAllTags':
+                    setMatchAllTags(!matchAllTags);
+                    break;
+                case 'matchAllCategories':
+                    setMatchAllCategories(!matchAllCategories);
+                    break;
                 default:
                     console.log("Unknown string event: ", event);
             }
         } else {
-            // eventHandler({'transaction_id': transaction_id, 'tag_list': tag_list})
-            // eventHandler({'categories': categories});
-            // eventHandler({'searchString': searchText})
             if(event.hasOwnProperty('transaction_id')) {
                 setTagsFilter(event['tag_list']);
             } else if(event.hasOwnProperty('categories')) {
-
+                setCategoriexFilter(event['categories']);
             } else if(event.hasOwnProperty('searchString')) {
-
-            } else if(event.hasOwnProperty('matchAllTags')) {
-                setMatchAllTags(!matchAllTags);
-            } else if(event.hasOwnProperty('matchAllCategories')) {
-                setMatchAllCategories(!matchAllCategories);
+                // perform search of event['searchString']
             } else {
                 console.error("Unknown event: ", event);
             }

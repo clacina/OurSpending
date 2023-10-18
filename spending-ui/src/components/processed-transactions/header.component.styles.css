@@ -15,6 +15,10 @@
     color: #fff;
 }
 
+.form-check {
+    color: black;
+}
+
 .navbar-nav {
     display: flex;
 }
