@@ -93,13 +93,13 @@ const TemplateComponent = ({bank, templateTransactions}) => {
 
             cols.push({
                 dataField: 'transaction.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
-                    // onClick: colEvent
+                    onClick: columnEvent
                 }, style: {cursor: 'pointer'}
             })
 
             cols.push({
                 dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
-                    onClick: colNoteEvent
+                    onClick: columnEvent
                 }, style: {cursor: 'pointer'}
             })
             cols.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
@@ -156,14 +156,15 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         return (<div>{note_list}</div>);
     }
 
-    const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
+    const columnEvent = (e, column, columnIndex, row, rowIndex) => {
         setActiveRow(row);
         if (columnIndex === 4) {  // Notes column
             e.preventDefault();
-            console.log("colNoteEvent: ", activeRow);
+            console.log("columnEvent(4): ", activeRow);
             e.stopPropagation();
             setOpenNotes(true);
         } else if(columnIndex === 3) {  // Tags column
+            console.log("columnEvent(3): ", activeRow);
             e.stopPropagation();
         }
     }
@@ -186,38 +187,6 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
-            /*
-            {
-                const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === row.institution_id);
-                    line.value = row.transaction.transaction_data[i];
-
-
-                "id": 817,
-                "batch_id": 5,
-                "institution": {
-                    "id": 3,
-                        "key": "CONE_VISA",
-                        "name": "Capital One Visa",
-                        "notes": null
-                },
-                "transaction_date": "2023-01-02",
-                "transaction_data": [
-                    "2023-01-02",
-                    "2023-01-03",
-                    "7776",
-                    "Amazon web services",
-                    "Other Services",
-                    "1.76",
-                    ""
-                ],
-                "tags": [],
-                "description": "Amazon web services",
-                "amount": -1.76,
-                "notes": [],
-                "category": null,
-                "keyid": "UKxBr_dbR9TOjkIGVMBjp"
-            }
-            */
             const transaction = {}
             transaction.institution_id = row.institution.id;
             transaction.transaction = row;
@@ -225,9 +194,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
             console.log("Expanding: ", rowIndex);
             console.log("Row: ", row);
             return(<TransactionDetailComponent row={transaction} />);
-
         },
-        // onExpand: handleOnExpand
     }
 
     if(isLoaded) {

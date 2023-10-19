@@ -34,3 +34,12 @@
 #categorySelection {
     width: 400px;
 }
+
+.dateLabel {
+    color: black;
+}
+
+.react-datepicker__input-container input {
+    border: 1px;
+    color: black;
+}

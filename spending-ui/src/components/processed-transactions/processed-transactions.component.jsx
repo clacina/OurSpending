@@ -1,8 +1,6 @@
+import moment from "moment/moment.js";
 import {useContext, useEffect, useState} from "react";
-import {Col, Row} from "react-bootstrap";
-import Container from "react-bootstrap/Container";
 import {useParams} from "react-router-dom";
-
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 import BankComponent from "./bank.component";
@@ -35,6 +33,8 @@ const ProcessedTransactions = () => {
     const [matchAllCategories, setMatchAllCategories] = useState(false);
     const [institutionFilter, setInstitutionFilter] = useState([]);
     const [matchAllInstitutions, setMatchAllInstitutions] = useState(false);
+    const [startDateFilter, setStartDateFilter] = useState(null);
+    const [endDateFilter, setEndDateFilter] = useState(null);
 
     // Data Loading Flags
     const [isLoaded, setIsLoaded] = useState(false);
@@ -109,6 +109,7 @@ const ProcessedTransactions = () => {
         }
     }, [institutionGroups, institutionsLoaded,
         tagsFilter, categoriesFilter, institutionFilter,
+        startDateFilter, endDateFilter,
         matchAllTags, matchAllCategories, matchAllInstitutions,
         searchString]);
 
@@ -165,6 +166,31 @@ const ProcessedTransactions = () => {
             // item.transaction.category.id - probably null
             var processTransaction = true;
 
+            // Banks
+            if(processTransaction && institutionFilter && institutionFilter.length > 0) {
+                processTransaction = institutionFilter.includes(item.transaction.institution.id);
+            }
+
+            // Search String
+            if(processTransaction && searchString && searchString.length > 0) {
+                processTransaction = !!item.transaction.description.toUpperCase().includes(searchString.toUpperCase());
+            }
+
+            // Start Date
+            if(processTransaction && startDateFilter) {
+                // Tue Jan 17 2023 00:00:00 GMT-0800
+                const filterDate = moment(startDateFilter);
+                const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
+                processTransaction = transactionDate >= filterDate;
+            }
+
+            // End Date
+            if(processTransaction && endDateFilter) {
+                const filterDate = moment(endDateFilter);
+                const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
+                processTransaction = transactionDate <= filterDate;
+            }
+
             // Tags
             if(tagsFilter && tagsFilter.length > 0) {
                 processTransaction = false;
@@ -202,16 +228,6 @@ const ProcessedTransactions = () => {
                         }
                     })
                 }
-            }
-
-            // Banks
-            if(processTransaction && institutionFilter && institutionFilter.length > 0) {
-                processTransaction = institutionFilter.includes(item.transaction.institution.id);
-            }
-
-            // Search String
-            if(processTransaction && searchString && searchString.length > 0) {
-                processTransaction = !!item.transaction.description.toUpperCase().includes(searchString.toUpperCase());
             }
 
             if(processTransaction) {
@@ -283,6 +299,10 @@ const ProcessedTransactions = () => {
             } else if(event.hasOwnProperty('banks')) {
                 console.log(event);
                 setInstitutionFilter(event['banks']);
+            } else if(event.hasOwnProperty('startDate')) {
+                setStartDateFilter(new Date(event['startDate']));
+            } else if(event.hasOwnProperty('endDate')) {
+                setEndDateFilter(new Date(event['endDate']));
             } else {
                 console.error("Unknown event: ", event);
             }
