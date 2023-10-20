@@ -17,6 +17,7 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelector from "../tag-selector/tag-selector.component.jsx";
 import send from "../../utils/http_client.js";
+import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions}) => {
     /*
@@ -92,13 +93,13 @@ const TemplateComponent = ({bank, templateTransactions}) => {
 
             cols.push({
                 dataField: 'transaction.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
-                    // onClick: colEvent
+                    onClick: columnEvent
                 }, style: {cursor: 'pointer'}
             })
 
             cols.push({
                 dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
-                    onClick: colNoteEvent
+                    onClick: columnEvent
                 }, style: {cursor: 'pointer'}
             })
             cols.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
@@ -155,13 +156,16 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         return (<div>{note_list}</div>);
     }
 
-    const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
+    const columnEvent = (e, column, columnIndex, row, rowIndex) => {
         setActiveRow(row);
         if (columnIndex === 4) {  // Notes column
             e.preventDefault();
-            console.log("colNoteEvent: ", activeRow);
+            console.log("columnEvent(4): ", activeRow);
             e.stopPropagation();
             setOpenNotes(true);
+        } else if(columnIndex === 3) {  // Tags column
+            console.log("columnEvent(3): ", activeRow);
+            e.stopPropagation();
         }
     }
 
@@ -180,6 +184,19 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     };
 
+    const expandRow = {
+        onlyOneExpanding: false,
+        renderer: (row, rowIndex) => {
+            const transaction = {}
+            transaction.institution_id = row.institution.id;
+            transaction.transaction = row;
+
+            console.log("Expanding: ", rowIndex);
+            console.log("Row: ", row);
+            return(<TransactionDetailComponent row={transaction} />);
+        },
+    }
+
     if(isLoaded) {
         return (
             <div>
@@ -189,6 +206,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
                         data={transactions}
                         columns={columns}
                         rowEvents={rowEvents}
+                        expandRow={expandRow}
                     />
                     <Menu id="context-menu" theme='dark'>
                         {activeRow && (<>

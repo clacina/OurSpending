@@ -17,11 +17,13 @@ const ProcessedBatches = () => {
     columns.push({dataField: 'run_date', text: 'Run Date', sort: true})
     columns.push({dataField: 'notes', text: 'Notes', sort: true})
     columns.push({dataField: 'transaction_batch_id', text: 'Transaction Batch', sort: true})
+    columns.push({dataField: 'transaction_count', text: 'Transaction Count', sort: true})
 
     useEffect(() => {
         console.log("Start");
         if (processedBatches.length !== 0) {
             setIsLoaded(true);
+            console.log(processedBatches);
         } else {
             console.info("No definitions yet");
         }

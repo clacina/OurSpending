@@ -3,7 +3,7 @@ import sys
 sys.path.append("../..")
 
 from common import db_access
-import datafiles.original_data as entities
+import data_processing.datafiles.original_data as entities
 from data_processing.data_models import *
 import db_utils
 import argparse

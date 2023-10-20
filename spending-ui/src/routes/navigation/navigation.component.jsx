@@ -1,3 +1,7 @@
+/*
+    Original code: https://codesandbox.io/s/react-sidebar-navigation-menu-0hkkj?file=/src/components/SlidebarData.js
+ */
+
 import React, { useState } from "react";
 
 // ICONS
@@ -16,7 +20,7 @@ import { SidebarData } from "./SlidebarData";
 // STYLES
 import './navigation.component.styles.css';
 
-const Navbar = () => {
+const MenuBar = () => {
     const [sidebar, setSidebar] = useState(false);
 
     const showSidebar = () => setSidebar(!sidebar);
@@ -29,6 +33,7 @@ const Navbar = () => {
                     <Link to="#" className="menu-bars">
                         <FaIcons.FaBars onClick={showSidebar} />
                     </Link>
+                    <h2>Our Spending - Lacinas Lair</h2>
                 </div>
                 <nav className={sidebar ? "nav-menu active" : "nav-menu"}>
                     <ul className="nav-menu-items" onClick={showSidebar}>
@@ -55,4 +60,4 @@ const Navbar = () => {
     );
 }
 
-export default Navbar;
+export default MenuBar;

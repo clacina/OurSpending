@@ -1,7 +1,8 @@
 from fastapi import status, HTTPException
 
 import rest_api.utils
-from common import db_access
+from common.db_access import DBAccess
+db_access = DBAccess()
 
 """  Server actions """
 

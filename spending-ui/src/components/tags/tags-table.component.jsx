@@ -10,17 +10,11 @@ import TableBaseComponent from '../table-base/table-base.component.jsx';
 import reactCSS from 'reactcss'
 import {SwatchesPicker} from 'react-color';
 
-import jsLogger from '../../utils/jslogger.js';
-
 const TagsTableComponent = () => {
     const {tagsMap, setTagsMap} = useContext(TagsContext);
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [selectedTag, setSelectedTag] = useState();
 
-    const log = (...args) => {
-        jsLogger.custom('tag-table', 8, args);
-    }
-    
     // -------------------- Event handlers for Tag Edit ---------------------
     const cellEdit = cellEditFactory({
         mode: 'click',
@@ -37,7 +31,7 @@ const TagsTableComponent = () => {
             const url = 'http://localhost:8000/resources/tags/' + row.id;
             const response = await fetch(url, requestOptions);
             const str = await response.json();
-            log('tags-table', "Response: ", str);
+            console.log("Response: ", str);
         }
     })
 
@@ -63,23 +57,23 @@ const TagsTableComponent = () => {
         const url = 'http://localhost:8000/resources/tags/' + selectedTag;
         const response = await fetch(url, requestOptions);
         const str = await response.json();
-        log("Response: ", str);
+        console.log("Response: ", str);
         setTagsMap(newMap);
     };
 
     const handleColorClick = () => {
-        log("ColorClick")
+        console.log("ColorClick")
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
-        log("ColorClose")
+        console.log("ColorClose")
         setShowColorPicker(false);
         setSelectedTag(null);
     }
 
     const handleColorChangeComplete = (color, event) => {
-        log("ColorComplete")
+        console.log("ColorComplete")
         setShowColorPicker(false);
     }
 
@@ -137,7 +131,7 @@ const TagsTableComponent = () => {
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
-            log('tags-table', "Setting selected tag: ", row.id);
+            console.log('tags-table', "Setting selected tag: ", row.id);
             setSelectedTag(row.id);
         }
 
@@ -163,7 +157,7 @@ const TagsTableComponent = () => {
     })
 
     // --------------------------- Render ----------------------------------------
-    log("Render");
+    console.log("Render");
     return (
         <Row>
             <TableBaseComponent

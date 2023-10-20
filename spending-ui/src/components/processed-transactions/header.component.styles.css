@@ -1,0 +1,45 @@
+/* UTILITIES */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* NAVBAR STYLING STARTS */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: teal;
+    color: #fff;
+}
+
+.form-check {
+    color: black;
+}
+
+.navbar-nav {
+    display: flex;
+}
+
+#search-input {
+    width: 200px;
+}
+
+#tagSelection {
+    width: 400px;
+}
+
+#categorySelection {
+    width: 400px;
+}
+
+.dateLabel {
+    color: black;
+}
+
+.react-datepicker__input-container input {
+    border: 1px;
+    color: black;
+}

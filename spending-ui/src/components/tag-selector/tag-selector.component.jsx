@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import chroma from 'chroma-js';
 import { ColourOption } from './data.tsx';
-import Select, { StylesConfig } from 'react-select';
+import Select, {StylesConfig} from 'react-select';
 
 
 export const colourStyles: StylesConfig<ColourOption, true> = {
@@ -58,7 +58,16 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
     }),
 };
 
-const TagSelector = ({tagsMap, transaction, onChange}) => {
+const TagSelector = ({tagsMap, transaction, onChange, clearEntry}) => {
+    const tagSelectionRef = useRef();
+
+    useEffect(() => {
+        if(clearEntry !== undefined) {
+            console.log("tsc - clear: ", clearEntry);
+            tagSelectionRef.current.clearValue();
+        }
+    }, [clearEntry]);
+
     const tagColourOptions = []
     tagsMap.forEach((item) => {
         const tagOption = {}
@@ -86,12 +95,13 @@ const TagSelector = ({tagsMap, transaction, onChange}) => {
         <Select
             onChange={changeTag}
             closeMenuOnSelect={true}
+            ref={tagSelectionRef}
             defaultValue={assigned}
             isMulti
+            id="tagSelection"
             options={tagColourOptions}
             styles={colourStyles}
             menuPortalTarget={document.body}
-            menuPosition={'fixed'}
         />
     );
 }

@@ -1,7 +1,7 @@
 
 
 :root {
-    --navBg: #060b26;
+    --navBg: #70A0AF;
 }
 
 .navbar {
@@ -58,7 +58,7 @@
 }
 
 .nav-text a:hover {
-    background-color: #1a83ff;
+    background-color: #95d5b2;
 }
 
 .nav-menu-items {

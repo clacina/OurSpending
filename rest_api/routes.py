@@ -8,13 +8,14 @@ from datetime import datetime
 from typing import Optional, List
 from typing import Annotated
 
+import fastapi
 from fastapi import FastAPI, Path
 from pydantic import BaseConfig, BaseModel
 
 from fastapi import APIRouter, Query, HTTPException, status, Body, Request
 
 import rest_api.models as models
-from common import db_access
+from common.db_access import DBAccess
 from rest_api.template_models import (
     TemplateDetailModel,
     TemplatesDetailReportBuilder,
@@ -26,6 +27,7 @@ from rest_api.template_models import (
 
 
 router = APIRouter()
+db_access = DBAccess()
 
 
 """ ---------- Templates -------------------------------------------------------------------------"""
@@ -408,6 +410,7 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
 
 
 def parse_transaction_record(row):
+    logging.info(f"Row len: {len(row)}")
     """
 0         transaction_records.id AS TID, 
 1         transaction_records.batch_id AS BID, 
@@ -523,9 +526,11 @@ async def get_transaction(transaction_id: int):
         except Exception as e:
             logging.info(f"Got exception: {str(e)}")
 
-    return_data = transaction_list[0]
-    logging.info(f"Type: {type(return_data)}")
-    return return_data
+    logging.info(f"size: {len(transaction_list)}")
+    if transaction_list:
+        return transaction_list[0]
+
+    return fastapi.Response(status_code=404)
 
 
 @router.get(
@@ -718,6 +723,7 @@ async def get_processed_batches():
             run_date=row[1],
             notes=row[2],
             transaction_batch_id=row[3],
+            transaction_count=row[4]
         )
         response.append(entry)
     return response
@@ -736,6 +742,7 @@ async def get_batch(batch_id: int):
             run_date=query_result[1],
             notes=query_result[2],
             transaction_batch_id=query_result[3],
+            transaction_count=query_result[4],
         )
         return response
     raise HTTPException(
@@ -794,28 +801,60 @@ SELECT   processed_transaction_records.id as PID,
 
 @router.get(
     "/processed_transaction/{transaction_id}",
-    summary="Get details for a specific transaction",
+    summary="Get details for a specific processed transaction",
     response_model=models.ProcessedTransactionRecordModel,
 )
 async def get_processed_transaction(transaction_id: int):
-    # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
-    row = db_access.fetch_transaction(transaction_id=transaction_id)
-    tags = db_access.query_tags_for_transaction(transaction_id=transaction_id)
-    notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
+    """
+                        0                               1
+SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
+                            2
+         transaction_records.transaction_date,
+                            3
+         transaction_records.institution_id as BANK_ID,
+                            4
+         transaction_records.transaction_data,
+                            5
+         transaction_records.description,
+                            6
+         transaction_records.amount
+                      7                8
+         , bank.name as bank_name, bank.key
+                     9              10
+         , t.id as tag_id, t.value as tag_value
+                   11            12
+         , tt.transaction_id, tt.tag_id
+                   13                       15
+         , c.id as category_id, c.value as category_value
+             15      16
+         , tn.id, tn.note
+    """
+    transactions = db_access.fetch_transaction(transaction_id=transaction_id)
+    batch_id = None
 
-    tr = models.ProcessedTransactionRecordModel(
-        id=row[0],
-        batch_id=row[1],
-        institution_id=row[2],
-        transaction_date=row[3],
-        transaction_data=row[4],
-        description=row[5],
-        amount=row[6],
-        tags=tags,
-        notes=notes,
-    )
-    return tr
+    transaction_record = {}
+    if transactions:
+        for row in transactions:
+            logging.info(f"Row: {row}")
+            batch_id = row[1]
+            tr = models.ProcessedTransactionRecordModel(
+                id=row[0],
+                processed_batch_id=batch_id,
+                transaction_id=row[0],
+                institution_id=row[3],
+                transaction=parse_transaction_record(row)
+            )
+            if row[0] not in transaction_record:
+                transaction_record[row[0]] = tr
+            else:
+                transaction_record[row[0]].update(tr)
+    else:
+        logging.info(
+            {"message": f"No transactions found for processed batch {batch_id}"}
+        )
 
+    logging.info(f"Sending back: {transaction_record[transaction_id]}")
+    return list(transaction_record[transaction_id])
 
 """ Aggregate Results """
 
