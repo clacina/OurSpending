@@ -13,7 +13,12 @@ module.exports = function override(config) {
         "querystring": require.resolve("querystring-es3"),
         "zlib": require.resolve("browserify-zlib"),
         "url": require.resolve("url"),
-        "fs": false
+        "fs": false,
+        "@mui/material": false,
+        "@mui/icons-material": false,
+        "material-ui/core": false,
+        "material-ui/core/Collapse": false,
+        "material-ui/icons": false,
     })
     config.resolve.fallback = fallback;
     config.plugins = (config.plugins || []).concat([

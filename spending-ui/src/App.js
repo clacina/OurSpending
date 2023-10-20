@@ -2,7 +2,7 @@ import './App.css';
 import {Route, Routes} from "react-router-dom";
 import {Fragment} from "react";
 
-import Navbar from "./routes/navigation/navigation.component";
+import MenuBar from "./routes/navigation/navigation.component";
 import BanksComponent from "./components/banks/banks.component";
 import BatchesComponent from "./components/batches/batches.component";
 import CategoriesComponent from "./components/categories/categories.component";
@@ -22,7 +22,7 @@ import TransactionsList from "./components/transaction/transactions-list.compone
 function App() {
     return (
         <Fragment>
-            <Navbar/>
+            <MenuBar/>
             <Routes>
                 <Route index element={<Home/>}/>
                 <Route path='categories/*' element={<CategoriesComponent/>}/>
