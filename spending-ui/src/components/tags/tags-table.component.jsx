@@ -1,17 +1,26 @@
 import React from "react";
 import {useContext, useState} from "react";
+import {useDispatch} from "react-redux";
+import { useSelector } from 'react-redux'
+import {selectTagIds, selectTags} from '../../features/tagsSlice.js'
+
 
 import "react-contexify/dist/ReactContexify.css";
 import { Row } from "react-bootstrap";
 import cellEditFactory from "react-bootstrap-table2-editor";
-import {TagsContext} from "../../contexts/tags.context.jsx";
+// import {TagsContext} from "../../contexts/tags.context.jsx";
 import TableBaseComponent from '../table-base/table-base.component.jsx';
 
 import reactCSS from 'reactcss'
 import {SwatchesPicker} from 'react-color';
 
 const TagsTableComponent = () => {
-    const {tagsMap, setTagsMap} = useContext(TagsContext);
+    const dispatch = useDispatch()
+    const tagsMap = useSelector(selectTagIds)
+    console.log("TM: ", tagsMap);
+    const loadingStatus = useSelector((state) => state.tags.status)
+
+    // const {tagsMap, setTagsMap} = useContext(TagsContext);
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [selectedTag, setSelectedTag] = useState();
 
@@ -58,7 +67,7 @@ const TagsTableComponent = () => {
         const response = await fetch(url, requestOptions);
         const str = await response.json();
         console.log("Response: ", str);
-        setTagsMap(newMap);
+        // setTagsMap(newMap);
     };
 
     const handleColorClick = () => {
@@ -108,6 +117,14 @@ const TagsTableComponent = () => {
                 },
             },
         });
+
+        if (loadingStatus === 'loading') {
+            return(
+                <div>
+                    <div className='loader'/>
+                </div>
+            )
+        }
 
         return (
             <div>
