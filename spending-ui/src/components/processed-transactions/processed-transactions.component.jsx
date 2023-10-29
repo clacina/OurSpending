@@ -2,10 +2,14 @@ import moment from "moment/moment.js";
 import {useContext, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
+import send from "../../utils/http_client.js";
 
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
+
+import { FerrisWheelSpinner } from 'react-spinner-overlay';
+import '../collapsible.scss';
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
@@ -18,8 +22,6 @@ const ProcessedTransactions = () => {
     // Content for display
     const [entityMap, setEntityMap] = useState([]);
     const [categoriesMap, setCategoriesMap] = useState([]);
-    // const [categorizedButtonTitle, setCategorizedButtonTitle] = useState('Hide Categorized');
-    // const [groupByCategoryButtonTitle, setGroupByCategoryButtonTitle] = useState('Group by Category');
 
     // UI Display Flags
     const [categoryView, setCategoryView] = useState(false);
@@ -291,17 +293,23 @@ const ProcessedTransactions = () => {
             }
         } else {
             if(event.hasOwnProperty('transaction_id')) {
+                console.log("--Setting Tags Filter")
                 setTagsFilter(event['tag_list']);
             } else if(event.hasOwnProperty('categories')) {
+                console.log("--Setting Categories Filter")
                 setCategoriesFilter(event['categories']);
             } else if(event.hasOwnProperty('searchString')) {
+                console.log("--Setting Search String Filter")
                 setSearchString(event['searchString']);
             } else if(event.hasOwnProperty('banks')) {
+                console.log("--Setting Banks Filter")
                 console.log(event);
                 setInstitutionFilter(event['banks']);
             } else if(event.hasOwnProperty('startDate')) {
+                console.log("--Setting Start Date Filter")
                 setStartDateFilter(new Date(event['startDate']));
             } else if(event.hasOwnProperty('endDate')) {
+                console.log("--Setting End Date Filter")
                 setEndDateFilter(new Date(event['endDate']));
             } else {
                 console.error("Unknown event: ", event);
@@ -309,27 +317,83 @@ const ProcessedTransactions = () => {
         }
     }
 
-    if (isLoaded) {
-        return (
-            <div key='pb'>
-                <h1>Processed Transactions</h1>
-                <HeaderComponent eventHandler={headerEventHandler}/>
-                <div>
-                    {categoryView &&
-                        categoriesMap.map((bank) => {
-                            // console.log("Cat: ", bank);
-                            return ( bank[1].length > 0 && <CategoryComponent category={bank[1]} display={categorized}/>)
-                        })}
-                    {!categoryView &&
-                        entityMap.map((bank) => {
-                            // console.log("Cat: ", bank[1]);
-                            return (<BankComponent key={bank[0]} bankData={bank}/>)
-                        })
-                    }
-                </div>
-            </div>
-        )
+    //------------------------------ Server Callback ------------------------
+    const updateTags = async (transaction_id, tag_list) => {
+        // event contains an array of active entries in the select
+        console.log("Tags for: ", transaction_id);
+        console.log("        : ", tag_list);
+        var body = []
+        tag_list.forEach((item) => {
+            body.push(item.value);
+        })
+
+        const headers = {'Content-Type': 'application/json'}
+        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
+        const method = 'PUT'
+        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Response: ", request);
     }
+
+    const updateNotes = async (transaction_id, note) => {
+        console.log("Closed with: ", typeof note);
+        console.log("Got notes: ", note);
+        var body = []
+
+        if (note) {
+            note.forEach((item) => {
+                body.push({"id": item.id, "text": item.text})
+            })
+        }
+        const headers = {'Content-Type': 'application/json'}
+        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
+        const method = 'POST'
+        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Response: ", request);
+    }
+
+    const viewEventHandler = (event) => {
+        console.log("PT-viewEventHandler: ", event);
+
+        if(event.hasOwnProperty('updateNotes')) {
+            updateNotes(event['updateNotes']['transaction_id'],
+                        event['updateNotes']['notes']);
+        } else if(event.hasOwnProperty('updateTags')) {
+            updateTags(event['updateTags']['transaction_id'],
+                event['updateTags']['tag_list'])
+        }
+    }
+
+    return(
+        <>
+            {
+                !isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38} />
+                          :
+                    <div key='pb'>
+                        <h1>Processed Transactions</h1>
+                        <HeaderComponent eventHandler={headerEventHandler}/>
+                        <div>
+                            {categoryView &&
+                                categoriesMap.map((bank) => {
+                                    // console.log("Cat: ", bank);
+                                    return ( bank[1].length > 0 && <CategoryComponent
+                                        category={bank[1]}
+                                        display={categorized}
+                                        eventHandler={viewEventHandler}/>)
+                                })}
+                            {!categoryView &&
+                                entityMap.map((bank) => {
+                                    // console.log("Bank: ", bank[1]);
+                                    return (<BankComponent
+                                        key={bank[0]}
+                                        bankData={bank}
+                                        eventHandler={viewEventHandler}/>)
+                                })
+                            }
+                        </div>
+                    </div>
+            }
+        </>
+    )
 }
 
 export default ProcessedTransactions;

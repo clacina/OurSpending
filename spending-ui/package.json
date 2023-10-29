@@ -45,6 +45,7 @@
     "react-color": "^2.19.3",
     "react-contexify": "^6.0.0",
     "react-datepicker": "^4.21.0",
+    "react-devtools": "^4.28.5",
     "react-dom": "^18.2.0",
     "react-dropdown": "^1.11.0",
     "react-icons": "^4.11.0",
@@ -53,6 +54,7 @@
     "react-router-dom": "^6.17.0",
     "react-scripts": "5.0.1",
     "react-select": "^5.7.5",
+    "react-spinner-overlay": "^0.1.33",
     "reactcss": "^1.2.3",
     "request": "^2.88.2",
     "sass": "^1.64.1",
@@ -89,11 +91,19 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "acorn-dynamic-import": "3.0.0",
     "babel-eslint": "^10.1.0",
     "eslint-config-react": "^1.1.7",
     "eslint-config-react-app": "^7.0.1",
+    "imports-loader": "0.8.0",
+    "node-sass": "6.0.1",
+    "raw-loader": "0.5.1",
     "react-app-rewired": "^2.2.1",
-    "typescript": "^5.2.2"
+    "react-scripts": "4.0.3",
+    "sass-loader": "7.3.1",
+    "style-loader": "0.23.1",
+    "typescript": "^5.2.2",
+    "webpack-bundle-analyzer": "3.9.0"
   },
   "browser": {
     "fs": false,

@@ -16,17 +16,14 @@ import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
-import send from "../../utils/http_client.js";
 
-
-const CategoryComponent = ({category, display}) => {
+const CategoryComponent = ({category, display, eventHandler}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
 
-    // console.log("category: ", category);
     const uncategorized = category[0].template === null;
 
     useEffect(() => {
@@ -38,22 +35,14 @@ const CategoryComponent = ({category, display}) => {
     }, [transactionDataDefinitions.length]);
 
     const closeModal = async (note) => {
-        console.log("Closed with: ", typeof note);
         if (openNotes) {
             setOpenNotes(false);
-            console.log("Got notes: ", note);
-            if (note) {
-                var body = []
-                note.forEach((item) => {
-                    body.push({"id": item.id, "text": item.text})
-                })
-
-                const headers = {'Content-Type': 'application/json'}
-                const url = 'http://localhost:8000/resources/transaction/' + activeRow.id + '/notes';
-                const method = 'POST'
-                const request = await send({url}, {method}, {headers}, {body});
-                console.log("Response: ", request);
-            }
+            eventHandler({
+                "updateNotes": {
+                    "transaction_id": activeRow.id,
+                    "notes": note
+                }
+            })
         }
     }
 
@@ -61,16 +50,12 @@ const CategoryComponent = ({category, display}) => {
         // event contains an array of active entries in the select
         console.log("Tags for: ", transaction_id);
         console.log("        : ", tag_list);
-        var body = []
-        tag_list.forEach((item) => {
-            body.push(item.value);
-        })
-
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
+        eventHandler({
+            'updateTags': {
+                'transaction_id': transaction_id,
+                'tag_list': tag_list
+            }
+        });
     }
 
     // Setup tags column as a multi-select
@@ -155,11 +140,16 @@ const CategoryComponent = ({category, display}) => {
         }
     };
 
+    const assignCategoryToTransaction = (event) => {
+        console.log(event);
+        eventHandler(event);
+    }
+
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
             console.log("Expanding: ", rowIndex);
-            return(<TransactionDetailComponent row={row} />);
+            return(<TransactionDetailComponent row={row} eventHandler={assignCategoryToTransaction}/>);
 
         },
         // onExpand: handleOnExpand

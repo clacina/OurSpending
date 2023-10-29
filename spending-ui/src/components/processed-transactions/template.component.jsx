@@ -19,7 +19,7 @@ import TagSelector from "../tag-selector/tag-selector.component.jsx";
 import send from "../../utils/http_client.js";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
-const TemplateComponent = ({bank, templateTransactions}) => {
+const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
     /*
         templateTransactions is an array
         element [0] = template id of group
@@ -109,40 +109,25 @@ const TemplateComponent = ({bank, templateTransactions}) => {
     }, [templateList])
 
     const closeModal = async (note) => {
-        console.log("Closed with: ", typeof note);
         if (openNotes) {
             setOpenNotes(false);
-            console.log("Got notes: ", note);
-            if (note !== undefined) {
-                console.log("Processing note...")
-                var body = []
-                note.forEach((item) => {
-                    body.push({"id": item.id, "text": item.text})
-                })
-
-                const headers = {'Content-Type': 'application/json'}
-                const url = 'http://localhost:8000/resources/transaction/' + activeRow.id + '/notes';
-                const method = 'POST';
-                const request = await send({url}, {method}, {headers}, {body});
-                console.log("Response: ", request);
-            }
+            eventHandler({
+                "updateNotes": {
+                    "transaction_id": activeRow.id,
+                    "notes": note
+                }
+            })
         }
     }
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        // console.log("Tags for: ", transaction_id);
-        // console.log("        : ", tag_list);
-        var body = []
-        tag_list.forEach((item) => {
-            body.push(item.value);
-        })
-
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
+        eventHandler({
+            'updateTags': {
+                'transaction_id': transaction_id,
+                'tag_list': tag_list
+            }
+        });
     }
 
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -184,6 +169,11 @@ const TemplateComponent = ({bank, templateTransactions}) => {
         }
     };
 
+    const assignCategoryToTransaction = (event) => {
+        console.log(event);
+        eventHandler(event);
+    }
+
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
@@ -193,7 +183,7 @@ const TemplateComponent = ({bank, templateTransactions}) => {
 
             console.log("Expanding: ", rowIndex);
             console.log("Row: ", row);
-            return(<TransactionDetailComponent row={transaction} />);
+            return(<TransactionDetailComponent row={transaction} eventHandler={assignCategoryToTransaction}/>);
         },
     }
 

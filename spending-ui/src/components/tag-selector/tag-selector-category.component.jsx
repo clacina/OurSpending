@@ -62,8 +62,8 @@ const TagSelectorForCategories = ({tagsMap, transaction, onChange}) => {
     const changeTag = (event) => {
         // update transaction tags list
         transaction.tags = event
-        // console.log("Change Tag: ", event);
-        onChange(transaction.id, event);
+        // console.log("Change Tag: ", transaction);
+        onChange(transaction.transaction.id, event);
     }
 
     const tagColourOptions = []
@@ -81,7 +81,10 @@ const TagSelectorForCategories = ({tagsMap, transaction, onChange}) => {
             return (item['value'] === tag.id)
         }))
     })
-    // console.log("Setting assinged to: ", assigned);
+
+    // if(assigned.length > 0) {
+    //     console.log("Setting assigned to: ", assigned);
+    // }
 
     return (
         <Select

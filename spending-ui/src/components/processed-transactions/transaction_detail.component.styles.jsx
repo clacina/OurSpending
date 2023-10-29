@@ -63,5 +63,9 @@ export const CButton = styled(BaseButton)`
   left: 50%;
   bottom: 15px;
   transform: translate(-50%, -15px);
+`;
 
-`
+export const sub_format = styled.p`
+    margin-left: 10px;
+    color: red;
+`;
