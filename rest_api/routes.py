@@ -549,6 +549,34 @@ async def get_transaction_notes(transaction_id: int):
 
 
 @router.put(
+    "/transaction/{transaction_id}/category",
+    summary="Add a category to the given transaction",
+    response_model=models.TransactionRecordModel,
+)
+async def add_transaction_category(transaction_id: int, category_id: int):
+    logging.info(f"Input {transaction_id}, {category_id}")
+    db_access.assign_category_to_transaction(transaction_id, category_id)
+
+    transaction = db_access.fetch_transaction(
+        transaction_id=transaction_id
+    )
+
+    transaction_list = []
+    for tr in transaction:
+        try:
+            model = parse_transaction_record(tr)
+            if len(transaction_list):
+                transaction_list[0].category = category_id
+            else:
+                transaction_list.append(model)
+        except Exception as e:
+            logging.exception(f"Got exception: {str(e)}")
+
+    return_data = transaction_list[0]
+    return return_data
+
+
+@router.put(
     "/transaction/{transaction_id}/notes",
     summary="Add a note to the given transaction",
     response_model=models.TransactionRecordModel,
