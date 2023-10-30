@@ -232,7 +232,7 @@ resourcesRouter.post('/tags', async function(req, res, next) {
   }
 });
 
-// --------------------------------- Transaction Notes ------------------------------
+// --------------------------------- Transaction Tags ------------------------------
 
 resourcesRouter.put('/transaction/:id/tags', async function(req, res, next) {
   req.accepts('application/json');
@@ -276,6 +276,29 @@ resourcesRouter.post('/transaction/:id/notes', async function(req, res, next) {
     res.status(200).send(data);
   } catch (e) {
     // console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
+// --------------------------------- Transaction Category ------------------------------
+
+resourcesRouter.put('/transaction/:id/category', async function(req, res, next) {
+  req.accepts('application/json');
+  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/category?category_id=' + req.body['category_id'];
+  console.log("URL: ", url);
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    }
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.put(url, options);
+    console.log("Data: ", data.body);
+    res.status(200).send(data.body);
+  } catch (e) {
+    console.log("Got Error: ", e);
     res.status(422).send("Invalid Parameters");
   }
 });
