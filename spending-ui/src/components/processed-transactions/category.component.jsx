@@ -142,17 +142,21 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     const assignCategoryToTransaction = (event) => {
         console.log(event);
-        eventHandler(event);
+        eventHandler({
+            "updateCategory": {
+                "transaction_id": activeRow.transaction.id,
+                "category_id": event.value
+            }
+        });
     }
 
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
             console.log("Expanding: ", rowIndex);
+            setActiveRow(row);
             return(<TransactionDetailComponent row={row} eventHandler={assignCategoryToTransaction}/>);
-
         },
-        // onExpand: handleOnExpand
     }
 
     const showContext = (event, row) => {
@@ -188,13 +192,8 @@ const CategoryComponent = ({category, display, eventHandler}) => {
                             <>
                                 <Item className="text-center">Header row {activeRow.id}</Item>
                                 <Separator/>
-                                {["Google", "Apple"].includes("Google") && (
-                                    <Submenu label="Contact" arrow=">">
-                                        <Item>Phone</Item>
-                                        <Item>Email</Item>
-                                    </Submenu>
-                                )}
-                                <Item disabled={true}>Add to Cart</Item>
+                                <Item>Processed Transaction: {activeRow.id}</Item>
+                                <Item>Transaction: {activeRow.transaction.id}</Item>
                             </>
                         )}
                     </Menu>

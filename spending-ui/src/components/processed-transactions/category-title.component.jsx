@@ -12,6 +12,9 @@ const CategoryTitleComponent = ({category}) => {
     if(!uncategorized) {
         title = category[0].template.category.value;
     }
+    if(category[0].transaction.category) {
+        title = category[0].transaction.category.value;
+    }
 
     return(
         <div>

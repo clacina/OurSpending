@@ -1,15 +1,15 @@
 import moment from "moment/moment.js";
 import {useContext, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
+
+import {FerrisWheelSpinner} from 'react-spinner-overlay';
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import send from "../../utils/http_client.js";
+import '../collapsible.scss';
 
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
-
-import { FerrisWheelSpinner } from 'react-spinner-overlay';
-import '../collapsible.scss';
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
@@ -25,7 +25,7 @@ const ProcessedTransactions = () => {
 
     // UI Display Flags
     const [categoryView, setCategoryView] = useState(false);
-    const [categorized, setCategorized]= useState(true);
+    const [categorized, setCategorized] = useState(true);
 
     // UI Filters
     const [tagsFilter, setTagsFilter] = useState([]);
@@ -99,21 +99,17 @@ const ProcessedTransactions = () => {
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
             console.log("Updating template groups");
-            const template_groups = {};
-            for (const [key, value] of Object.entries(institutionGroups)) {
-                template_groups[key] = groupTransactionsByTemplate(value);
-            }
-            setTemplateGroups(template_groups);
+            // const template_groups = {};
+            // for (const [key, value] of Object.entries(institutionGroups)) {
+            //     template_groups[key] = groupTransactionsByTemplate(value);
+            // }
+            setTemplateGroups(groupTransactionsByTemplate());
             setTemplatesGrouped(true);
 
             console.log("Updating category groups");
             setCategoryGroups(groupTransactionsByCategory());
         }
-    }, [institutionGroups, institutionsLoaded,
-        tagsFilter, categoriesFilter, institutionFilter,
-        startDateFilter, endDateFilter,
-        matchAllTags, matchAllCategories, matchAllInstitutions,
-        searchString]);
+    }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, institutionFilter, startDateFilter, endDateFilter, matchAllTags, matchAllCategories, matchAllInstitutions, searchString]);
 
     useEffect(() => {
         if (templatesGrouped) {
@@ -136,11 +132,11 @@ const ProcessedTransactions = () => {
         // Triggered when setUsingGroup() is called
         if (categoryView) {
             // console.log("Set entity map with categories");
-            if(!categorized) {
+            if (!categorized) {
                 // console.log("Filtering: ", categoryGroups);
                 setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
                     // console.log(item[1][0]);
-                    return(item[1][0].template === null);
+                    return (item[1][0].template === null);
                 }));
                 // setCategorizedButtonTitle("Show Categorized");
             } else {
@@ -157,122 +153,127 @@ const ProcessedTransactions = () => {
 
     // ----------------------------------------------------------------
 
-    const groupTransactionsByTemplate = (entries) => {
-        const templateEntries = {};
+    const includeInFilter = (item) => {
+        var processTransaction = true;
 
-        // Apply all filters
+        // Banks
+        if (processTransaction && institutionFilter && institutionFilter.length > 0) {
+            processTransaction = institutionFilter.includes(item.transaction.institution.id);
+        }
 
-        entries.forEach((item) => {
-            // item.transaction.tags
-            // item.template.category.id
-            // item.transaction.category.id - probably null
-            var processTransaction = true;
+        // Search String
+        if (processTransaction && searchString && searchString.length > 0) {
+            processTransaction = !!item.transaction.description.toUpperCase().includes(searchString.toUpperCase());
+        }
 
-            // Banks
-            if(processTransaction && institutionFilter && institutionFilter.length > 0) {
-                processTransaction = institutionFilter.includes(item.transaction.institution.id);
-            }
+        // Start Date
+        if (processTransaction && startDateFilter) {
+            // Tue Jan 17 2023 00:00:00 GMT-0800
+            const filterDate = moment(startDateFilter);
+            const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
+            processTransaction = transactionDate >= filterDate;
+        }
 
-            // Search String
-            if(processTransaction && searchString && searchString.length > 0) {
-                processTransaction = !!item.transaction.description.toUpperCase().includes(searchString.toUpperCase());
-            }
+        // End Date
+        if (processTransaction && endDateFilter) {
+            const filterDate = moment(endDateFilter);
+            const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
+            processTransaction = transactionDate <= filterDate;
+        }
 
-            // Start Date
-            if(processTransaction && startDateFilter) {
-                // Tue Jan 17 2023 00:00:00 GMT-0800
-                const filterDate = moment(startDateFilter);
-                const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
-                processTransaction = transactionDate >= filterDate;
-            }
+        // Tags
+        if (tagsFilter && tagsFilter.length > 0) {
+            processTransaction = false;
+            if (matchAllTags) {
 
-            // End Date
-            if(processTransaction && endDateFilter) {
-                const filterDate = moment(endDateFilter);
-                const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
-                processTransaction = transactionDate <= filterDate;
-            }
-
-            // Tags
-            if(tagsFilter && tagsFilter.length > 0) {
-                processTransaction = false;
-                if(matchAllTags) {
-
-                } else {
-                    // if none of the search tags are in the transaction tags, processTransaction is False
-                    item.transaction.tags.forEach((tag) => {
-                        tagsFilter.forEach((filter) => {
-                            if(tag.id === filter.value) {
-                                processTransaction = true;
-                            }
-                        })
-                    })
-                }
-            }
-
-            // Categories
-            if(processTransaction && categoriesFilter && categoriesFilter.length > 0) {
-                processTransaction = false;
-
-                // check transaction level category first.  If it exists use it over the template category
-                // -- Could be we just wanted this transaction grouped here
-                if(item.transaction.category) {
-                    categoriesFilter.forEach((cat_id) => {
-                        if (cat_id === item.template.category.id) {
+            } else {
+                // if none of the search tags are in the transaction tags, processTransaction is False
+                item.transaction.tags.forEach((tag) => {
+                    tagsFilter.forEach((filter) => {
+                        if (tag.id === filter.value) {
                             processTransaction = true;
                         }
                     })
-                } else if(item.template && item.template.category) {
-                    // array of ids
-                    categoriesFilter.forEach((cat_id) => {
-                        if (cat_id === item.template.category.id) {
-                            processTransaction = true;
-                        }
-                    })
-                }
+                })
             }
+        }
 
-            if(processTransaction) {
-                if (!templateEntries.hasOwnProperty(item.template_id)) {
-                    templateEntries[item.template_id] = [];
-                }
-                templateEntries[item.template_id].push(item);
+        // Categories
+        if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
+            processTransaction = false;
+
+            // check transaction level category first.  If it exists use it over the template category
+            // -- Could be we just wanted this transaction grouped here
+            if (item.transaction.category) {
+                categoriesFilter.forEach((cat_id) => {
+                    if (cat_id === item.template.category.id) {
+                        processTransaction = true;
+                    }
+                })
+            } else if (item.template && item.template.category) {
+                // array of ids
+                categoriesFilter.forEach((cat_id) => {
+                    if (cat_id === item.template.category.id) {
+                        processTransaction = true;
+                    }
+                })
             }
-        })
-        return templateEntries;
+        }
+
+        return processTransaction;
+    }
+
+    const groupTransactionsByTemplate = () => {
+        const bankGroups = {}
+        for (const [bank, transactions] of Object.entries(institutionGroups)) {
+            // Apply all filters
+            const templateEntries = {};
+            transactions.forEach((item) => {
+                if (includeInFilter(item)) {
+                    if (!templateEntries.hasOwnProperty(item.template_id)) {
+                        templateEntries[item.template_id] = [];
+                    }
+                    templateEntries[item.template_id].push(item);
+                }
+            })
+            console.log(templateEntries);
+            bankGroups[bank] = templateEntries
+        }
+        return bankGroups;
     }
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-        // console.log("transactionsMap: ", transactionsMap);
-        // console.log("institutionGroups: ", institutionGroups);
-        // console.log("templateGroups: ", templateGroups);
-        // console.log("templatesMap: ", templatesMap);
 
         // Key is bank, value is list of processed transactions
-        categoryEntries['-1'] = []
         for (const [bank, transactions] of Object.entries(institutionGroups)) {
             transactions.forEach((item) => {
-                if (item.template && item.template.category) {
-                    const template_category = item.template.category.id;
+                console.log("Grouping: ", item);
+                if(includeInFilter(item)) {
+                    var template_category = -1;  // no category
+                    if(item.transaction.category) {
+                        template_category = item.transaction.category.id;
+                    }
+                    else if (item.template && item.template.category) {
+                        template_category = item.template.category.id;
+                    }
+
                     if (!categoryEntries.hasOwnProperty(template_category)) {
                         categoryEntries[template_category] = []
                     }
                     categoryEntries[template_category].push(item);
-                } else {
-                    categoryEntries['-1'].push(item);
                 }
-            });
+            })
         }
-        // console.log("CategoryEntries: ", categoryEntries);
+        console.log(categoryEntries)
         return (categoryEntries);
     }
 
     const headerEventHandler = (event) => {
         console.log("PT - event: ", event);
         console.log("---: ", typeof event);
-        if(typeof event === "string") {
-            switch(event) {
+        if (typeof event === "string") {
+            switch (event) {
                 case 'templateview':
                     setCategoryView(false);
                     break;
@@ -292,23 +293,23 @@ const ProcessedTransactions = () => {
                     console.log("Unknown string event: ", event);
             }
         } else {
-            if(event.hasOwnProperty('transaction_id')) {
+            if (event.hasOwnProperty('transaction_id')) {
                 console.log("--Setting Tags Filter")
                 setTagsFilter(event['tag_list']);
-            } else if(event.hasOwnProperty('categories')) {
+            } else if (event.hasOwnProperty('categories')) {
                 console.log("--Setting Categories Filter")
                 setCategoriesFilter(event['categories']);
-            } else if(event.hasOwnProperty('searchString')) {
+            } else if (event.hasOwnProperty('searchString')) {
                 console.log("--Setting Search String Filter")
                 setSearchString(event['searchString']);
-            } else if(event.hasOwnProperty('banks')) {
+            } else if (event.hasOwnProperty('banks')) {
                 console.log("--Setting Banks Filter")
                 console.log(event);
                 setInstitutionFilter(event['banks']);
-            } else if(event.hasOwnProperty('startDate')) {
+            } else if (event.hasOwnProperty('startDate')) {
                 console.log("--Setting Start Date Filter")
                 setStartDateFilter(new Date(event['startDate']));
-            } else if(event.hasOwnProperty('endDate')) {
+            } else if (event.hasOwnProperty('endDate')) {
                 console.log("--Setting End Date Filter")
                 setEndDateFilter(new Date(event['endDate']));
             } else {
@@ -335,8 +336,6 @@ const ProcessedTransactions = () => {
     }
 
     const updateNotes = async (transaction_id, note) => {
-        console.log("Closed with: ", typeof note);
-        console.log("Got notes: ", note);
         var body = []
 
         if (note) {
@@ -351,49 +350,211 @@ const ProcessedTransactions = () => {
         console.log("Response: ", request);
     }
 
+    const updateCategory = async (transaction_id, category_id) => {
+        const body = {
+            'category_id': category_id
+        }
+        const headers = {'Content-Type': 'application/json'}
+        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/category';
+        const method = 'PUT'
+        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Response: ", request);
+    }
+
     const viewEventHandler = (event) => {
         console.log("PT-viewEventHandler: ", event);
 
-        if(event.hasOwnProperty('updateNotes')) {
-            updateNotes(event['updateNotes']['transaction_id'],
-                        event['updateNotes']['notes']);
-        } else if(event.hasOwnProperty('updateTags')) {
-            updateTags(event['updateTags']['transaction_id'],
-                event['updateTags']['tag_list'])
+        if (event.hasOwnProperty('updateNotes')) {
+            updateNotes(event['updateNotes']['transaction_id'], event['updateNotes']['notes']);
+        } else if (event.hasOwnProperty('updateTags')) {
+            updateTags(event['updateTags']['transaction_id'], event['updateTags']['tag_list']);
+        } else if (event.hasOwnProperty('updateCategory')) {
+            updateCategory(event['updateCategory']['transaction_id'], event['updateCategory']['category_id']);
         }
     }
 
-    return(
-        <>
-            {
-                !isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38} />
-                          :
-                    <div key='pb'>
-                        <h1>Processed Transactions</h1>
-                        <HeaderComponent eventHandler={headerEventHandler}/>
-                        <div>
-                            {categoryView &&
-                                categoriesMap.map((bank) => {
-                                    // console.log("Cat: ", bank);
-                                    return ( bank[1].length > 0 && <CategoryComponent
-                                        category={bank[1]}
-                                        display={categorized}
-                                        eventHandler={viewEventHandler}/>)
-                                })}
-                            {!categoryView &&
-                                entityMap.map((bank) => {
-                                    // console.log("Bank: ", bank[1]);
-                                    return (<BankComponent
-                                        key={bank[0]}
-                                        bankData={bank}
-                                        eventHandler={viewEventHandler}/>)
-                                })
-                            }
-                        </div>
-                    </div>
-            }
-        </>
-    )
+    return (<>
+            {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div key='pb'>
+                <h1>Processed Transactions</h1>
+                <HeaderComponent eventHandler={headerEventHandler}/>
+                <div>
+                    {categoryView && categoriesMap.map((cat) => {
+                        console.log("Cat: ", cat);
+                        return (cat[1].length > 0 && <CategoryComponent
+                            category={cat[1]}
+                            display={categorized}
+                            eventHandler={viewEventHandler}/>)
+                    })}
+                    {!categoryView && entityMap.map((bank) => {
+                        // console.log("Bank: ", bank[1]);
+                        return (<BankComponent
+                            key={bank[0]}
+                            bankData={bank}
+                            eventHandler={viewEventHandler}/>)
+                    })}
+                </div>
+            </div>}
+        </>)
 }
 
 export default ProcessedTransactions;
+
+/*
+
+Template View
+{
+    ----- Key is template id
+    "104": [
+        {
+            "id": 767,
+            "processed_batch_id": 2,
+            "transaction": {
+                "id": 802,
+                "batch_id": 4,
+                "institution": {
+                    "id": 3,
+                    "key": "CONE_VISA",
+                    "name": "Capital One Visa",
+                    "notes": null
+                },
+                "transaction_date": "2023-01-02",
+                "transaction_data": [
+                    "2023-01-02",
+                    "2023-01-03",
+                    "7776",
+                    "Amazon web services",
+                    "Other Services",
+                    "1.76",
+                    ""
+                ],
+                "tags": [
+                    {
+                        "id": 14,
+                        "value": "Chris",
+                        "notes": null,
+                        "color": null
+                    }
+                ],
+                "description": "Amazon web services",
+                "amount": -1.76,
+                "notes": [
+                    {
+                        "id": 3,
+                        "note": "New note",
+                        "transaction_id": 802
+                    }
+                ],
+                "category": {
+                    "id": 4,
+                    "value": "Chris's Training / Development",
+                    "notes": null
+                },
+                "keyid": "SGzhvc0vFbZHHNCmkAlkN"
+            },
+            "template_id": 104,
+            "institution_id": 3,
+            "template": {
+                "id": 104,
+                "credit": false,
+                "hint": "Chris's Web Work",
+                "notes": null,
+                "category": {
+                    "id": 4,
+                    "value": "Chris's Training / Development",
+                    "notes": null
+                },
+                "institution": {
+                    "id": 3,
+                    "key": "CONE_VISA",
+                    "name": "Capital One Visa",
+                    "notes": null
+                },
+                "tags": [
+                    {
+                        "id": 4,
+                        "value": "Recurring",
+                        "notes": null,
+                        "color": "black"
+                    }
+                ],
+                "qualifiers": [
+                    {
+                        "id": 14,
+                        "value": "Amazon web services",
+                        "institution_id": 3
+                    }
+                ]
+            }
+        },
+    ]
+}
+
+Category View
+{
+    ---- Key is category id
+    "1": [
+    {
+        "id": 761,
+        "processed_batch_id": 2,
+        "transaction": {
+            "id": 796,
+            "batch_id": 4,
+            "institution": {
+                "id": 3,
+                "key": "CONE_VISA",
+                "name": "Capital One Visa",
+                "notes": null
+            },
+            "transaction_date": "2023-02-18",
+            "transaction_data": [
+                "2023-02-18",
+                "2023-02-23",
+                "7776",
+                "U-HAUL-CTR-12TH-L #70221",
+                "Car Rental",
+                "99.10",
+                ""
+            ],
+            "tags": [],
+            "description": "U-HAUL-CTR-12TH-L #70221",
+            "amount": -99.1,
+            "notes": [
+                {
+                    "id": 4,
+                    "note": "Into the unknown",
+                    "transaction_id": 796
+                }
+            ],
+            "category": null,
+            "keyid": "dzLySBqVRIozNUt2auNcY"
+        },
+        "template_id": 113,
+        "institution_id": 3,
+        "template": {
+            "id": 113,
+            "credit": false,
+            "hint": "Car Rental",
+            "notes": null,
+            "category": {
+                "id": 1,
+                "value": "Unknown",
+                "notes": null
+            },
+            "institution": {
+                "id": 3,
+                "key": "CONE_VISA",
+                "name": "Capital One Visa",
+                "notes": null
+            },
+            "tags": [],
+            "qualifiers": [
+                {
+                    "id": 23,
+                    "value": "Car Rental",
+                    "institution_id": 3
+                }
+            ]
+        }
+    }
+
+*/

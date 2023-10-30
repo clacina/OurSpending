@@ -145,11 +145,9 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
         setActiveRow(row);
         if (columnIndex === 4) {  // Notes column
             e.preventDefault();
-            console.log("columnEvent(4): ", activeRow);
             e.stopPropagation();
             setOpenNotes(true);
         } else if(columnIndex === 3) {  // Tags column
-            console.log("columnEvent(3): ", activeRow);
             e.stopPropagation();
         }
     }
@@ -165,24 +163,27 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
 
     const rowEvents = {
         onContextMenu: (e, row, index) => {
+            console.log("row: ", row)
             showContext(e, row);
         }
     };
 
     const assignCategoryToTransaction = (event) => {
-        console.log(event);
-        eventHandler(event);
+        eventHandler({
+            "updateCategory": {
+                "transaction_id": activeRow.id,
+                "category_id": event.value
+            }
+        });
     }
 
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
             const transaction = {}
+            setActiveRow(row);
             transaction.institution_id = row.institution.id;
             transaction.transaction = row;
-
-            console.log("Expanding: ", rowIndex);
-            console.log("Row: ", row);
             return(<TransactionDetailComponent row={transaction} eventHandler={assignCategoryToTransaction}/>);
         },
     }
@@ -202,11 +203,8 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
                         {activeRow && (<>
                             <Item className="text-center">Header row {activeRow.id}</Item>
                             <Separator/>
-                            {["Google", "Apple"].includes("Google") && (<Submenu label="Contact" arrow=">">
-                                <Item>Phone</Item>
-                                <Item>Email</Item>
-                            </Submenu>)}
-                            <Item disabled={true}>Add to Cart</Item>
+                            <Item>Processed Transaction: {activeRow.id}</Item>
+                            <Item>Transaction: {activeRow.id}</Item>
                         </>)}
                     </Menu>
                 </Collapsible>
