@@ -162,6 +162,23 @@ class DBAccess:
             logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
             raise e
 
+    def assign_category_to_transaction(self, transaction_id, category_id):
+        sql = "UPDATE transaction_records SET category_id = %(category_id)s WHERE id=%(transaction_id)s"
+
+        query_params = {
+            'category_id': category_id,
+            'transaction_id': transaction_id
+        }
+
+        conn = self.connect_to_db()
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception({"message": f"Error in transaction query: {str(e)}"})
+            raise e
+
     def query_transactions_from_batch(self, batch_id, offset=0, limit=10):
         conn = self.connect_to_db()
         assert conn
