@@ -12,17 +12,17 @@ BaseConfig.arbitrary_types_allowed = True
 
 # ---------------------------------- TEMPLATE MODELS --------------------------
 class TemplateInputModel(BaseModel):
-    institution_id: int
+    institution_id: Optional[int]
     category: Optional[str]
-    credit: bool
+    credit: Optional[bool]
     tags: Optional[List[str]]
     qualifiers: Optional[List[str]]
-    hint: str
+    hint: Optional[str]
     notes: Optional[str]
 
 
 class TemplateReportModel(TemplateInputModel):
-    id: int
+    id: Optional[int]
 
     def update(self, rep):
         if rep.qualifiers:

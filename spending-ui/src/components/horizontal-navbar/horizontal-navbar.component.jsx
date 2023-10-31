@@ -3,22 +3,9 @@ import React, {useContext, useState} from "react";
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-// import NavDropdown from 'react-bootstrap/NavDropdown';
-import Select from "react-select";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-import TagSelectorComponent from "../tag-selector/tag-selector.component.jsx";
-// import './horizontal-navbar.component.styles.css'
 
-/*
-        'hideUncategorized': false,
-        'useDateRange': false,
-        'useTags': false,
-        'useCategories': false,
-        'useInstitutions': false
-
-
- */
 function HorizontalNavBar() {
     const [templateView, setTemplateView] = useState(true);
     const {tagsMap} = useContext(TagsContext);

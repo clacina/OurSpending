@@ -16,7 +16,6 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelector from "../tag-selector/tag-selector.component.jsx";
-import send from "../../utils/http_client.js";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
@@ -66,7 +65,7 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
                     categoryBreakdown[i.template.category.id].push(i);
 
                 } else {
-                    // log("Got missing transaction: ", i);
+                    // log("Got missing entity: ", i);
                 }
             })
             setTransactions(trans)
@@ -92,13 +91,13 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
             });
 
             cols.push({
-                dataField: 'transaction.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
+                dataField: 'entity.tags', text: 'Tags', formatter: tagColumnFormatter, events: {
                     onClick: columnEvent
                 }, style: {cursor: 'pointer'}
             })
 
             cols.push({
-                dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+                dataField: 'entity.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
                     onClick: columnEvent
                 }, style: {cursor: 'pointer'}
             })
@@ -131,7 +130,7 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
     }
 
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<TagSelector tagsMap={tagsMap} transaction={row} onChange={changeTag}/>);
+        return (<TagSelector tagsMap={tagsMap} entity={row} onChange={changeTag}/>);
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -208,7 +207,7 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
                         </>)}
                     </Menu>
                 </Collapsible>
-                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} transaction={activeRow}/>}
+                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} entity={activeRow}/>}
             </div>
         )
     }

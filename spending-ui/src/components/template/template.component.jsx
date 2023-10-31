@@ -19,7 +19,7 @@ import {TagsContext} from "../../contexts/tags.context";
             "key": "WF",
             "name": "Wells Fargo"
         },
-        "transaction": {
+        "entity": {
             "id": 34,
             "value": "Fee"
         },
@@ -42,7 +42,7 @@ import {TagsContext} from "../../contexts/tags.context";
 
    {
         "institution_id": 1,
-        "transaction": "Interest",
+        "entity": "Interest",
         "credit": false,
         "tags": [],
         "qualifiers": [

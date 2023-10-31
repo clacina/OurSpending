@@ -58,7 +58,10 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
     }),
 };
 
-const TagSelector = ({tagsMap, transaction, onChange, clearEntry}) => {
+const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
+    // entity must contain 2 members:
+    //  -- .id
+    //  -- .tags
     const tagSelectionRef = useRef();
 
     useEffect(() => {
@@ -78,17 +81,17 @@ const TagSelector = ({tagsMap, transaction, onChange, clearEntry}) => {
     });
 
     const assigned = []
-    transaction.tags.forEach((tag) => {
+    entity.tags.forEach((tag) => {
         assigned.push(tagColourOptions.find((item) => {
             return (item['value'] === tag.id)
         }))
     })
 
     const changeTag = (event) => {
-        // update transaction tags list
-        transaction.tags = event
+        // update entity tags list
+        entity.tags = event
         console.log("Change Tag: ", event);
-        onChange(transaction.id, event);
+        onChange(entity.id, event);
     }
 
     return (

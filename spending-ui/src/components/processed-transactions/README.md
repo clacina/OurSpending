@@ -15,15 +15,15 @@ Based on settings, it either displays a List of BankComponent(s) or a List of Ca
 #### TemplateComponent - template.component.jsx
 
 
-### CategoryComponent - transaction.component.jsx
+### CategoryComponent - entity.component.jsx
 
-Displays a list of transactions per transaction
+Displays a list of transactions per entity
 
     Bank, Amount, Date, Tags, Notes
 
-Selecting a transaction displays a transaction detail - TransactionDetailComponent
+Selecting a entity displays a entity detail - TransactionDetailComponent
 
-#### TransactionDetailComponent - transaction-detail.component.jsx
+#### TransactionDetailComponent - entity-detail.component.jsx
 
 Allows:
 - Assign Category

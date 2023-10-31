@@ -60,7 +60,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} transaction={row} onChange={changeTag}/>);
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={row} onChange={changeTag}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
@@ -93,14 +93,14 @@ const CategoryComponent = ({category, display, eventHandler}) => {
         columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
         columns.push({dataField: 'template.hint', text: 'Template', editable: false, style: {cursor: 'pointer'}})
         columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}})
-        columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+        columns.push({dataField: 'entity.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
         columns.push({
-            dataField: 'transaction.transaction_date',
+            dataField: 'entity.transaction_date',
             style: {cursor: 'pointer'},
             text: 'Date',
             editable: false})
         columns.push({
-            dataField: 'transaction.tags',
+            dataField: 'entity.tags',
             text: 'Tags',
             formatter: tagColumnFormatter,
             events: {
@@ -108,19 +108,19 @@ const CategoryComponent = ({category, display, eventHandler}) => {
             },
             style: {cursor: 'pointer'}
         })
-        columns.push({dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+        columns.push({dataField: 'entity.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
                 onClick: colNoteEvent
             }, style: {cursor: 'pointer'}
         })
-        columns.push({dataField: 'transaction.id', text: '', hidden: true})
+        columns.push({dataField: 'entity.id', text: '', hidden: true})
     } else {
         columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-        columns.push({dataField: 'transaction.institution.name', text: 'Bank', editable: false})
-        columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false})
-        columns.push({dataField: 'transaction.transaction_date', text: 'Date', editable: false})
-        columns.push({dataField: 'transaction.tags', text: 'Tags'})
-        columns.push({dataField: 'transaction.notes', text: 'Notes'})
-        columns.push({dataField: 'transaction.id', text: '', hidden: true})
+        columns.push({dataField: 'entity.institution.name', text: 'Bank', editable: false})
+        columns.push({dataField: 'entity.amount', text: 'Amount', editable: false})
+        columns.push({dataField: 'entity.transaction_date', text: 'Date', editable: false})
+        columns.push({dataField: 'entity.tags', text: 'Tags'})
+        columns.push({dataField: 'entity.notes', text: 'Notes'})
+        columns.push({dataField: 'entity.id', text: '', hidden: true})
     }
 
     // Create unique id for each row
@@ -198,7 +198,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
                         )}
                     </Menu>
                 </Collapsible>
-                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} transaction={activeRow}/>}
+                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} entity={activeRow}/>}
             </div>
         )
     }

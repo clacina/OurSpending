@@ -58,12 +58,12 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
     }),
 };
 
-const TagSelectorForCategories = ({tagsMap, transaction, onChange}) => {
+const TagSelectorForCategories = ({tagsMap, entity, onChange}) => {
     const changeTag = (event) => {
-        // update transaction tags list
-        transaction.tags = event
-        // console.log("Change Tag: ", transaction);
-        onChange(transaction.transaction.id, event);
+        // update entity tags list
+        entity.tags = event
+        // console.log("Change Tag: ", entity);
+        onChange(entity.id, event);
     }
 
     const tagColourOptions = []
@@ -74,9 +74,9 @@ const TagSelectorForCategories = ({tagsMap, transaction, onChange}) => {
         tagOption['color'] = item.color;
         tagColourOptions.push(tagOption);
     });
-    // console.log("Transaction: ", transaction);
+    // console.log("Transaction: ", entity);
     const assigned = []
-    transaction.transaction.tags.forEach((tag) => {
+    entity.tags.forEach((tag) => {
         assigned.push(tagColourOptions.find((item) => {
             return (item['value'] === tag.id)
         }))

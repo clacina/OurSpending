@@ -4,10 +4,10 @@ import ReactModal from "react-modal";
 import EditableList from "../editable-list/editable-list.component.jsx";
 import {footer} from "./note_edit_dialog.component.styles.jsx";
 
-const NoteEditDialog = ({closeHandler, transaction}) => {
-    const notesRef = useRef(transaction.notes);
+const NoteEditDialog = ({closeHandler, entity}) => {
+    const notesRef = useRef(entity.notes);
     const [isOpen, setIsOpen] = useState(true);
-    console.log("Transaction: ", transaction);
+    console.log("Transaction: ", entity);
 
     const customStyles = {
         content: {
@@ -39,7 +39,7 @@ const NoteEditDialog = ({closeHandler, transaction}) => {
                     <h2>Manage Notes</h2>
                 </Row>
                 <Row>
-                    <EditableList transaction={notesRef}/>
+                    <EditableList entity={notesRef}/>
                 </Row>
                 <Row className={footer}>
                     <Col>

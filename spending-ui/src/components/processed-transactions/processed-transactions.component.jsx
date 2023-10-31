@@ -99,10 +99,6 @@ const ProcessedTransactions = () => {
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
             console.log("Updating template groups");
-            // const template_groups = {};
-            // for (const [key, value] of Object.entries(institutionGroups)) {
-            //     template_groups[key] = groupTransactionsByTemplate(value);
-            // }
             setTemplateGroups(groupTransactionsByTemplate());
             setTemplatesGrouped(true);
 
@@ -187,7 +183,7 @@ const ProcessedTransactions = () => {
             if (matchAllTags) {
 
             } else {
-                // if none of the search tags are in the transaction tags, processTransaction is False
+                // if none of the search tags are in the entity tags, processTransaction is False
                 item.transaction.tags.forEach((tag) => {
                     tagsFilter.forEach((filter) => {
                         if (tag.id === filter.value) {
@@ -202,8 +198,8 @@ const ProcessedTransactions = () => {
         if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
             processTransaction = false;
 
-            // check transaction level category first.  If it exists use it over the template category
-            // -- Could be we just wanted this transaction grouped here
+            // check entity level category first.  If it exists use it over the template category
+            // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
                 categoriesFilter.forEach((cat_id) => {
                     if (cat_id === item.template.category.id) {
@@ -236,7 +232,6 @@ const ProcessedTransactions = () => {
                     templateEntries[item.template_id].push(item);
                 }
             })
-            console.log(templateEntries);
             bankGroups[bank] = templateEntries
         }
         return bankGroups;
@@ -248,7 +243,6 @@ const ProcessedTransactions = () => {
         // Key is bank, value is list of processed transactions
         for (const [bank, transactions] of Object.entries(institutionGroups)) {
             transactions.forEach((item) => {
-                console.log("Grouping: ", item);
                 if(includeInFilter(item)) {
                     var template_category = -1;  // no category
                     if(item.transaction.category) {
@@ -265,7 +259,6 @@ const ProcessedTransactions = () => {
                 }
             })
         }
-        console.log(categoryEntries)
         return (categoryEntries);
     }
 
@@ -379,14 +372,12 @@ const ProcessedTransactions = () => {
                 <HeaderComponent eventHandler={headerEventHandler}/>
                 <div>
                     {categoryView && categoriesMap.map((cat) => {
-                        console.log("Cat: ", cat);
                         return (cat[1].length > 0 && <CategoryComponent
                             category={cat[1]}
                             display={categorized}
                             eventHandler={viewEventHandler}/>)
                     })}
                     {!categoryView && entityMap.map((bank) => {
-                        // console.log("Bank: ", bank[1]);
                         return (<BankComponent
                             key={bank[0]}
                             bankData={bank}
@@ -408,7 +399,7 @@ Template View
         {
             "id": 767,
             "processed_batch_id": 2,
-            "transaction": {
+            "entity": {
                 "id": 802,
                 "batch_id": 4,
                 "institution": {
@@ -496,7 +487,7 @@ Category View
     {
         "id": 761,
         "processed_batch_id": 2,
-        "transaction": {
+        "entity": {
             "id": 796,
             "batch_id": 4,
             "institution": {

@@ -62,7 +62,7 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
 
 
 const ColorizedMultiSelect = ({tagsMap, transaction}) => {
-    console.log("Display transaction: ", transaction);
+    console.log("Display entity: ", transaction);
     const tagColourOptions = []
     tagsMap.forEach((item) => {
         const tagOption = {}
@@ -73,13 +73,13 @@ const ColorizedMultiSelect = ({tagsMap, transaction}) => {
     });
 
     // const assigned = []
-    // transaction.tags.forEach((tag) => {
+    // entity.tags.forEach((tag) => {
     //     assigned.push(tagColourOptions.find((item) => {
     //         return (item['value'] === tag.id)
     //     }))
     // })
     //
-    // log("Using tags for transaction: ", assigned);
+    // log("Using tags for entity: ", assigned);
 
     return (
         <Select

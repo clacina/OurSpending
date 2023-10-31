@@ -42,16 +42,16 @@ const Item = ({
 };
 
 
-const EditableList = ({transaction}) => {
+const EditableList = ({entity}) => {
     const [todos, setTodos] = useState([]);
     const inputRef = useRef();
 
     useEffect(() => {
-        const ourNotes = transaction.current.map((note) => {
+        const ourNotes = entity.current.map((note) => {
             return ({"id": note.id, "text": note.note})
         })
         setTodos(ourNotes)
-    }, [transaction])
+    }, [entity])
 
     const handleKeyPress = (e) => {
         if (e.key === "Enter") {
@@ -59,8 +59,8 @@ const EditableList = ({transaction}) => {
                 console.log("Enter Key:, ", e.target.value);
                 const newList = [...todos, {text: e.target.value, id: Date.now()}];
                 setTodos(newList);
-                transaction.current = newList
-                console.log('New list: ', transaction.current);
+                entity.current = newList
+                console.log('New list: ', entity.current);
                 inputRef.current.value = "";
             }
         }
@@ -70,7 +70,7 @@ const EditableList = ({transaction}) => {
     const handleDelete = (id) => {
         const filter = todos.filter((e) => e.id !== id);
         setTodos(filter);
-        transaction.current = filter;
+        entity.current = filter;
     };
 
     // handle text update
@@ -84,7 +84,7 @@ const EditableList = ({transaction}) => {
         });
 
         setTodos(updatedList);
-        transaction.current = updatedList;
+        entity.current = updatedList;
     };
 
     return (

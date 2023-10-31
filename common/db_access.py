@@ -507,6 +507,37 @@ class DBAccess:
             logging.exception(f"Error loading Template with institution {institution_id}: {str(e)}")
             raise e
 
+    def update_template(self, new_template):
+        sql = """
+            UPDATE
+                templates
+            SET
+                institution_id=%(institution_id)s,
+                credit=%(credit)s,
+                hint=%(hint)s,
+                notes=%(notes)s
+            WHERE
+                id=%(id)s
+            """
+
+        query_params = {
+            'institution_id': new_template.institution_id,
+            'credit': new_template.credit,
+            'hint': new_template.hint,
+            'notes': new_template.notes,
+            'id': new_template.id
+        }
+
+        conn = self.connect_to_db()
+        assert conn
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception(f"Error updating Template with institution {new_template}: {str(e)}")
+            raise e
+
     """ Tags """
 
     def query_tags_for_transaction(self, transaction_id: int):

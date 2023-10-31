@@ -90,6 +90,7 @@ async def get_template(template_id: int):
     response_model=TemplateReportModel,
 )
 def update_template(template_id: int, template: TemplateReportModel = Body(...)):
+    logging.info("Updating template")
     query_result = db_access.query_templates_by_id(template_id)
     if not query_result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -99,6 +100,13 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
 
     # Store updated template in database
     # TODO: Store changed template in DB
+    logging.info({
+        "message": "Modifying template",
+        "original": existing_template,
+        "updated ": new_template
+    })
+
+    db_access.update_template(new_template)
 
     return new_template
 

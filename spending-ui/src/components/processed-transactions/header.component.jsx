@@ -160,7 +160,7 @@ const HeaderComponent = ({eventHandler}) => {
                     <Nav      as={TagSelectorComponent}
                               clearEntry={clearTags}
                               tagsMap={tagsMap.sort(compareTags)}
-                              transaction={transaction}
+                              entity={transaction}
                               onChange={changeTag} />
                     <Form.Check
                         type="switch"

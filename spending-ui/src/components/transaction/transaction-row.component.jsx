@@ -3,7 +3,7 @@ const TransactionRow = ({transaction}) => {
     const editHandler = (event) => {
         console.log("Click ", event.target.id);
 
-        // Navigate to new screen - with transaction
+        // Navigate to new screen - with entity
 
     }
 

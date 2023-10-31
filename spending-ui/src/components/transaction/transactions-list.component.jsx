@@ -4,7 +4,7 @@
  TransactionList - list of transactions for a given institution
  Transaction - container for TransactionRow below - possibly redundant?
  TransactionRow - row in TransactionList
- TransactionEntry - single transaction edit form
+ TransactionEntry - single entity edit form
  *************************************************************************************/
 import TransactionList from "./transaction-list.component.jsx";
 import {useEffect, useState} from "react";

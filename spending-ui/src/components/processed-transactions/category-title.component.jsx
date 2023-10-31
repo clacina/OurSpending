@@ -1,7 +1,7 @@
 import {TitleSpacer, TotalSpacer} from "./transaction_detail.component.styles.jsx";
 
 const CategoryTitleComponent = ({category}) => {
-    // total transaction amount
+    // total entity amount
     var categoryTotal = 0.0
     category.forEach((item) => {
         categoryTotal += item.transaction.amount;
