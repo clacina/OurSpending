@@ -15,6 +15,7 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
+import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
 import TagSelector from "../tag-selector/tag-selector.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
@@ -130,7 +131,11 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
     }
 
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<TagSelector tagsMap={tagsMap} entity={row} onChange={changeTag}/>);
+        const entity_info = {
+            id: row.id,
+            tags: row.tags
+        }
+        return (<TagSelector tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -170,7 +175,7 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
     const assignCategoryToTransaction = (event) => {
         eventHandler({
             "updateCategory": {
-                "transaction_id": activeRow.id,
+                "transaction_id": activeRow.transaction.id,
                 "category_id": event.value
             }
         });

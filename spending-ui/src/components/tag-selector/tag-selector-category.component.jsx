@@ -62,7 +62,7 @@ const TagSelectorForCategories = ({tagsMap, entity, onChange}) => {
     const changeTag = (event) => {
         // update entity tags list
         entity.tags = event
-        // console.log("Change Tag: ", entity);
+        console.log("Change Tag: ", entity);
         onChange(entity.id, event);
     }
 
@@ -74,17 +74,13 @@ const TagSelectorForCategories = ({tagsMap, entity, onChange}) => {
         tagOption['color'] = item.color;
         tagColourOptions.push(tagOption);
     });
-    // console.log("Transaction: ", entity);
+
     const assigned = []
     entity.tags.forEach((tag) => {
         assigned.push(tagColourOptions.find((item) => {
             return (item['value'] === tag.id)
         }))
     })
-
-    // if(assigned.length > 0) {
-    //     console.log("Setting assigned to: ", assigned);
-    // }
 
     return (
         <Select

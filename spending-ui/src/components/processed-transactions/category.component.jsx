@@ -60,7 +60,11 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={row} onChange={changeTag}/>);
+        const entity_info = {
+            id: row.transaction.id,
+            tags: row.transaction.tags
+        }
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
