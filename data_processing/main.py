@@ -11,13 +11,13 @@ debug_processors = False
 cli = Radicli()
 
 
-def process_transaction_files(source: Optional[str] = "./datafiles"):
+def process_transaction_files(source: Optional[str] = "./datafiles", debug_processors: Optional[bool] = False):
     """
     Create a processing batch
     :return:
     """
     batch_id = db_utils.create_transaction_batch()
-    processors = settings.create_configs_with_data(source=source)
+    processors = settings.create_configs_with_data(source=source, debug_processors=debug_processors)
     transactions_processed = 0
     for account in processors:
         print(f"Loading data for account: {account.name}")
@@ -38,13 +38,15 @@ def present_batch_menu_select():
     for b in batches:
         print(f"Batch ID: {b[0]}, Ran: {b[1].strftime('%m-%d-%Y %H:%H')}, {b[2]}")
     batch_id = input(
-        "Enter the batch to process (enter 'q' to exit, 'r' to run a new batch):"
+        "Enter the batch to process (enter 'q' to exit, 'r' to run a new batch, 'd' to run a new debug batch):"
     )
 
     if batch_id == "q":
         sys.exit(1)
     elif batch_id == "r":  # run new batch
         batch_id = process_transaction_files()
+    elif batch_id == "d":  # run new batch
+        batch_id = process_transaction_files(debug_processors=True)
     elif batch_id == "l":  # just use last run
         batch_id = batches[-1][0]
     else:

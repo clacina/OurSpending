@@ -68,17 +68,17 @@ const TemplateList = () => {
 
 
     //------------------------------ Server Callback ------------------------
-    const updateTags = async (transaction_id, tag_list) => {
+    const updateTags = async (template_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
+        console.log("Tags for: ", template_id);
         console.log("        : ", tag_list);
-        var body = []
+        var body = {tags: []}
         tag_list.forEach((item) => {
-            body.push(item.value);
+            body.tags.push(item.value);
         })
 
         const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
+        const url = 'http://localhost:8000/resources/template/' + template_id;
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
@@ -120,19 +120,21 @@ const TemplateList = () => {
         }
     }
 
-    const changeTag = async (transaction_id, tag_list) => {
+    const changeTag = async (template_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
+        console.log("Tags for: ", template_id);
         console.log("        : ", tag_list);
+        await updateTags(template_id, tag_list);
     }
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        const test_entity = {
-            id: 2,
-            tags: []
+        // console.log("tcf: ", row)
+        const entity_info = {
+            id: row.id,
+            tags: row.tags
         }
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={test_entity} onChange={changeTag}/>);
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {

@@ -116,7 +116,7 @@ def create_qualifiers(conn, entities, institution_id):
 
 
 def create_tables():
-    conn = db_access.connect_to_db()
+    conn = db_access.DBAccess().connect_to_db()
     assert conn
     with conn.cursor() as cursor:
         try:

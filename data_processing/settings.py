@@ -8,8 +8,6 @@ import data_processing.db_utils as db_utils
 """ -------------------------- Entry Point ----------------------------- """
 
 
-debug_processors = True
-
 
 class ConfigurationData:
     def __init__(self):
@@ -122,10 +120,10 @@ def configure_processor(institution_name, datafile, processor, config):
     return inst_proc
 
 
-def create_configs_with_data(source="./datafiles"):
+def create_configs_with_data(source="./datafiles", debug_processors=False):
     all_processors = list()
-    cwd = os.getcwd()
-    # -------------------
+
+    # -------------------  Small test file
     if debug_processors:
         if os.path.isfile(f"{source}/CapitalOne.csv"):
             cap = configure_processor(
@@ -249,7 +247,7 @@ def create_configs_with_data(source="./datafiles"):
     return all_processors
 
 
-def create_configs():
+def create_configs(debug_processors=False):
     all_processors = list()
 
     # -------------------

@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("../..")
 
-from common import db_access
+from common.db_access import DBAccess
 import data_processing.datafiles.original_data as entities
 from data_processing.data_models import *
 import db_utils
@@ -21,6 +21,7 @@ args = parser.parse_args()
 
 
 """ ------------------------------------ Entry Point ------------------------------------"""
+db_access = DBAccess()
 conn = db_access.connect_to_db()
 assert conn
 

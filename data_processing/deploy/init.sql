@@ -130,6 +130,7 @@ CREATE TABLE processed_transaction_batch
     notes                TEXT,
     transaction_batch_id INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL
 );
+ALTER SEQUENCE processed_transaction_batch_id_seq RESTART WITH 1000;
 
 
 DROP TABLE IF EXISTS processed_transaction_records CASCADE;
@@ -141,6 +142,7 @@ CREATE TABLE processed_transaction_records
     template_id        INTEGER REFERENCES templates (id) ON DELETE CASCADE                   NULL DEFAULT NULL,
     institution_id     INTEGER REFERENCES institutions (id) ON DELETE CASCADE                NOT NULL
 );
+ALTER SEQUENCE processed_transaction_records_id_seq RESTART WITH 10000;
 
 
 INSERT INTO institutions(key, name)
