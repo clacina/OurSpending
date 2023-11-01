@@ -508,6 +508,7 @@ class DBAccess:
             raise e
 
     def update_template(self, new_template):
+        # update templates, template_qualifiers and template_tags tables
         sql = """
             UPDATE
                 templates
@@ -537,6 +538,33 @@ class DBAccess:
         except Exception as e:
             logging.exception(f"Error updating Template with institution {new_template}: {str(e)}")
             raise e
+
+        sql = "DELETE FROM template_tags WHERE template_id=%(template_id)s"
+        query_params = {
+            'template_id': new_template.id
+        }
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception(f"Error removing existing tags from Template {new_template}: {str(e)}")
+            raise e
+
+        if new_template.tags:
+            sql = "INSERT INTO template_tags (template_id, tag_id) VALUES "
+            for t in new_template.tags:
+                sql += f"({new_template.id},{t}),"
+            sql = sql[:-1]  # remove last ','
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception(f"Error adding new tags to Template {new_template}: {str(e)}")
+            raise e
+
+        # TODO Qualifiers
 
     """ Tags """
 
