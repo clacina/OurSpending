@@ -15,7 +15,6 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
-import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
 import TagSelector from "../tag-selector/tag-selector.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 

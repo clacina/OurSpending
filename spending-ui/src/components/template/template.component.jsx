@@ -62,20 +62,32 @@ const templateData = {
     qualifiers: [],
     credit: "",
     tags: [],
-    institution: "",
-    transaction: ""
+    institution: null,
+    category: ""
 }
 
-const Template = ({template}) => {
+const TemplateDetailComponent = ({template, eventHandler}) => {
     const [templateFields, setTemplateFields] = useState(templateData);
     const {hint, notes, credit} = templateFields;
+    const [isLoaded, setIsLoaded] = useState(false);
 
     const {categoriesMap} = useContext(CategoriesContext);
     const {tagsMap} = useContext(TagsContext);
     console.log("Using template: ", template);
+
+
     useEffect(() => {
-        setTemplateFields(template);
-    }, [template]);
+        if (!isLoaded && template.institution !== null) {
+            console.log("setting template: ", template);
+            if(template.notes === null) {
+                setTemplateFields({...template, 'notes': ''});
+            } else {
+                setTemplateFields(template);
+            }
+            console.log(templateFields);
+            setIsLoaded(true);
+        }
+    }, [template, template.institution]);
 
     function updateCategory(event) {
         const existingCategory = categoriesMap.find((item) => event.value === item.value);
@@ -119,38 +131,18 @@ const Template = ({template}) => {
         return true;
     }
 
-    return (
-        <TemplateContainer>
-            <p>Institution: {templateFields.institution.name}</p>
-            <p>Template ID: {templateFields.id}</p>
-            <p>{templateFields.qualifiers.map((item) => item.value)}</p>
-            <p>{templateFields.credit}</p>
-            <p>{templateFields.tags.map((item) => item.value)}</p>
-            <p>Category: {templateFields.transaction.value}</p>
-            <p>{templateFields.notes}</p>
+    if (isLoaded) {
+        return (
+            <TemplateContainer>
+                <form onSubmit={handleSubmit}>
+                    <span>Qualifiers: </span><EntityList nodes={templateFields.qualifiers}/>
+                    <label>Is Credit</label>
+                    <input type='checkbox' value={credit} onChange={updateCredit} name='credit'/>
+                </form>
 
-            <form onSubmit={handleSubmit}>
-                <FormInput label='Hint'
-                           name='hint'
-                           value={hint}
-                           onChange={handleChange}/>
-                <FormInput label='Notes'
-                           name='notes'
-                           value={notes}
-                           onChange={handleChange}/>
-                <span>Qualifiers: </span><EntityList nodes={templateFields.qualifiers}/>
-                <span>Tags: </span><EntityList nodes={templateFields.tags}/>
-                <input type='checkbox' value={credit} onChange={updateCredit} name='credit'/>
-                <span> Is Credit</span>
-                <Dropdown placeholder='Change Category' options={categoriesMap}
-                          onChange={updateCategory}/>
-                <Dropdown placeholder='Add Tag' options={tagsMap}
-                          onChange={addTag}/>
-                <Button type='submit' id='submit'>Save</Button>
-            </form>
-
-        </TemplateContainer>
-    )
+            </TemplateContainer>
+        )
+    }
 }
 
-export default Template;
+export default TemplateDetailComponent;

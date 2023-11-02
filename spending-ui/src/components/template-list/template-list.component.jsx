@@ -2,6 +2,8 @@
 /* eslint no-unused-vars: 0 */
 
 import {useContext, useEffect, useState} from "react";
+import Collapsible from "react-collapsible";
+import '../collapsible.scss';
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -11,9 +13,9 @@ import React from "react";
 import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 import send from "../../utils/http_client.js";
-import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
 import ModalPromptComponent from "../modal-prompt/modal-prompt.component.jsx";
+import TemplateDetailComponent from "../template/template.component.jsx";
 
 
 const data = {
@@ -137,11 +139,24 @@ const TemplateList = () => {
         return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
     }
 
+    // const columnEvent = (e, column, columnIndex, row, rowIndex) => {
+    //     setActiveRow(row);
+    //     if (columnIndex === 4) {  // Notes column
+    //         e.preventDefault();
+    //         e.stopPropagation();
+    //         setOpenNotes(true);
+    //     } else if(columnIndex === 3) {  // Tags column
+    //         e.stopPropagation();
+    //     }
+    // }
+
+
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 3) {  // tags column - it's a drop down
+        setActiveRow(row);
+        if (columnIndex === 3) {  // tags Column
+            e.preventDefault();
             e.stopPropagation();
         }
-        console.log({e, column, columnIndex, row, rowIndex})
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -152,7 +167,6 @@ const TemplateList = () => {
         setActiveRow(row);
         if (columnIndex === 4) {  // Notes column
             e.preventDefault();
-            console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();
             setOpenNotes(true);
         }
@@ -199,13 +213,40 @@ const TemplateList = () => {
     };
 
     const rowEvents = {
-        onClick: (e, row, index) => {
-            setActiveRow(row);
-        },
+        // onClick: (e, row, index) => {
+        //     console.log("SetActive: ", row);
+        //     setActiveRow(row);
+        // },
         onContextMenu: (e, row, index) => {
             showContext(e, row);
         }
     };
+
+    const detailEventHandler = (event) => {
+
+    }
+
+    const expandRow = {
+        onlyOneExpanding: false,
+        renderer: (row, rowIndex) => {
+            console.log("Expand: ", row);
+            console.log("------: ", rowIndex);
+            // setActiveRow(row);
+            return(<TemplateDetailComponent template={row} eventHandler={detailEventHandler}/>);
+        },
+        showExpandColumns: true,
+        onExpand: (row, isExpand, rowIndex, e) => {
+            console.log(row.id);
+            console.log(isExpand);
+            console.log(rowIndex);
+            console.log(e);
+        },
+        onExpandAll: (isExpandAll, rows, e) => {
+            console.log(isExpandAll);
+            console.log(rows);
+            console.log(e);
+        }
+    }
 
     if (isLoaded) {
         return (
@@ -217,6 +258,7 @@ const TemplateList = () => {
                     columns={columns}
                     rowEvents={rowEvents}
                     rowStyle={rowStyle}
+                    expandRow={expandRow}
                 />
                 <Menu id="context-menu" theme='dark'>
                     {activeRow && (
