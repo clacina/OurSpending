@@ -53,6 +53,7 @@ const TemplateList = () => {
     const [openNotes, setOpenNotes] = useState(false);
     const [editColumn, setEditColumn] = useState(-1);
     const [editTitle, setEditTitle] = useState("");
+    const [editPrompt, setEditPrompt] = useState("text")
 
     const {templatesMap} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
@@ -179,12 +180,14 @@ const TemplateList = () => {
                 e.stopPropagation();
                 setEditColumn(1);
                 setEditTitle("Template Hint");
+                setEditPrompt("text");
                 setOpenNotes(true);
                 break;
             case 2: // credit
                 e.preventDefault();
                 e.stopPropagation();
                 setEditColumn(2);
+                setEditPrompt("check");
                 setEditTitle("Template Credit");
                 setOpenNotes(true);
                 break;
@@ -196,14 +199,13 @@ const TemplateList = () => {
                 e.preventDefault();
                 e.stopPropagation();
                 setEditColumn(4);
+                setEditPrompt("text");
                 setEditTitle("Template Note");
                 setOpenNotes(true);
                 break;
             case 5: // category
                 e.preventDefault();
                 e.stopPropagation();
-                setEditColumn(5);
-                setOpenNotes(true);
                 break;
             default:
                 break
@@ -244,7 +246,6 @@ const TemplateList = () => {
         onlyOneExpanding: false,
         showExpandColumn: false,
         renderer: (row, rowIndex) => {
-            // setActiveRow(row);
             return(<TemplateDetailComponent template={row} eventHandler={detailEventHandler}/>);
         },
     }
@@ -280,6 +281,7 @@ const TemplateList = () => {
                                                 closeHandler={closeModal}
                                                 content={activeRow.notes}
                                                 title={editTitle}
+                                                prompt_type={editPrompt}
                                                 entity_id={activeRow.id}/>
                 }
             </div>

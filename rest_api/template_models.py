@@ -191,19 +191,22 @@ class TemplatesDetailReportBuilder:
 # ------------------------ QUERY PARSE ROUTINES --------------------------
 
 def parse_template_record(row):
+    tags = []
+    qualifiers = []
+
     if isinstance(row[3], List):
+        logging.info(f"CJL-setting tags from list: {row[3]}")
         tags = row[3]
     elif isinstance(row[3], str):
-        tags = [row[3]]
-    else:
-        tags = []
+        logging.info(f"CJL-setting tags from string: {row[3]}")
+        if len(row[3]):
+            tags = [row[3]]
 
     if isinstance(row[5], List):
         qualifiers = row[5]
     elif isinstance(row[5], str):
-        qualifiers = [row[5]]
-    else:
-        qualifiers = []
+        if len(row[5]):
+            qualifiers = [row[5]]
 
     return tags, qualifiers
 

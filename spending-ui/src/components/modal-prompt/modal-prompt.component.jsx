@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 
-const ModalPromptComponent = ({entity_id, content, closeHandler, title}) => {
+const ModalPromptComponent = ({entity_id, content, closeHandler, title, prompt_type='text'}) => {
     const [show, setShow] = useState(true);
-    const [newContent, setNewContent] = useState("");
+    const [newContent, setNewContent] = useState(content);
 
     const handleClose = () => {
         closeHandler(entity_id, newContent, false);
@@ -18,7 +18,12 @@ const ModalPromptComponent = ({entity_id, content, closeHandler, title}) => {
     }
 
     function updateContent(event) {
+        console.log(event);
         setNewContent(event.target.value);
+    }
+
+    const changeCheck = () => {
+        setNewContent(!newContent);
     }
 
     return (
@@ -33,7 +38,18 @@ const ModalPromptComponent = ({entity_id, content, closeHandler, title}) => {
                             className="mb-3"
                             controlId="exampleForm.ControlTextarea1"
                         >
-                            <Form.Control onChange={updateContent} as="textarea" rows={3} autoFocus value={content}/>
+                            {prompt_type==='check' &&
+                                <Form.Check
+                                    type="switch"
+                                    id="allTags"
+                                    label="Are matching transactions Credits?"
+                                    checked={newContent}
+                                    onChange={changeCheck}
+                                />
+                            }
+                            {prompt_type==='text' &&
+                                <Form.Control onChange={updateContent} as="textarea" rows={3} autoFocus value={newContent}/>
+                            }
                         </Form.Group>
                     </Form>
                 </Modal.Body>
