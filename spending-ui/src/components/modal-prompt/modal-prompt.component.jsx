@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 
-const ModalPromptComponent = ({entity_id, content, closeHandler}) => {
+const ModalPromptComponent = ({entity_id, content, closeHandler, title}) => {
     const [show, setShow] = useState(true);
     const [newContent, setNewContent] = useState("");
 
@@ -25,7 +25,7 @@ const ModalPromptComponent = ({entity_id, content, closeHandler}) => {
         <>
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Notes for Template</Modal.Title>
+                    <Modal.Title>{title}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>

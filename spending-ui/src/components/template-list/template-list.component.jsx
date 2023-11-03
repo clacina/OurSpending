@@ -2,7 +2,6 @@
 /* eslint no-unused-vars: 0 */
 
 import {useContext, useEffect, useState} from "react";
-import Collapsible from "react-collapsible";
 import '../collapsible.scss';
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
@@ -52,6 +51,9 @@ const TemplateList = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
+    const [editColumn, setEditColumn] = useState(-1);
+    const [editTitle, setEditTitle] = useState("");
+
     const {templatesMap} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
 
@@ -70,20 +72,20 @@ const TemplateList = () => {
 
 
     //------------------------------ Server Callback ------------------------
-    const updateTags = async (template_id, tag_list) => {
-        // event contains an array of active entries in the select
-        console.log("Tags for: ", template_id);
-        console.log("        : ", tag_list);
-        var body = {tags: []}
-        tag_list.forEach((item) => {
-            body.tags.push(item.value);
-        })
-
+    const callUpdate = async (template_id, body) => {
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/template/' + template_id;
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+    }
+
+    const updateTags = async (template_id, tag_list) => {
+        var body = {tags: []}
+        tag_list.forEach((item) => {
+            body.tags.push(item.value);
+        })
+        await callUpdate(template_id, body);
     }
 
     const updateNotes = async (template_id, note) => {
@@ -91,114 +93,57 @@ const TemplateList = () => {
             notes: note
         }
 
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/template/' + template_id;
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
+        await callUpdate(template_id, body);
     }
 
-    const updateCategory = async (transaction_id, category_id) => {
+    const updateHint = async (template_id, hint) => {
+        const body = {
+            hint: hint
+        }
+
+        await callUpdate(template_id, body);
+    }
+
+    const updateCategory = async (template_id, category_id) => {
         const body = {
             'category_id': category_id
         }
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/category';
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
+        await callUpdate(template_id, body);
     }
 
+    const updateCredit = async (template_id, is_credit) => {
+        const body = {
+            'credit': is_credit
+        }
+        await callUpdate(template_id, body);
+    }
 
-    //---------------------------- Event Handlers ------------------------
+    //-------------------- Event Handlers ---------------------------------
     const closeModal = async (id, note, save_result) => {
         if (openNotes) {
             console.log("Close notes: ", note);
             setOpenNotes(false);
             if(save_result) {
-                console.log("---Saving");
-                await updateNotes(id, note);
+                console.log("---Saving: ", editColumn);
+                switch(editColumn) {
+                    case 1: // hint
+                        await updateHint(id, note);
+                        break;
+                    case 2: // credit
+                        await updateCredit(id, note);
+                        break;
+                    case 4: // notes
+                        await updateNotes(id, note);
+                        break;
+                    default: break;
+                }
             }
         }
     }
 
-    const changeTag = async (template_id, tag_list) => {
-        // event contains an array of active entries in the select
-        console.log("Tags for: ", template_id);
-        console.log("        : ", tag_list);
-        await updateTags(template_id, tag_list);
-    }
-
-    // Setup tags column as a multi-select
-    const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        // console.log("tcf: ", row)
-        const entity_info = {
-            id: row.id,
-            tags: row.tags
-        }
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
-    }
-
-    // const columnEvent = (e, column, columnIndex, row, rowIndex) => {
-    //     setActiveRow(row);
-    //     if (columnIndex === 4) {  // Notes column
-    //         e.preventDefault();
-    //         e.stopPropagation();
-    //         setOpenNotes(true);
-    //     } else if(columnIndex === 3) {  // Tags column
-    //         e.stopPropagation();
-    //     }
-    // }
-
-
-    const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        setActiveRow(row);
-        if (columnIndex === 3) {  // tags Column
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    }
-
-    const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        return (<div>{row.notes}</div>);
-    }
-
-    const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
-        setActiveRow(row);
-        if (columnIndex === 4) {  // Notes column
-            e.preventDefault();
-            e.stopPropagation();
-            setOpenNotes(true);
-        }
-    }
-
-    const columns = [];
-    columns.push({dataField: 'id', text: 'Id', sort: true});
-    columns.push({dataField: 'hint', text: 'Hint', sort: true});
-    columns.push({dataField: 'credit', text: 'Credit', sort: true});
-    columns.push({
-        dataField: 'entity.tags',
-        text: 'Tags',
-        formatter: tagColumnFormatter,
-        events: {
-            onClick: colEvent
-        },
-        style: {cursor: 'pointer'}
-    })
-    columns.push({dataField: 'entity.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
-            onClick: colNoteEvent
-        }, style: {cursor: 'pointer'}
-    })
-    columns.push({dataField: 'category.value', text: 'Category', sort: true});
-    columns.push({dataField: 'institution.name', text: 'Bank', sort: true});
-
-    const rowStyle = (row) => {
-        if (row === activeRow) {
-            return {
-                backgroundColor: "lightcyan",
-                border: "solid 2px grey",
-                color: "purple"
-            };
+    const rowEvents = {
+        onContextMenu: (e, row, index) => {
+            showContext(e, row);
         }
     };
 
@@ -212,40 +157,96 @@ const TemplateList = () => {
         });
     };
 
-    const rowEvents = {
-        // onClick: (e, row, index) => {
-        //     console.log("SetActive: ", row);
-        //     setActiveRow(row);
-        // },
-        onContextMenu: (e, row, index) => {
-            showContext(e, row);
-        }
-    };
-
     const detailEventHandler = (event) => {
 
     }
 
+    // Setup tags column as a multi-select
+    const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        const entity_info = {
+            id: row.id,
+            tags: row.tags
+        }
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={updateTags}/>);
+    }
+
+    const colEvent = (e, column, columnIndex, row, rowIndex) => {
+        setActiveRow(row);
+        console.log("Click col: ", columnIndex);
+        switch (columnIndex) {
+            case 1: // hint
+                e.preventDefault();
+                e.stopPropagation();
+                setEditColumn(1);
+                setEditTitle("Template Hint");
+                setOpenNotes(true);
+                break;
+            case 2: // credit
+                e.preventDefault();
+                e.stopPropagation();
+                setEditColumn(2);
+                setEditTitle("Template Credit");
+                setOpenNotes(true);
+                break;
+            case 3: // tags
+                e.preventDefault();
+                e.stopPropagation();
+                break;
+            case 4: // notes
+                e.preventDefault();
+                e.stopPropagation();
+                setEditColumn(4);
+                setEditTitle("Template Note");
+                setOpenNotes(true);
+                break;
+            case 5: // category
+                e.preventDefault();
+                e.stopPropagation();
+                setEditColumn(5);
+                setOpenNotes(true);
+                break;
+            default:
+                break
+        }
+    }
+
+    // Setup Columns
+    const columns = [];
+    columns.push({dataField: 'id', text: 'Id', sort: true});
+    columns.push({dataField: 'hint', text: 'Hint', sort: true, events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'}
+    });
+    columns.push({dataField: 'credit', text: 'Credit', sort: true, events: {
+        onClick: colEvent
+        }, style: {cursor: 'pointer'}
+    });
+    columns.push({
+        dataField: 'entity.tags',
+        text: 'Tags',
+        formatter: tagColumnFormatter,
+        events: {
+            onClick: colEvent
+        },
+        style: {cursor: 'pointer'}
+    });
+    columns.push({dataField: 'notes', text: 'Notes', events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'}
+    });
+    columns.push({dataField: 'category.value', text: 'Category', sort: true, events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'}
+    });
+    columns.push({dataField: 'institution.name', text: 'Bank', sort: true});
+
     const expandRow = {
         onlyOneExpanding: false,
+        showExpandColumn: false,
         renderer: (row, rowIndex) => {
-            console.log("Expand: ", row);
-            console.log("------: ", rowIndex);
             // setActiveRow(row);
             return(<TemplateDetailComponent template={row} eventHandler={detailEventHandler}/>);
         },
-        showExpandColumns: true,
-        onExpand: (row, isExpand, rowIndex, e) => {
-            console.log(row.id);
-            console.log(isExpand);
-            console.log(rowIndex);
-            console.log(e);
-        },
-        onExpandAll: (isExpandAll, rows, e) => {
-            console.log(isExpandAll);
-            console.log(rows);
-            console.log(e);
-        }
     }
 
     if (isLoaded) {
@@ -257,7 +258,6 @@ const TemplateList = () => {
                     data={templateList}
                     columns={columns}
                     rowEvents={rowEvents}
-                    rowStyle={rowStyle}
                     expandRow={expandRow}
                 />
                 <Menu id="context-menu" theme='dark'>
@@ -279,6 +279,7 @@ const TemplateList = () => {
                     openNotes && activeRow && <ModalPromptComponent
                                                 closeHandler={closeModal}
                                                 content={activeRow.notes}
+                                                title={editTitle}
                                                 entity_id={activeRow.id}/>
                 }
             </div>
