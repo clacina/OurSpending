@@ -24,7 +24,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
 
-    const uncategorized = category[0].template === null;
+    console.log("Category: ", category);
 
     useEffect(() => {
         if (transactionDataDefinitions.length !== 0) {
@@ -39,7 +39,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
             setOpenNotes(false);
             eventHandler({
                 "updateNotes": {
-                    "transaction_id": activeRow.id,
+                    "transaction_id": activeRow.transaction.id,
                     "notes": note
                 }
             })
@@ -82,8 +82,9 @@ const CategoryComponent = ({category, display, eventHandler}) => {
         return (<div>{note_list}</div>);
     }
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
-        setActiveRow(row.transaction);
         if (columnIndex === 5) {  // Notes column
+            console.log("Setting active row to: ", row.transaction);
+            setActiveRow(row);
             e.preventDefault();
             console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();
@@ -93,39 +94,29 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     // Define table columns
     const columns = []
-    if (!uncategorized) {
-        columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-        columns.push({dataField: 'template.hint', text: 'Template', editable: false, style: {cursor: 'pointer'}})
-        columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}})
-        columns.push({dataField: 'entity.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
-        columns.push({
-            dataField: 'entity.transaction_date',
-            style: {cursor: 'pointer'},
-            text: 'Date',
-            editable: false})
-        columns.push({
-            dataField: 'entity.tags',
-            text: 'Tags',
-            formatter: tagColumnFormatter,
-            events: {
-                onClick: colEvent
-            },
-            style: {cursor: 'pointer'}
-        })
-        columns.push({dataField: 'entity.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
-                onClick: colNoteEvent
-            }, style: {cursor: 'pointer'}
-        })
-        columns.push({dataField: 'entity.id', text: '', hidden: true})
-    } else {
-        columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-        columns.push({dataField: 'entity.institution.name', text: 'Bank', editable: false})
-        columns.push({dataField: 'entity.amount', text: 'Amount', editable: false})
-        columns.push({dataField: 'entity.transaction_date', text: 'Date', editable: false})
-        columns.push({dataField: 'entity.tags', text: 'Tags'})
-        columns.push({dataField: 'entity.notes', text: 'Notes'})
-        columns.push({dataField: 'entity.id', text: '', hidden: true})
-    }
+    columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
+    columns.push({dataField: 'template.hint', text: 'Template', editable: false, style: {cursor: 'pointer'}})
+    columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}})
+    columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+    columns.push({
+        dataField: 'transaction.transaction_date',
+        style: {cursor: 'pointer'},
+        text: 'Date',
+        editable: false})
+    columns.push({
+        dataField: 'transaction.tags',
+        text: 'Tags',
+        formatter: tagColumnFormatter,
+        events: {
+            onClick: colEvent
+        },
+        style: {cursor: 'pointer'}
+    })
+    columns.push({dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+            onClick: colNoteEvent
+        }, style: {cursor: 'pointer'}
+    })
+    columns.push({dataField: 'transaction.id', text: '', hidden: true})
 
     // Create unique id for each row
     category.forEach((item) => {
@@ -202,7 +193,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
                         )}
                     </Menu>
                 </Collapsible>
-                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} entity={activeRow}/>}
+                {openNotes && activeRow && <NoteEditDialog closeHandler={closeModal} entity={activeRow.transaction}/>}
             </div>
         )
     }

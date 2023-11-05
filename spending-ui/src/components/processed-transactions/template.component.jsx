@@ -172,9 +172,11 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
     };
 
     const assignCategoryToTransaction = (event) => {
+        console.log("act: ", event);
         eventHandler({
             "updateCategory": {
-                "transaction_id": activeRow.transaction.id,
+                // "transaction_id": activeRow.transaction.id,
+                "transaction_id": activeRow.id,
                 "category_id": event.value
             }
         });
