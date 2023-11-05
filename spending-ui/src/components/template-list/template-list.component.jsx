@@ -3,6 +3,8 @@
 
 import {useContext, useEffect, useState} from "react";
 import '../collapsible.scss';
+import Select from "react-select";
+import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -57,6 +59,7 @@ const TemplateList = () => {
 
     const {templatesMap} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
+    const {categoriesMap} = useContext(CategoriesContext);
 
     useEffect(() => {
         console.log("Start");
@@ -84,7 +87,7 @@ const TemplateList = () => {
     const updateTags = async (template_id, tag_list) => {
         var body = {tags: []}
         tag_list.forEach((item) => {
-            body.tags.push(item.value);
+            body.tags.push({id:item.value});
         })
         await callUpdate(template_id, body);
     }
@@ -107,7 +110,7 @@ const TemplateList = () => {
 
     const updateCategory = async (template_id, category_id) => {
         const body = {
-            'category_id': category_id
+            category: {'id': category_id, 'value': ''}
         }
         await callUpdate(template_id, body);
     }
@@ -159,8 +162,18 @@ const TemplateList = () => {
     };
 
     const detailEventHandler = (event) => {
-
+        console.log('dt: ', event);
+        updateCategory(event.template_id, event.category_id);
     }
+
+    function compareCategories(a, b) {
+        return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
+    }
+
+    function compareTags(a, b) {
+        return ('' + a.value.toLowerCase()).localeCompare(b.value.toLowerCase());
+    }
+
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -168,7 +181,7 @@ const TemplateList = () => {
             id: row.id,
             tags: row.tags
         }
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={updateTags}/>);
+        return (<TagSelectorCategoryComponent tagsMap={tagsMap.sort(compareTags)} entity={entity_info} onChange={updateTags}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
@@ -203,10 +216,6 @@ const TemplateList = () => {
                 setEditTitle("Template Note");
                 setOpenNotes(true);
                 break;
-            case 5: // category
-                e.preventDefault();
-                e.stopPropagation();
-                break;
             default:
                 break
         }
@@ -238,7 +247,7 @@ const TemplateList = () => {
     });
     columns.push({dataField: 'category.value', text: 'Category', sort: true, events: {
             onClick: colEvent
-        }, style: {cursor: 'pointer'}
+        }, style: {cursor: 'pointer'},
     });
     columns.push({dataField: 'institution.name', text: 'Bank', sort: true});
 

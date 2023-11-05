@@ -34,19 +34,19 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
         return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
     }
 
-    const updateCategory = (event) => {
-        console.log("updateCategory: ", event);
-        // event contains an array of active entries in the select
-        eventHandler(event);
-    }
+    // const updateCategory = (event) => {
+    //     console.log("updateCategory: ", event);
+    //     // event contains an array of active entries in the select
+    //     eventHandler(event);
+    // }
 
-    const showModal = () => {
-        setOpenCategories(true);
-    }
-
-    const showNotes = () => {
-        setOpenNotes(true);
-    }
+    // const showModal = () => {
+    //     setOpenCategories(true);
+    // }
+    //
+    // const showNotes = () => {
+    //     setOpenNotes(true);
+    // }
 
     const closeModal = (props) => {
         console.log("Closed with: ", props);
@@ -77,7 +77,7 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
                 options={options.sort(compareCategories)}
                 menuPortalTarget={document.body}
                 menuPosition={'fixed'}
-                onChange={updateCategory}/>
+                onChange={eventHandler}/>
 
             {/*<span><button onClick={showModal}>Assign Category</button></span>*/}
             {/*<span><button>Create Template</button></span>*/}

@@ -495,6 +495,8 @@ class DBAccess:
             # logging.info(f"Using institution id of {institution_id}")
             sql = f"{TemplateSQl} WHERE BANK_ID=%(institution_id)s"
             query_params = {"institution_id": institution_id}
+        else:  # all templates so order by TID
+            sql += " ORDER BY tlist.tid"
 
         try:
             cur = conn.cursor()
@@ -509,6 +511,7 @@ class DBAccess:
 
     def update_template(self, new_template):
         # update templates, template_qualifiers and template_tags tables
+        logging.info(f"Updating template to : {new_template}")
         sql = """
             UPDATE
                 templates
@@ -516,7 +519,8 @@ class DBAccess:
                 institution_id=%(institution_id)s,
                 credit=%(credit)s,
                 hint=%(hint)s,
-                notes=%(notes)s
+                notes=%(notes)s,
+                category_id=%(category_id)s
             WHERE
                 id=%(id)s
             """
@@ -526,9 +530,10 @@ class DBAccess:
             'credit': new_template.credit,
             'hint': new_template.hint,
             'notes': new_template.notes,
-            'id': new_template.id
+            'id': new_template.id,
+            'category_id': new_template.category.id
         }
-
+        logging.info( f"Query Params: {query_params}")
         conn = self.connect_to_db()
         assert conn
         try:
@@ -539,6 +544,7 @@ class DBAccess:
             logging.exception(f"Error updating Template with institution {new_template}: {str(e)}")
             raise e
 
+        # Update Tags - template_tags table
         sql = "DELETE FROM template_tags WHERE template_id=%(template_id)s"
         query_params = {
             'template_id': new_template.id

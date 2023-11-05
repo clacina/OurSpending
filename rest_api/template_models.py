@@ -13,10 +13,10 @@ BaseConfig.arbitrary_types_allowed = True
 # ---------------------------------- TEMPLATE MODELS --------------------------
 class TemplateInputModel(BaseModel):
     institution_id: Optional[int]
-    category: Optional[str]
+    category: Optional[CategoryModel] = None
     credit: Optional[bool]
-    tags: Optional[List[str]]
-    qualifiers: Optional[List[str]]
+    tags: Optional[List[TagModel]]
+    qualifiers: Optional[List[QualifierModel]]
     hint: Optional[str]
     notes: Optional[str]
 
@@ -24,11 +24,23 @@ class TemplateInputModel(BaseModel):
 class TemplateReportModel(TemplateInputModel):
     id: Optional[int]
 
-    def update(self, rep):
-        if rep.qualifiers:
-            self.qualifiers += rep.qualifiers
-        if rep.tags:
-            self.tags += rep.tags
+    def update(self, data):
+        self.id = data.id
+        self.credit = data.credit
+        self.hint = data.hint
+        self.notes = data.notes
+        self.category = data.category
+        self.institution_id = data.institution.id
+
+        logging.info(f"TemlateTags: {data.tags}")
+        for t in data.tags:
+            if t not in self.tags:
+
+                self.tags.append(t)
+
+        for q in data.qualifiers:
+            if q not in self.qualifiers:
+                self.qualifiers.append(q)
 
 
 class TemplateDetailModel(BaseModel):
@@ -75,6 +87,19 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
         # logging.info(f"Found {len(self.data)} records to parse")
         #      0              1               2              3        4        5            6                     7
         # templates.id, templates.hint, templates.credit, t.value, c.value, q.value, templates.notes, templates.institution_id FROM templates
+        """                  0              1                 2                 3                       4
+        SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
+                               5               6
+                 , bank.name as bank_name, bank.key
+                          7                 8
+                 , t.id as tag_id, t.value as tag_value
+                          9           10
+                 , tt.template_id, tt.tag_id
+                            11                     12
+                 , c.id as category_id, c.value as category_value
+                            13                     14
+                 , q.id AS qualifier_id, q.value as qualifier_value
+        """
         for row in self.data:
             if row[0] is None:
                 # TODO: Should never happen, need to fix query
@@ -89,7 +114,10 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
                 hint=row[1],
                 notes=row[3],
                 qualifiers=qualifiers,
-                category=row[12]
+                category=CategoryModel(
+                    value=row[12],
+                    id=1,
+                    notes='')
             )
             if not self.tr:
                 self.tr = tr
@@ -190,25 +218,23 @@ class TemplatesDetailReportBuilder:
 
 # ------------------------ QUERY PARSE ROUTINES --------------------------
 
+"""                  0              1                 2                 3                       4
+SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
+                       5               6
+         , bank.name as bank_name, bank.key
+                  7                 8
+         , t.id as tag_id, t.value as tag_value
+                  9           10 
+         , tt.template_id, tt.tag_id
+                    11                     12
+         , c.id as category_id, c.value as category_value
+                    13                     14
+         , q.id AS qualifier_id, q.value as qualifier_value 
+"""
+
+
 def parse_template_record(row):
-    tags = []
-    qualifiers = []
-
-    if isinstance(row[3], List):
-        logging.info(f"CJL-setting tags from list: {row[3]}")
-        tags = row[3]
-    elif isinstance(row[3], str):
-        logging.info(f"CJL-setting tags from string: {row[3]}")
-        if len(row[3]):
-            tags = [row[3]]
-
-    if isinstance(row[5], List):
-        qualifiers = row[5]
-    elif isinstance(row[5], str):
-        if len(row[5]):
-            qualifiers = [row[5]]
-
-    return tags, qualifiers
+    return row[10], row[13]
 
 
 def parse_template_detail_record(row):

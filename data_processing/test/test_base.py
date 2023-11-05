@@ -11,10 +11,10 @@ print(f"Datafile: {datafile_path}")
 processing_path = Path('../../rest_api').resolve()
 datafile_path = os.path.join(processing_path, 'datafiles')
 
-report_data = reports.ReportData()
-report_data.categories = db_utils.db_access.load_categories()
-report_data.tags = db_utils.db_access.load_tags()
-report_data.institutions = db_utils.db_access.load_institutions()
+# report_data = reports.ReportData()
+# report_data.categories = db_utils.db_access.load_categories()
+# report_data.tags = db_utils.db_access.load_tags()
+# report_data.institutions = db_utils.db_access.load_institutions()
 
 
 def dump_results(processor):

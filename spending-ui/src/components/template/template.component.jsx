@@ -1,6 +1,8 @@
-import {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 
 import 'react-dropdown/style.css';
+import Select from "react-select";
+import {CategoriesContext} from "../../contexts/categories.context.jsx";
 
 import {TemplateContainer} from "./template.component.styles";
 import EntityList from "../entity-list/entity-list.component";
@@ -61,9 +63,10 @@ const templateData = {
 }
 
 const TemplateDetailComponent = ({template, eventHandler}) => {
+    const {categoriesMap} = useContext(CategoriesContext);
     const [templateFields, setTemplateFields] = useState(templateData);
-    const {credit} = templateFields;
     const [isLoaded, setIsLoaded] = useState(false);
+    const [selection, setSelection] = useState();
 
     useEffect(() => {
         if (!isLoaded && template.institution !== null) {
@@ -76,30 +79,41 @@ const TemplateDetailComponent = ({template, eventHandler}) => {
         }
     }, [template, template.institution]);
 
-    function updateCredit(event) {
-        setTemplateFields({...templateFields, 'credit': event.target.checked});
+    const updateCategory = (event) => {
+        console.log("Update Category: ", event);
+        // contact parent to store....
+        // const payload = {
+        //     template_id: template.id,
+        //     category_id: event.value
+        // }
+        // setSelection(event.value);
+        // eventHandler(payload);
     }
 
-    async function handleSubmit(event) {
-        event.preventDefault();  // don't have form clear screen
-        console.log("handleSubmit: ", event);
-        // Store Data
-        try {
-        } catch (error) {
-            console.log("Error storing template: ", error);
-            return false;
-        }
-
-        return true;
+    // Sort comparator
+    function compareCategories(a, b) {
+        return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
     }
+
+    // Format list
+    const options = []
+    categoriesMap.forEach((item) => {
+        options.push({value: item.id, label: item.value});
+    })
 
     if (isLoaded) {
+        const defaultValue={ label: template.category.value, value: template.category.id }
+
         return (
             <TemplateContainer>
-                <form onSubmit={handleSubmit}>
+                <form>
                     <span>Qualifiers: </span><EntityList nodes={templateFields.qualifiers}/>
-                    <label>Is Credit</label>
-                    <input type='checkbox' value={credit} onChange={updateCredit} name='credit'/>
+                    <label>Category</label>
+                    <Select
+                        options={options.sort(compareCategories)}
+                        onChange={updateCategory}
+                        defaultValue={defaultValue}
+                    />
                 </form>
 
             </TemplateContainer>

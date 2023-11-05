@@ -15,7 +15,7 @@ BaseConfig.arbitrary_types_allowed = True
 
 class SimpleLUTModel(BaseModel):
     id: int
-    value: str
+    value: Optional[str]
 
 
 class CategoryModel(SimpleLUTModel):
