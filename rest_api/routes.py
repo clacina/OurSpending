@@ -1018,20 +1018,52 @@ def template_report(batch_id: int):
     )
 
 
-def category_report(batch_id: Optional[int] = None):
+@router.get("/processed/categories", summary="Category Breakdown Report")
+async def query_processed_categories(
+    processed_batch_id: int,
+    institution_id: Optional[int] = None,
+    include_spending: Optional[bool] = True,
+    include_missing: Optional[bool] = False,
+):
+    """
+    Builds a json model list transactions broken down by categories
+    Grouped by institution
+    :param processed_batch_id:
+    :param institution_id:
+    :param include_spending:
+    :param include_missing:
+    :return:
+    """
+    logging.info({
+        "message": "Template data requested",
+        "batch": processed_batch_id,
+        "bank": institution_id,
+        "with spending": include_spending,
+        "with missing": include_missing
+    })
+
+    return category_report(processed_batch_id)
+
+
+def category_report(batch_id: int):
     """Generate a Category Breakdown Report"""
 
-    # report_data = reports.ReportData()
-    # report_data.categories = db_utils.db_access.load_categories()
-    # report_data.tags = db_utils.db_access.load_tags()
-    # report_data.institutions = db_utils.db_access.load_institutions()
-    # all_processors = settings.create_configs()
-    #
-    # for bank in all_processors:
-    #     bank.analyze_data(processed_batch_id=batch_id)
-    #
-    # reports.Reporting(report_data).category_verification_report(
-    #     all_processors,
-    #     "report_output/categories.html",
-    # )
-    pass
+    report_data = reports.ReportData()
+    report_data.categories = db_access.load_categories()
+    report_data.tags = db_access.load_tags()
+    report_data.institutions = db_access.load_institutions()
+
+    all_processors = list()
+    for bank in report_data.institutions:
+        institution_id = bank[0]
+        templates = db_access.query_templates_by_institution(institution_id)
+        if templates:
+            proc = report_processor.ReportProcessor(institution_id, templates)
+            proc.name = bank[2]
+            proc.analyze_data(processed_batch_id=batch_id)
+            all_processors.append(proc)
+
+    reports.Reporting(report_data).category_verification_report(
+        all_processors,
+        "report_output/categories.html",
+    )

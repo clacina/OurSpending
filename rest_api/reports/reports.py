@@ -148,10 +148,19 @@ class Reporting:
             }
             """
             for template_id, template_transactions in proc.spending.items():
-                category_id = template_transactions["banking_entity"].category_id
+                logging.info(f"Grabbing category from {template_id}, {template_transactions}")
+                """
+             {'banking_entity': (7103, "Chris's Web Work", False, None, 3, 'Capital One Visa', 'CONE_VISA', 3003,
+                                      8         9     10   11                 12                   13          14 
+                                 'Recurring', 7103, 3003, 2003, "Chris's Training / Development", 5013, 'Amazon web services'), 
+                 
+              'transactions': [<rest_api.reports.report_processor.ProcessingTransaction object at 0x00000169C0260D50>, 
+                
+                """
+                category_id = template_transactions["banking_entity"][11]
 
                 # sum all transactions
-                category_value = 0.0
+                category_value = decimal.Decimal(0.0)
                 for t in template_transactions["transactions"]:
                     if t.amount < 0:
                         t.amount = 0 - t.amount
@@ -161,7 +170,7 @@ class Reporting:
                 if category_id not in new_category_breakdown:
                     new_category_breakdown[category_id] = {
                         "count": 0,
-                        "amount": 0.0,
+                        "amount": decimal.Decimal(0.0),
                         "credit": "",
                         "transactions": list(),
                     }
@@ -171,7 +180,7 @@ class Reporting:
                 cb_item["transactions"].extend(
                     template_transactions["transactions"]
                 )
-                if template_transactions["banking_entity"].credit:
+                if template_transactions["banking_entity"][2]:
                     cb_item["credit"] = "+"  # Indicate credit vs debit
         return new_category_breakdown
 
@@ -190,7 +199,7 @@ class Reporting:
             )
 
             outfile.write(
-                '<table border=1 class="fixed_table"><thead><tr><th style="width: 50px;">Id</th><th>Value</th><th  '
+                '<table border=1 class="fixed_table"><thead><tr><th style="width: 50px;">Category Id</th><th>Value</th><th  '
                 'style="width: 50px;">Count</th><th style="width: 80px;">Spend</th>\n'
             )
             for c in self.report_data.categories:
@@ -216,12 +225,15 @@ class Reporting:
                     if cat["transactions"]:
                         outfile.write(
                             '<table class="sub_section_div" width=100%><thead><tr><th>Transaction '
-                            'Id</th><th>Date</th><th>Amount</th><th>Description</th><th>Bank</th><th>Template</th></tr></thead>\n'
+                            'Id</th><th>Date</th><th>Amount</th>'
+                            '<th>Description</th><th>Bank</th><th>Template</th></tr></thead>\n'
                         )
 
                         for t in transaction_list:
                             outfile.write(
-                                f'<tr><td  class="right">{t.transaction_id}</td><td>{t.date}</td><td class="right">{t.amount}</td><td>{t.description}</td><td>{self.report_data.get_bank(t.institution_id)}</td><td>{t.template_id}</td></tr>\n'
+                                f'<tr><td  class="right">{t.transaction_id}</td><td>{t.transaction_date}</td>'
+                                f'<td class="right">{t.amount}</td><td>{t.description}</td>'
+                                f'<td>{self.report_data.get_bank(t.institution_id)}</td><td>{t.template_id}</td></tr>\n'
                             )
                         outfile.write("</table>\n")
 
