@@ -25,7 +25,7 @@ from rest_api.template_models import (
     SingleTemplateReportBuilder,
 )
 from rest_api.reports import reports
-from rest_api.reports import processor_base
+from rest_api.reports import report_processor
 
 router = APIRouter()
 db_access = DBAccess()
@@ -966,15 +966,49 @@ def template_report(batch_id: int):
 
     all_processors = list()
     for bank in report_data.institutions:
-        logging.info(f"bank: {bank}")
+        # logging.info(f"bank: {bank}")
         institution_id = bank[0]
         templates = db_access.query_templates_by_institution(institution_id)
-        logging.info(f"templates: {templates}")
-        proc = processor_base.ProcessorBase(institution_id,
-                                            templates)
-        proc.name = bank[2]
-        proc.analyze_data(processed_batch_id=batch_id)
-        all_processors.append(proc)
+        if templates:
+            logging.info(f"bank: {bank}")
+            logging.info(f"templates: {templates}")
+            """
+                    0                1                 2                 3                      4
+           templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
+                        5              6
+         , bank.name as bank_name, bank.key
+                  7                   8
+         , t.id as tag_id, t.value as tag_value
+                  9            10 
+         , tt.template_id, tt.tag_id
+                    11                      12
+         , c.id as category_id, c.value as category_value
+                    13                      14 
+         , q.id AS qualifier_id, q.value as qualifier_value 
+            
+            
+            """
+            """
+         templates: [(7094,                             0  
+                      'Cinemark',                       1
+                      False,                            2
+                      None,                             3
+                      2,                                4
+                      'Wellsfargo Visa',                5
+                      'WLS_VISA',                       6
+                      3003,                             7    tag id
+                      'Recurring',                      8    tag
+                      7094,                             9   template id again
+                      3003,                             10   tag id again
+                      2005,                             11   category id
+                      'Entertainment',                  12   category value
+                      5229,                             13   qualifier id
+                      'CINEMARK MOVIE CLUB')            14   qualifier value
+            """
+            proc = report_processor.ReportProcessor(institution_id, templates)
+            proc.name = bank[2]
+            proc.analyze_data(processed_batch_id=batch_id)
+            all_processors.append(proc)
 
     reports.Reporting(report_data).template_verification_report(
         all_processors,

@@ -28,16 +28,19 @@ class Reporting:
     def _report_header(outfile):
         outfile.write(
             """
-            
             <html><head>
             <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
             <style>
+            #templateReportTable {
+                width: 100%;
+            }
             .section_div {
                 border:1px solid gray;
                 margin-left: 10px;
                 padding-left: 10px;
                 margin-top: 10px;
                 padding-bottom: 10px;
+                width: 100%;
             } 
             .sub_section_div {
                 margin-left: 10px;
@@ -45,6 +48,7 @@ class Reporting:
                 margin-top: 10px;
                 padding-right: 10px;
                 padding-bottom: 10px;
+                width: 100%;
             } 
             th {
                 background-color: LightGray;                
@@ -65,14 +69,13 @@ class Reporting:
             }
             .fixed_table {
                 table-layout: fixed;
-                width: 90%
+                width: 100%
             }
             </style>
             
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
             <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
             <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-                        
             <script>
                 window.onload = function() {
                     click_category = function(id) {
@@ -102,6 +105,7 @@ class Reporting:
                     console.log("CJL-DONE-Registering our data tables");
                 });                
             </script>
+                        
             </head><body>\n"""
         )
 
@@ -233,42 +237,58 @@ class Reporting:
         outfile.write(f"<h3>Spending</h3>\n")
         outfile.write(f"<p>{total_spending_count} Transactions</p>\n")
 
-        outfile.write("<table border=1>\n")
+        outfile.write("<table id='templateReportTable' border=1>\n")
         outfile.write(
-            "<thead><tr><th>Template ID</th><th># Transactions</th><th>Total</th><th>Category</th><th>Description</th"
-            "></tr></thead>\n"
+            "<thead><tr><th>Template ID</th><th># Transactions</th>"
+            "<th>Total</th><th>Category</th><th>Qualifiers</th></tr></thead>\n"
         )
         for k, v in processor.spending.items():
-            # logging.info(f"spending items: {k}: {v}")
+            logging.info(f"spending items: {k}: {v}")
             """
-             spending items: 92: {'banking_entity': (92, 'Chris Software', False, '', 1, 'Wellsfargo Checking', 'WLS_CHK', None, None, None, None, 4, "Chris's 
-             Training / Development", 226, 'paddle.com'), 'transactions': [<rest_api.reports.processor_base.ProcessingTransaction object at 0x0000015C57D78590>]}            
+                                   0            1            2      3   4          5               6          7 
+             {'banking_entity': (7103, "Chris's Web Work", False, None, 3, 'Capital One Visa', 'CONE_VISA', 3003,
+                                      8         9     10   11                 12                   13          14 
+                                 'Recurring', 7103, 3003, 2003, "Chris's Training / Development", 5013, 'Amazon web services'), 
+                 
+              'transactions': [<rest_api.reports.report_processor.ProcessingTransaction object at 0x00000169C0260D50>, 
+                <rest_api.reports.report_processor.ProcessingTransaction object at 0x00000169C028B690>,
+                <rest_api.reports.report_processor.ProcessingTransaction object at 0x00000169C028A0D0>, 
+                <rest_api.reports.report_processor.ProcessingTransaction object at 0x00000169C02B6010>]}            
             """
             # desc = " | ".join(v["banking_entity"].qualifiers)
+            template_id = k
             desc = v['banking_entity'][14]
             amount = decimal.Decimal(0.0)
-            category = k
+            category = v['banking_entity'][12]
+            category_id = v['banking_entity'][11]
             for item in v["transactions"]:
                 amount += item.amount
 
             outfile.write("<tr>")
             outfile.write(
-                f'<td  class="right">{k}</td><td  class="right">{len(v["transactions"])}</td><td class="right">${amount}</td><td>{category}</td><td bgcolor="blue" style="color: white;">{desc}</td>'
+                f'<td  class="right">{k}</td>'
+                f'<td class="right">{len(v["transactions"])}</td>'
+                f'<td class="right">${amount}</td>'
+                f'<td>{category_id} <i>{category}</i></td>'
+                f'<td bgcolor="lightblue" ">{desc}</td>'
             )
             outfile.write("</tr>\n")
             if verbose:  # list all transactions below
                 outfile.write(
                     '<tr><td colspan=5 bgcolor="MediumSeaGreen"><table class="sub_section_div" '
-                    'width=90%><thead><tr><th>Transaction '
-                    'Id</th><th>Date</th><th>Amount</th><th>Description</th></tr></thead>\n'
+                    'width=90%><thead><tr><th>Transaction Id</th><th>Date</th><th>Amount</th>'
+                    '<th>Description</th><th>Transaction Data</th></tr></thead>\n'
                 )
 
                 for t in v["transactions"]:
                     outfile.write(
-                        f'<tr><td  class="right">{t.transaction_id}</td><td class="right">{t.transaction_date}</td><td class="right">{t.amount}</td><td>{t.description}</td></tr>\n'
+                        f'<tr><td  class="right">{t.transaction_id}</td>'
+                        f'<td class="right">{t.transaction_date}</td>'
+                        f'<td class="right">{t.amount}</td>'
+                        f'<td>{t.description}</td>'
+                        f'<td>{t.transaction_data}</td></tr>\n'
                     )
                 outfile.write("</table>\n")
-
         outfile.write("</table>\n")
 
     def _draw_extras_table(self, processor, outfile):
@@ -277,11 +297,15 @@ class Reporting:
         )
 
         outfile.write(
-            '<table class="first_table cell-border"><thead><tr><th>Id</th><th>Date</th><th>Amount</th><th>Description</th></tr></thead>\n'
+            '<table class="first_table cell-border"><thead><tr><th>Id</th><th>Date</th>'
+            '<th>Amount</th><th>Description</th></tr></thead>\n'
         )
         for e in processor.unrecognized_transactions:
             outfile.write(
-                f'<tr><td class="right">{e.transaction_id}</td><td class="right">{e.transaction_date}</td><td class="right">${e.amount}</td><td>{e.description}</td></tr>\n'
+                f'<tr><td class="right">{e.transaction_id}</td>'
+                f'<td class="right">{e.transaction_date}</td>'
+                f'<td class="right">${e.amount}</td>'
+                f'<td>{e.description}</td></tr>\n'
             )
 
         outfile.write("</table>\n")

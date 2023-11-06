@@ -1,9 +1,7 @@
 """
-    processors.py
+report_processor.py
 
-    Routines to process activity files for various financial institutions.
-
-    Each institution is derived from AccountBase.
+Data and processing routines for report data
 
 """
 import abc
@@ -24,6 +22,10 @@ class ProcessingTransaction:
         self.description = None
         self.batch_id = None
 
+    def __repr__(self):
+        return f'{self.transaction_id}, {self.template_id}, {self.institution_id}, {self.transaction_date},' \
+               f'{self.category_id}, {self.amount}, {self.description}, {self.batch_id}, {self.transaction_data}'
+
     def parse(self, data):
         #        0    1    2  3             4
         # data: (11, 104, 11, 3, datetime.date(2023, 2, 2),
@@ -43,7 +45,7 @@ class ProcessingTransaction:
         self.batch_id = data[9]
 
 
-class ProcessorBase(metaclass=abc.ABCMeta):
+class ReportProcessor(metaclass=abc.ABCMeta):
     def __init__(self, institution_id, templates):
         self.name = "Base"
         self.transactions = list()
@@ -56,98 +58,6 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         self.category_breakdown = {}
 
     """ -------------------- Template Matching Algorithm  -----------------"""
-
-    def find_banking_template(self, transaction):
-        """
-        loop through our config.bank_entries and then through each set of qualifiers to see if we have a match
-        :param transaction:
-        :return: matching template or None if not found
-        """
-        if "Deposit Home Banking Transfer From Sha" in transaction.description:
-            print("Found")
-        if "Deposit Home Banking Transfer From Sha" in transaction.category:
-            print("Found")
-
-        for be in self.templates:
-            found_count = 0
-            # match_all should come from template somewhere
-            for q in be.qualifiers:
-                if q.upper() in transaction.description.upper():
-                    found_count += 1
-                elif q.upper() in transaction.category.upper():
-                    found_count += 1
-
-            if found_count >= len(
-                be.qualifiers
-            ):  # or (found_count > 0 and match_all is False):
-                return be
-            # elif found_count > 0:
-            #     print(f"Found partial match {found_count} of {len(be.qualifiers)}")
-
-        return None
-
-    def add_spending_transaction(self, template, transaction):
-        """
-        Update our internal spending dictionary
-        :param template: template matched to the transaction
-        :param transaction: transaction to include
-        :return: None
-        """
-        if template[0] not in self.spending:
-            self.spending[template[0]] = {
-                "banking_entity": template,
-                "transactions": list(),
-            }
-        self.spending[template[0]]["transactions"].append(transaction)
-
-    def process_transactions(self, batch_id):
-        """
-        Loops through the internal list of transactions and adds them to the database using the specified
-        batch id.  This is used when loading the original datafiles from the banks
-        :return: None
-        """
-        conn = db_utils.db_access.connect_to_db()
-        for transaction in self.transactions:
-            transaction.normalize_data()
-            transaction.institution_id = self.institution_id
-            assert (
-                transaction.description and len(transaction.description) > 1
-            ), f"Invalid entry {transaction}"
-            db_utils.add_transaction(conn, transaction, batch_id)
-
-    def match_templates(self, batch_id: int, processed_batch_id: int):
-        """
-        This loads the given transaction_batch from the database and then analyzes each
-        transaction:
-            First it finds a matching template for the transaction
-            if successful:
-                Updates the Spending Dictionary as well as the
-                Category Breakdown Dictionary
-            otherwise it adds the transaction to the 'Extras' list
-        :param batch_id: batch to process
-               processed_batch_id:
-        :return: None
-        """
-        # Load data to process
-        raw_data = db_utils.fetch_transactions_from_batch(
-            batch_id=batch_id, institution_id=self.institution_id
-        )
-        self.transactions = self.parse_raw_data(raw_data)
-
-        # Loop through all transactions in the dataset
-        for transaction in self.transactions:
-            # loop through our templates and qualifiers to find a match
-            found_match = self.find_banking_template(transaction=transaction)
-            template_id_match = None
-            if found_match:
-                template_id_match = found_match.id
-
-            db_utils.add_processed_transaction(
-                transaction_id=transaction.transaction_id,
-                template_id=template_id_match,
-                processed_batch_id=processed_batch_id,
-                institution_id=self.institution_id,
-            )
 
     def load_processed_batch(self, processed_batch_id):
         # gives us template_id and transaction_id
@@ -192,17 +102,48 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         # Loop through all transactions in the dataset
         recognized_transactions = list()
         for transaction in self.transactions:
-            # logging.info({
-            #     "message": "analyze data",
-            #     "transaction": transaction
-            # })
+            logging.info({
+                "message": "analyze data",
+                "transaction": transaction
+            })
             """
             (1, 105, 1, 3, datetime.date(2023, 4, 13), ['2023-04-13', '2023-04-13', '7776', 'CAPITAL ONE ONLINE PYMT', 'Payment/Credit', '', '100.00'], None)}            
             """
             if transaction.template_id:
                 template = [x for x in self.templates if x[0] == transaction.template_id][0]
-                self.add_spending_transaction(template, transaction)
                 transaction.template_id = template[0]
+                logging.info({
+                    "message": "template",
+                    "template": template
+                })
+                """
+         templates: [(7094,                             0  
+                      'Cinemark',                       1
+                      False,                            2
+                      None,                             3
+                      2,                                4
+                      'Wellsfargo Visa',                5
+                      'WLS_VISA',                       6
+                      3003,                             7    tag id
+                      'Recurring',                      8    tag
+                      7094,                             9   template id again
+                      3003,                             10   tag id again
+                      2005,                             11   category id
+                      'Entertainment',                  12   category value
+                      5229,                             13   qualifier id
+                      'CINEMARK MOVIE CLUB')            14   qualifier value
+
+                              
+                'template': (7104, 'Payment', False, None, 3, 'Capital One Visa', 'CONE_VISA', 
+                None, None, None, None, 2004, 'Credit Card Payment', 5014, 'CAPITAL ONE ONLINE PYMT')}                
+                """
+
+                if transaction.template_id not in self.spending:
+                    self.spending[transaction.template_id] = {
+                        "banking_entity": template,
+                        "transactions": list(),
+                    }
+                self.spending[transaction.template_id]["transactions"].append(transaction)
             else:
                 self.unrecognized_transactions.append(transaction)
 
