@@ -930,6 +930,65 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
 """ Aggregate Results """
 
 
+def generate_report_data():
+    report_data = reports.ReportData()
+    report_data.categories = db_access.load_categories()
+    report_data.tags = db_access.load_tags()
+    report_data.institutions = db_access.load_institutions()
+
+    return report_data
+
+
+def build_report_processors(report_data, batch_id):
+    all_processors = list()
+    for bank in report_data.institutions:
+        # logging.info(f"bank: {bank}")
+        institution_id = bank[0]
+        templates = db_access.query_templates_by_institution(institution_id)
+        if templates:
+            logging.info(f"bank: {bank}")
+            logging.info(f"templates: {templates}")
+            """
+                    0                1                 2                 3                      4
+           templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
+                        5              6
+         , bank.name as bank_name, bank.key
+                  7                   8
+         , t.id as tag_id, t.value as tag_value
+                  9            10 
+         , tt.template_id, tt.tag_id
+                    11                      12
+         , c.id as category_id, c.value as category_value
+                    13                      14 
+         , q.id AS qualifier_id, q.value as qualifier_value 
+
+
+            """
+            """
+         templates: [(7094,                             0  
+                      'Cinemark',                       1
+                      False,                            2
+                      None,                             3
+                      2,                                4
+                      'Wellsfargo Visa',                5
+                      'WLS_VISA',                       6
+                      3003,                             7    tag id
+                      'Recurring',                      8    tag
+                      7094,                             9   template id again
+                      3003,                             10   tag id again
+                      2005,                             11   category id
+                      'Entertainment',                  12   category value
+                      5229,                             13   qualifier id
+                      'CINEMARK MOVIE CLUB')            14   qualifier value
+            """
+            proc = report_processor.ReportProcessor(institution_id, templates)
+            proc.name = bank[2]
+            proc.analyze_data(processed_batch_id=batch_id)
+            all_processors.append(proc)
+
+    return all_processors
+
+
 @router.get("/processed/templates", summary="Template Matching Data")
 async def query_processed_templates(
     processed_batch_id: int,
@@ -959,56 +1018,8 @@ async def query_processed_templates(
 
 def template_report(batch_id: int):
     """Generate a Template Verification Report from a Processed Batch"""
-    report_data = reports.ReportData()
-    report_data.categories = db_access.load_categories()
-    report_data.tags = db_access.load_tags()
-    report_data.institutions = db_access.load_institutions()
-
-    all_processors = list()
-    for bank in report_data.institutions:
-        # logging.info(f"bank: {bank}")
-        institution_id = bank[0]
-        templates = db_access.query_templates_by_institution(institution_id)
-        if templates:
-            logging.info(f"bank: {bank}")
-            logging.info(f"templates: {templates}")
-            """
-                    0                1                 2                 3                      4
-           templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
-                        5              6
-         , bank.name as bank_name, bank.key
-                  7                   8
-         , t.id as tag_id, t.value as tag_value
-                  9            10 
-         , tt.template_id, tt.tag_id
-                    11                      12
-         , c.id as category_id, c.value as category_value
-                    13                      14 
-         , q.id AS qualifier_id, q.value as qualifier_value 
-            
-            
-            """
-            """
-         templates: [(7094,                             0  
-                      'Cinemark',                       1
-                      False,                            2
-                      None,                             3
-                      2,                                4
-                      'Wellsfargo Visa',                5
-                      'WLS_VISA',                       6
-                      3003,                             7    tag id
-                      'Recurring',                      8    tag
-                      7094,                             9   template id again
-                      3003,                             10   tag id again
-                      2005,                             11   category id
-                      'Entertainment',                  12   category value
-                      5229,                             13   qualifier id
-                      'CINEMARK MOVIE CLUB')            14   qualifier value
-            """
-            proc = report_processor.ReportProcessor(institution_id, templates)
-            proc.name = bank[2]
-            proc.analyze_data(processed_batch_id=batch_id)
-            all_processors.append(proc)
+    report_data = generate_report_data()
+    all_processors = build_report_processors(report_data, batch_id)
 
     reports.Reporting(report_data).template_verification_report(
         all_processors,
@@ -1019,27 +1030,16 @@ def template_report(batch_id: int):
 
 
 @router.get("/processed/categories", summary="Category Breakdown Report")
-async def query_processed_categories(
-    processed_batch_id: int,
-    institution_id: Optional[int] = None,
-    include_spending: Optional[bool] = True,
-    include_missing: Optional[bool] = False,
-):
+async def query_processed_categories(processed_batch_id: int):
     """
     Builds a json model list transactions broken down by categories
     Grouped by institution
     :param processed_batch_id:
-    :param institution_id:
-    :param include_spending:
-    :param include_missing:
     :return:
     """
     logging.info({
-        "message": "Template data requested",
-        "batch": processed_batch_id,
-        "bank": institution_id,
-        "with spending": include_spending,
-        "with missing": include_missing
+        "message": "Category data requested",
+        "batch": processed_batch_id
     })
 
     return category_report(processed_batch_id)
@@ -1047,21 +1047,8 @@ async def query_processed_categories(
 
 def category_report(batch_id: int):
     """Generate a Category Breakdown Report"""
-
-    report_data = reports.ReportData()
-    report_data.categories = db_access.load_categories()
-    report_data.tags = db_access.load_tags()
-    report_data.institutions = db_access.load_institutions()
-
-    all_processors = list()
-    for bank in report_data.institutions:
-        institution_id = bank[0]
-        templates = db_access.query_templates_by_institution(institution_id)
-        if templates:
-            proc = report_processor.ReportProcessor(institution_id, templates)
-            proc.name = bank[2]
-            proc.analyze_data(processed_batch_id=batch_id)
-            all_processors.append(proc)
+    report_data = generate_report_data()
+    all_processors = build_report_processors(report_data, batch_id)
 
     reports.Reporting(report_data).category_verification_report(
         all_processors,
