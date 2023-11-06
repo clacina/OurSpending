@@ -48,22 +48,15 @@ export const SidebarData = [
         cName: "nav-text"
     },
     {
-        title: "Reports",
+        title: "Template Report",
+        path: "/reports/template",
         icon: <FaIcons.FaBook />,
         cName: "nav-text",
-        children: [
-            {
-                title: "Template Report",
-                path: "/tags",
-                icon: <FaIcons.FaTags />,
-                cName: "nav-text"
-            },
-            {
-                title: "Category Report",
-                path: "/tags",
-                icon: <FaIcons.FaTags />,
-                cName: "nav-text"
-            }
-        ]
+    },
+    {
+        title: "Category Report",
+        path: "/reports/category",
+        icon: <FaIcons.FaBook />,
+        cName: "nav-text",
     },
 ];

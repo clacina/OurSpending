@@ -20,6 +20,13 @@ import TransactionsList from "./components/transaction/transactions-list.compone
 // jsLogger.setUseTimestamp(false);
 
 function App() {
+    const PageNotFound = () => {
+        return(
+            <div>
+                <h2>404 Page Not Found</h2>
+            </div>
+        )
+    }
     return (
         <Fragment>
             <MenuBar/>
@@ -34,6 +41,7 @@ function App() {
                 <Route path='processed_batches/*' element={<ProcessedBatches/>}/>
                 <Route path='processed_transactions/:batch_id' element={<ProcessedTransactions/>}/>
                 <Route path='reports/*' element={<Reports/>}/>
+                <Route path='*' element={<PageNotFound />}/>
             </Routes>
         </Fragment>
     );
