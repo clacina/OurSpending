@@ -121,7 +121,6 @@ const ProcessedTransactions = () => {
         if (categoryView) {
             if (!categorized) {
                 setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
-                    console.table(item);
                     return (item[1][0].template === null && item[1][0].transaction.category === null);
                 }));
             } else {
@@ -187,7 +186,7 @@ const ProcessedTransactions = () => {
             // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
                 categoriesFilter.forEach((cat_id) => {
-                    if (cat_id === item.template.category.id) {
+                    if (cat_id === item.transaction.category.id) {
                         processTransaction = true;
                     }
                 })
