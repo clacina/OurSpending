@@ -32,7 +32,6 @@ class TemplateReportModel(TemplateInputModel):
         self.category = data.category
         self.institution_id = data.institution.id
 
-        logging.info(f"TemlateTags: {data.tags}")
         for t in data.tags:
             if t not in self.tags:
 
