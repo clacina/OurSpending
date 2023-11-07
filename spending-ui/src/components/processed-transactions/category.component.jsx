@@ -24,8 +24,6 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
 
-    console.log("Category: ", category);
-
     useEffect(() => {
         if (transactionDataDefinitions.length !== 0) {
             setIsLoaded(true);
@@ -48,8 +46,6 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
-        console.log("        : ", tag_list);
         eventHandler({
             'updateTags': {
                 'transaction_id': transaction_id,
@@ -71,7 +67,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
         if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
         }
-        console.log({e, column, columnIndex, row, rowIndex})
+        // console.log({e, column, columnIndex, row, rowIndex})
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -83,10 +79,8 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     }
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 5) {  // Notes column
-            console.log("Setting active row to: ", row.transaction);
             setActiveRow(row);
             e.preventDefault();
-            console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();
             setOpenNotes(true);
         }
@@ -126,9 +120,6 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     // ----------------------- On Click Handlers ------------------------------
 
     const rowEvents = {
-        // onClick: (e, row, index) => {
-        //     setActiveRow(row);
-        // },
         onContextMenu: (e, row, index) => {
             e.stopPropagation();
             showContext(e, row);
@@ -136,7 +127,6 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     };
 
     const assignCategoryToTransaction = (event) => {
-        console.log(event);
         eventHandler({
             "updateCategory": {
                 "transaction_id": activeRow.transaction.id,
@@ -148,14 +138,12 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
-            console.log("Expanding: ", rowIndex);
             setActiveRow(row);
             return(<TransactionDetailComponent row={row} eventHandler={assignCategoryToTransaction}/>);
         },
     }
 
     const showContext = (event, row) => {
-        console.log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({

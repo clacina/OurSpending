@@ -151,6 +151,7 @@ const HeaderComponent = ({eventHandler}) => {
                      onSelect={handleSelect}>
                     <Nav.Link eventKey="templateview">Group by Template</Nav.Link>
                     <Nav.Link eventKey="categoryview">Group by Category</Nav.Link>
+                    <Nav.Link eventKey="noncategoryview">Uncategorized</Nav.Link>
                     <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
                     <button onClick={onSearch} >Search</button>
                 </Nav>

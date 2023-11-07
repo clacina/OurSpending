@@ -66,9 +66,6 @@ const ProcessedTransactions = () => {
 
     useEffect(() => {
         // Group transactions by institution
-        // console.log("Grouping Transactions by Institution: ", transactionsMap.length);
-        // console.log("--with templates: ", templatesMap.length);
-        // console.log("--and ", transactionResourcesLoaded);
         if (transactionResourcesLoaded && transactionsMap.length && templatesMap.length) {
             const institution_groups = {};
             transactionsMap.forEach((t) => {
@@ -84,7 +81,6 @@ const ProcessedTransactions = () => {
                 institution_groups[t.institution_id].push(t);
             })
             setInstitutionGroups(institution_groups);
-            // console.log("Unleash the Kraken!");
             setInstitutionsLoaded(true);
         } else {
             console.log("No definitions yet");
@@ -98,18 +94,15 @@ const ProcessedTransactions = () => {
 
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
-            console.log("Updating template groups");
             setTemplateGroups(groupTransactionsByTemplate());
             setTemplatesGrouped(true);
 
-            console.log("Updating category groups");
             setCategoryGroups(groupTransactionsByCategory());
         }
     }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, institutionFilter, startDateFilter, endDateFilter, matchAllTags, matchAllCategories, matchAllInstitutions, searchString]);
 
     useEffect(() => {
         if (templatesGrouped) {
-            // console.log("Setting entity map with templateGroups");
             // This is triggered when setTemplateGroups() is called
             setEntityMap(Object.entries(templateGroups));
         }
@@ -118,7 +111,6 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // We're ready, so allow rendering
         if (!entityMapCreated && entityMap.length && !isLoaded) {
-            // console.log("Setting isLoaded to True - ", entityMap);
             setIsLoaded(true);
             setEntityMapCreated(true);
         }
@@ -127,23 +119,16 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // Triggered when setUsingGroup() is called
         if (categoryView) {
-            // console.log("Set entity map with categories");
             if (!categorized) {
-                // console.log("Filtering: ", categoryGroups);
                 setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
-                    // console.log(item[1][0]);
-                    return (item[1][0].template === null);
+                    console.table(item);
+                    return (item[1][0].template === null && item[1][0].transaction.category === null);
                 }));
-                // setCategorizedButtonTitle("Show Categorized");
             } else {
                 setCategoriesMap(Object.entries(categoryGroups));
-                // setCategorizedButtonTitle("Hide Categorized");
             }
-            // setGroupByCategoryButtonTitle("Group by Institution");
         } else {
-            // console.log("Set entity map with template groups");
             setEntityMap(Object.entries(templateGroups));
-            // setGroupByCategoryButtonTitle("Group by Category");
         }
     }, [categoryView, categorized]);
 
@@ -272,6 +257,9 @@ const ProcessedTransactions = () => {
                     break;
                 case 'categoryview':
                     setCategoryView(true);
+                    break;
+                case 'noncategoryview':
+                    setCategorized(false);
                     break;
                 case 'matchAllTags':
                     setMatchAllTags(!matchAllTags);
