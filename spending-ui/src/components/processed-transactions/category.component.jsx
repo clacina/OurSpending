@@ -113,7 +113,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     }
 
     const generateColumns = () => {
-        console.log("Generating columns: ", isCategorized);
+        // console.log("Generating columns: ", isCategorized);
         if(!isCategorized) {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
             columns.push({

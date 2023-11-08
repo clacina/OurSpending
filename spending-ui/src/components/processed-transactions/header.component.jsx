@@ -26,7 +26,6 @@ const HeaderComponent = ({eventHandler}) => {
     const [clearTags, setClearTags] = useState(false);
     const [matchAllTags, setMatchAllTags] = useState(false);
     const [matchAllCategories, setMatchAllCategories] = useState(false);
-    const [matchAllInstitutins, setMatchAllInstitutions] = useState(false);
 
     const categorySelectionRef = useRef();
     const institutionSelectionRef = useRef();
@@ -117,11 +116,6 @@ const HeaderComponent = ({eventHandler}) => {
         eventHandler({'banks': banks});
     }
 
-    const changeAllInstitutions = () => {
-        setMatchAllInstitutions(!matchAllInstitutins);
-        eventHandler('matchAllInstitutions');
-    }
-
     const onInputChange = (inputValue: string, {action, prevInputValue}: InputActionMeta) => {
         console.log("action: ", action);
     }
@@ -137,7 +131,6 @@ const HeaderComponent = ({eventHandler}) => {
         institutionSelectionRef.current.clearValue();
         setMatchAllTags(false);
         setMatchAllCategories(false);
-        setMatchAllInstitutions(false);
     }
 
     return(
@@ -175,8 +168,6 @@ const HeaderComponent = ({eventHandler}) => {
                         <select>
 
                         </select>
-                        <button>Match all Banks</button>
-
                     </div>
                 </form>
 
@@ -236,13 +227,6 @@ const HeaderComponent = ({eventHandler}) => {
                               menuPortalTarget={document.body}
                               menuPosition={'fixed'}
                               onChange={updateInstitution}/>
-                    <Form.Check
-                        type="switch"
-                        id="allInstitutions"
-                        label="Match ALL Banks"
-                        checked={matchAllInstitutins}
-                        onChange={changeAllInstitutions}
-                    />
                 </Nav>
             </Navbar>
             <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
