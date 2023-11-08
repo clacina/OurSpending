@@ -88,16 +88,31 @@ const ProcessedTransactions = () => {
 
     }, [transactionResourcesLoaded, transactionsMap.length, templatesMap.length, transactionsMap, templatesMap]);
 
+    const updateContent = () => {
+        if (categoryView) {
+            if (!categorized) {
+                setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
+                    return (item[1][0].template === null && item[1][0].transaction.category === null);
+                }));
+            } else {
+                setCategoriesMap(Object.entries(categoryGroups));
+            }
+        } else {
+            setEntityMap(Object.entries(templateGroups));
+        }
+    }
+
     useEffect(() => {
         //  Populate our two data sets - one organized by template, the other organized by category
         //  - Apply any / all filters inside the two grouping routines.
 
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
+            console.log("Filter update")
             setTemplateGroups(groupTransactionsByTemplate());
             setTemplatesGrouped(true);
-
             setCategoryGroups(groupTransactionsByCategory());
+            updateContent()
         }
     }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, institutionFilter, startDateFilter, endDateFilter, matchAllTags, matchAllCategories, matchAllInstitutions, searchString]);
 
@@ -118,17 +133,7 @@ const ProcessedTransactions = () => {
 
     useEffect(() => {
         // Triggered when setUsingGroup() is called
-        if (categoryView) {
-            if (!categorized) {
-                setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
-                    return (item[1][0].template === null && item[1][0].transaction.category === null);
-                }));
-            } else {
-                setCategoriesMap(Object.entries(categoryGroups));
-            }
-        } else {
-            setEntityMap(Object.entries(templateGroups));
-        }
+        updateContent();
     }, [categoryView, categorized]);
 
     // ----------------------------------------------------------------
@@ -181,7 +186,7 @@ const ProcessedTransactions = () => {
         // Categories
         if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
             processTransaction = false;
-
+            console.log("Applying category filter: ", categoriesFilter);
             // check entity level category first.  If it exists use it over the template category
             // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
@@ -255,10 +260,11 @@ const ProcessedTransactions = () => {
                     setCategoryView(false);
                     break;
                 case 'categoryview':
+                    setCategorized(true);
                     setCategoryView(true);
                     break;
                 case 'noncategoryview':
-                    setCategorized(false);
+                    setCategorized(!categorized);
                     break;
                 case 'matchAllTags':
                     setMatchAllTags(!matchAllTags);

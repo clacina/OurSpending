@@ -91,6 +91,18 @@ const CategoryComponent = ({category, display, eventHandler}) => {
         })
         return (<div>{note_list}</div>);
     }
+
+    const columnOneFormater = (cell, row, rowIndex, formatExtraData) => {
+        return(row.transaction.institution.name);
+    }
+
+    const columnTwoFormater = (cell, row, rowIndex, formatExtraData) => {
+        if(row.transaction) {
+            return(row.transaction.description);
+        }
+        return("--")
+    }
+
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 5) {  // Notes column
             setActiveRow(row);
@@ -101,10 +113,19 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     }
 
     const generateColumns = () => {
-        if(isCategorized) {
+        console.log("Generating columns: ", isCategorized);
+        if(!isCategorized) {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-            columns.push({dataField: 'template.hint', text: 'Template', editable: false, style: {cursor: 'pointer'}})
-            columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}})
+            columns.push({
+                dataField: 'template.hint',
+                text: 'Template',
+                editable: false,
+                formatter: columnOneFormater,
+                style: {cursor: 'pointer'}
+            })
+
+            columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}
+            , formatter: columnTwoFormater})
             columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
@@ -198,7 +219,6 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     // ----------------------------------------------------------------
     if(isLoaded) {
         generateColumns();
-
         return (
             <div>
                 <Collapsible trigger={<CategoryTitleComponent category={category}/>}>

@@ -142,9 +142,49 @@ const HeaderComponent = ({eventHandler}) => {
 
     return(
         <div>
+            <div className='llNavBar'>
+                <form>
+                    <div className='llNavTop'>
+                        <div className='llNavDisplay'>
+                            <ul>
+                                <li><button>Group by Template</button></li>
+                                <li><button>Group by Category</button></li>
+                                <li><button>Hide Categorized</button></li>
+                            </ul>
+                        </div>
+                        <div className='llNavSearch'>
+                            <label>Search</label>
+                            <input/>
+                            <button>Search Now</button>
+                        </div>
+                    </div>
+                    <div className='llNavBottom'>
+                        <label>Categories</label>
+                        <select >
+
+                        </select>
+                        <button>Match all Categories</button>
+
+                        <label>Tags</label>
+                        <select>
+
+                        </select>
+                        <button>Match all Tags</button>
+
+                        <label>Banks</label>
+                        <select>
+
+                        </select>
+                        <button>Match all Banks</button>
+
+                    </div>
+                </form>
+
+            </div>
+            <hr/>
             <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
                 <Navbar.Brand>Display and Filter Options</Navbar.Brand>
-                <Nav justify={false}
+                <Nav
                      className="me-auto"
                      justify-content="space-between"
                      activeKey="1"
