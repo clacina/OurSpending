@@ -59,4 +59,10 @@ export const SidebarData = [
         icon: <FaIcons.FaBook />,
         cName: "nav-text",
     },
+    {
+        title: "Spending Chart",
+        path: "/reports",
+        icon: <FaIcons.FaBook />,
+        cName: "nav-text",
+    },
 ];

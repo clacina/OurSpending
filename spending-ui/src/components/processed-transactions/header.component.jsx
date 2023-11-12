@@ -25,7 +25,6 @@ const HeaderComponent = ({eventHandler}) => {
     const [endDateFilter, setEndDateFilter] = useState();
     const [clearTags, setClearTags] = useState(false);
     const [matchAllTags, setMatchAllTags] = useState(false);
-    const [matchAllCategories, setMatchAllCategories] = useState(false);
 
     const categorySelectionRef = useRef();
     const institutionSelectionRef = useRef();
@@ -102,11 +101,6 @@ const HeaderComponent = ({eventHandler}) => {
         eventHandler('matchAllTags');
     }
 
-    const changeAllCategories = () => {
-        setMatchAllCategories(!matchAllCategories);
-        eventHandler('matchAllCategories');
-    }
-
     function updateInstitution(event) {
         // event institutions is an array of active entries in the select
         const banks = []
@@ -130,7 +124,6 @@ const HeaderComponent = ({eventHandler}) => {
         categorySelectionRef.current.clearValue();
         institutionSelectionRef.current.clearValue();
         setMatchAllTags(false);
-        setMatchAllCategories(false);
     }
 
     return(
@@ -211,13 +204,6 @@ const HeaderComponent = ({eventHandler}) => {
                               menuPortalTarget={document.body}
                               menuPosition={'fixed'}
                               onChange={updateCategory}/>
-                    <Form.Check
-                        type="switch"
-                        id="allCategories"
-                        label="Match ALL Categories"
-                        checked={matchAllCategories}
-                        onChange={changeAllCategories}
-                    />
                     <Nav.Link as={Select}
                               id="institutionSelection"
                               ref={institutionSelectionRef}
