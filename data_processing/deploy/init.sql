@@ -18,6 +18,8 @@ CREATE TABLE qualifiers
     institution_id INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
     unique (value)
 );
+ALTER SEQUENCE qualifiers_id_seq RESTART WITH 5000;
+
 
 DROP TABLE IF EXISTS categories CASCADE;
 CREATE TABLE categories
@@ -27,6 +29,8 @@ CREATE TABLE categories
     notes TEXT DEFAULT NULL,
     unique (value)
 );
+ALTER SEQUENCE categories_id_seq RESTART WITH 2000;
+
 
 DROP TABLE IF EXISTS tags CASCADE;
 CREATE TABLE tags
@@ -37,6 +41,8 @@ CREATE TABLE tags
     color VARCHAR(10) DEFAULT '#0052CC',
     unique (value)
 );
+ALTER SEQUENCE tags_id_seq RESTART WITH 3000;
+
 
 DROP TABLE IF EXISTS templates CASCADE;
 CREATE TABLE templates
@@ -48,6 +54,7 @@ CREATE TABLE templates
     hint           TEXT                                                   NOT NULL,
     notes          TEXT
 );
+ALTER SEQUENCE templates_id_seq RESTART WITH 7000;
 
 DROP TABLE IF EXISTS template_qualifiers;
 CREATE TABLE template_qualifiers
@@ -111,6 +118,7 @@ CREATE TABLE transaction_notes
     transaction_id INTEGER REFERENCES transaction_records (id) ON DELETE CASCADE NOT NULL,
     note           TEXT
 );
+ALTER SEQUENCE transaction_notes_id_seq RESTART WITH 8000;
 
 
 DROP TABLE IF EXISTS transaction_tags;
@@ -130,7 +138,7 @@ CREATE TABLE processed_transaction_batch
     notes                TEXT,
     transaction_batch_id INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL
 );
-ALTER SEQUENCE processed_transaction_batch_id_seq RESTART WITH 1000;
+ALTER SEQUENCE processed_transaction_batch_id_seq RESTART WITH 500;
 
 
 DROP TABLE IF EXISTS processed_transaction_records CASCADE;

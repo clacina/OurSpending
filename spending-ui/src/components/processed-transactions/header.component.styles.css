@@ -43,3 +43,37 @@
     border: 1px;
     color: black;
 }
+
+.llNavBar {
+    display: none;
+}
+
+.llNavBar li {
+    margin: auto;
+    display: inline-block;
+}
+
+.llNavBar input {
+    width: 300px;
+}
+
+.llNavSearch {
+    display: inline-block;
+
+}
+
+.llNavDisplay {
+    display: inline-block;
+}
+
+.llNavTop {
+
+}
+
+.llNavBottom {
+
+}
+
+.llNavBottom select {
+    width: 200px;
+}

@@ -24,7 +24,8 @@ from rest_api.template_models import (
     TemplateInputModel,
     SingleTemplateReportBuilder,
 )
-
+from rest_api.reports import reports
+from rest_api.reports import report_processor
 
 router = APIRouter()
 db_access = DBAccess()
@@ -90,7 +91,6 @@ async def get_template(template_id: int):
     response_model=TemplateReportModel,
 )
 def update_template(template_id: int, template: TemplateReportModel = Body(...)):
-    logging.info(f"Updating template: {template_id}")
     query_result = db_access.query_templates_by_id(template_id)
     if not query_result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -107,7 +107,6 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
                         13                     14
              , q.id AS qualifier_id, q.value as qualifier_value 
     """
-    logging.info(f"Passed in template: {template}")
     existing_template = SingleTemplateReportBuilder(query_result).process()
     update_data = template.dict(exclude_unset=True)
     new_template = existing_template.copy(update=update_data)
@@ -120,14 +119,12 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
     """
 
     # Store updated template in database
-    # TODO: Store changed template in DB
-    logging.info({
-        "message": "Modifying template",
-        "original": existing_template,
-        "updated ": new_template
-    })
+    # logging.info({
+    #     "message": "Modifying template",
+    #     "original": existing_template,
+    #     "updated ": new_template
+    # })
 
-    logging.info(f"Query: {query_result[0][11]}")
     new_template.category = models.CategoryModel(
         id=query_result[0][11],
         value=query_result[0][12]
@@ -139,7 +136,7 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
         )
     if template.tags:
         new_template.tags = template.tags
-    logging.info(f"New Template: {new_template}")
+    # logging.info(f"New Template: {new_template}")
     db_access.update_template(new_template)
 
     return new_template
@@ -229,7 +226,6 @@ async def get_category(category_id: int):
 )
 async def add_category(info: Request):
     json_data = await info.json()
-    logging.info(f"Create Category: {json_data}")
     query_result = db_access.create_category(value=json_data['value'], notes=json_data.get('notes'))
     if not query_result:  # category exists
         raise HTTPException(
@@ -249,7 +245,6 @@ async def update_category(
     value: str = Body(...),
     notes: str = Body(...),
 ):
-    logging.info(f"Updating Category: {category_id} to {value} with {notes}")
     try:
         db_access.update_category(category_id=category_id, value=value, notes=notes)
     except Exception:
@@ -286,7 +281,6 @@ async def get_institutions():
 )
 async def create_institution(info: Request = None):
     data = await info.json()
-    logging.info(f"Create Institution: {data}")
 
     new_id = db_access.create_institution(data["key"], data["name"])
     inst = models.InstitutionsModel(id=new_id, key=data["key"], name=data["name"])
@@ -344,7 +338,6 @@ async def add_qualifier(
     value: str = Body(...),
     institution_id: str = Body(...),
 ):
-    logging.info(f"Create Qualifier: {value}")
     query_result = db_access.create_qualifer(value=value, institution_id=institution_id)
     if not query_result:  # qualifier exists
         raise HTTPException(
@@ -396,7 +389,6 @@ async def add_tag(
     notes: str = Body(...),
     color: str = Body(...),
 ):
-    logging.info(f"Create Tag: {value} with {notes}")
     query_result = db_access.create_tag(value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(
@@ -418,7 +410,6 @@ async def update_tag(
     notes: str = Body(...),
     color: str = Body(...),
 ):
-    logging.info(f"Updating Tag {tag_id}: {value} with {notes} and {color}")
     query_result = db_access.update_tag(tag_id=tag_id, value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(
@@ -440,7 +431,6 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     for tr in transactions:
         try:
             model = parse_transaction_record(tr)
-            logging.info(f"tranaction id: {model.id}")
             if model.id not in transaction_set:
                 transaction_set[model.id] = model
             else:
@@ -452,7 +442,7 @@ async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
 
 
 def parse_transaction_record(row):
-    logging.info(f"Row len: {len(row)}")
+    # logging.info(f"Row len: {len(row)}")
     """
 0         transaction_records.id AS TID, 
 1         transaction_records.batch_id AS BID, 
@@ -551,24 +541,20 @@ def parse_transaction_record(row):
     response_model=models.TransactionRecordModel,
 )
 async def get_transaction(transaction_id: int):
-    logging.info(f"Fetching transaction with id: {transaction_id}")
     transaction = db_access.fetch_transaction(
         transaction_id=transaction_id
     )
-    logging.info(f"Got transaction: {transaction}")
     transaction_list = []
     for tr in transaction:
         try:
             model = parse_transaction_record(tr)
             if len(transaction_list):
-                logging.info(f"calling update: {transaction_list[0]}")
                 transaction_list[0].update(model)
             else:
                 transaction_list.append(model)
         except Exception as e:
             logging.info(f"Got exception: {str(e)}")
 
-    logging.info(f"size: {len(transaction_list)}")
     if transaction_list:
         return transaction_list[0]
 
@@ -596,7 +582,6 @@ async def get_transaction_notes(transaction_id: int):
     response_model=models.TransactionRecordModel,
 )
 async def add_transaction_category(transaction_id: int, category_id: int):
-    logging.info(f"Input {transaction_id}, {category_id}")
     db_access.assign_category_to_transaction(transaction_id, category_id)
 
     transaction = db_access.fetch_transaction(
@@ -624,11 +609,8 @@ async def add_transaction_category(transaction_id: int, category_id: int):
     response_model=models.TransactionRecordModel,
 )
 async def add_transaction_note(transaction_id: int, info: Request):
-    logging.info(f"Request: {info}")
     json_data = await info.json()
-    logging.info(f"Data: {json_data}")
 
-    logging.info(f"Input {transaction_id}, {json_data['note']}")
     db_access.add_note_to_transaction(transaction_id, json_data['note'])
 
     transaction = db_access.fetch_transaction(
@@ -664,7 +646,6 @@ async def reset_transaction_notes(transaction_id: int, info: Request):
     }
     """
     json_data = await info.json()
-    logging.info(f"Got json data of: {json_data}")
 
     db_access.clear_transaction_notes(transaction_id=transaction_id)
     for note in json_data:
@@ -712,7 +693,6 @@ async def reset_transaction_tags(
         raise e
 
     for tag in tag_ids:
-        logging.info(f"adding tag: {tag}")
         db_access.add_tag_to_transaction(transaction_id, tag)
 
     transaction = db_access.fetch_transaction(
@@ -865,7 +845,6 @@ SELECT   processed_transaction_records.id as PID,
             {"message": f"No transactions found for processed batch {batch_id}"}
         )
 
-    logging.info(f"Sending back: {transaction_list.values()}")
     return list(transaction_list.values())
 
 
@@ -905,7 +884,6 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
     transaction_record = {}
     if transactions:
         for row in transactions:
-            logging.info(f"Row: {row}")
             batch_id = row[1]
             tr = models.ProcessedTransactionRecordModel(
                 id=row[0],
@@ -923,167 +901,130 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
             {"message": f"No transactions found for processed batch {batch_id}"}
         )
 
-    logging.info(f"Sending back: {transaction_record[transaction_id]}")
     return list(transaction_record[transaction_id])
 
 """ Aggregate Results """
 
 
-# class TransactionModel(BaseModel):
-#     transaction_id: int
-#     transaction_date: datetime
-#     amount: decimal
-#     description: str
-#
-#
-# class TemplateMatchModel(BaseModel):
-#     template_id: int
-#     category_id: int
-#     description: str
-#     transactions: List[TransactionModel]
-#
-#
-# class ProcessorModel(BaseModel):
-#     processor_id: int
-#     templates: List[TemplateMatchModel]
+def generate_report_data():
+    report_data = reports.ReportData()
+    report_data.categories = db_access.load_categories()
+    report_data.tags = db_access.load_tags()
+    report_data.institutions = db_access.load_institutions()
+
+    return report_data
 
 
-# @router.get("/processed/templates", summary="Template Matching Data")
-# async def query_processed_templates(
-#     processed_batch_id: int,
-#     institution_id: Optional[int] = None,
-#     include_spending: Optional[bool] = True,
-#     include_missing: Optional[bool] = False,
-# ):
-#     """
-#     Builds a json model list transaction to template matches and omissions.
-#     Grouped by institution
-#     :param processed_batch_id:
-#     :param institution_id:
-#     :param include_spending:
-#     :param include_missing:
-#     :return:
-#     """
-#     logging.info("Template data requested")
-#
-#     report_data = reports.ReportData()
-#     report_data.categories = db_utils.db_access.load_categories()
-#     report_data.tags = db_utils.db_access.load_tags()
-#     report_data.institutions = db_utils.db_access.load_institutions()
-#     all_processors = settings.create_configs()
-#
-#     for bank in all_processors:
-#         if not institution_id or bank.config.institution_id == institution_id:
-#             bank.analyze_data(processed_batch_id=processed_batch_id)
-#             # print(json.dumps(bank.spending, indent=4))
-#             # print(bank.__dict__)
-#             bank_json = {
-#                 "name": bank["name"],
-#                 "datafile": bank["datafile"],
-#                 "transactions": bank["transactions"],
-#                 "config": bank["config"],
-#                 "unrecognized_transactions": bank["unrecognized_transactions"],
-#                 "spending": bank["spending"],
-#                 "category_breakdown": bank["category_breakdown"],
-#             }
-#
-#             for tx in ["transactions"]:
-#                 print(tx.__dict__)
-#
-#     # {
-#     #     'name': 'Care Credit',
-#     #     'datafile': None,
-#     #     'transactions': [ < processing.transaction_models.CareCreditTransaction object at 0x0000020845E51F90 > , < processing.transaction_models.CareCreditTransaction object at 0x00000208457E0550 > , < processing.transaction_models.CareCreditTransaction object at 0x0000020845E52590 > , < processing.transaction_models.CareCreditTransaction object at 0x0000020845789690 > ],
-#     #     'config': < processing.settings.ConfigurationData object at 0x0000020845EF00D0 > ,
-#     #     'unrecognized_transactions': [],
-#     #     'spending': {
-#     #         1: {
-#     #             'banking_entity': Vet - 11 False 27 None,
-#     #             'transactions': [ < processing.transaction_models.CareCreditTransaction object at 0x0000020845E51F90 > ]
-#     #         },
-#     #         2: {
-#     #             'banking_entity': Interest - 11 False 13 None,
-#     #             'transactions': [ < processing.transaction_models.CareCreditTransaction object at 0x00000208457E0550 > , < processing.transaction_models.CareCreditTransaction object at 0x0000020845789690 > ]
-#     #         },
-#     #         3: {
-#     #             'banking_entity': Payment - 11 False 16 None,
-#     #             'transactions': [ < processing.transaction_models.CareCreditTransaction object at 0x0000020845E52590 > ]
-#     #         }
-#     #     },
-#     #     'category_breakdown': {}
-#     # }
-#
-#     # tm = TemplateMatch(
-#     #     template_id=
-#     # )
-#     # proc = ProcessorModel(
-#     #     processor_id=bank.config.institution_id,
-#     #     templates=templates
-#     # )
-#
-#     def _draw_spending_table(
-#         self, processor, outfile, total_spending_count, verbose=False
-#     ):
-#         outfile.write(
-#             "<thead><tr><th>Template ID</th><th># Transactions</th><th>Total</th><th>Category</th><th>Description</th"
-#             "></tr></thead>\n"
-#         )
-#         for k, v in processor.spending.items():
-#             desc = " | ".join(v["banking_entity"].qualifiers)
-#             amount = 0.0
-#             category = self.report_data.get_category(v["banking_entity"].category_id)
-#             for item in v["transactions"]:
-#                 amount += item.amount
-#
-#             outfile.write("<tr>")
-#             outfile.write(
-#                 f'<td  class="right">{k}</td><td  class="right">{len(v["transactions"])}</td><td class="right">${amount}</td><td>{category}</td><td bgcolor="blue" style="color: white;">{desc}</td>'
-#             )
-#             outfile.write("</tr>\n")
-#             if verbose:  # list all transactions below
-#                 outfile.write(
-#                     '<tr><td colspan=5 bgcolor="MediumSeaGreen"><table class="sub_section_div" '
-#                     "width=90%><thead><tr><th>Transaction "
-#                     "Id</th><th>Date</th><th>Amount</th><th>Description</th></tr></thead>\n"
-#                 )
-#
-#                 for t in v["transactions"]:
-#                     outfile.write(
-#                         f'<tr><td  class="right">{t.transaction_id}</td><td class="right">{t.date}</td><td class="right">{t.amount}</td><td>{t.description}</td></tr>\n'
-#                     )
-#                 outfile.write("</table>\n")
-#
-#         outfile.write("</table>\n")
-#
-#     def _draw_extras_table(self, processor, outfile):
-#         outfile.write(
-#             f"<h3>Unrecognized Transactions</h3><p>{len(processor.unrecognized_transactions)} Transactions</p>\n"
-#         )
-#
-#         outfile.write(
-#             '<table class="first_table cell-border"><thead><tr><th>Id</th><th>Date</th><th>Amount</th><th>Description</th></tr></thead>\n'
-#         )
-#         for e in processor.unrecognized_transactions:
-#             outfile.write(
-#                 f'<tr><td class="right">{e.transaction_id}</td><td class="right">{e.date}</td><td class="right">${e.amount}</td><td>{e.description}</td></tr>\n'
-#             )
-#
-#         outfile.write("</table>\n")
-#
-#     def _line_item_report(
-#         self, processor, outfile, include_spending=True, include_extras=True
-#     ):
-#         # Validate that entry counts match
-#         total_spending_count = processor.calc_spending_item_count()
-#
-#         outfile.write(
-#             f"<h2>{processor.name}</h2> <p>{len(processor.transactions)} Transactions</p>\n"
-#         )
-#
-#         if include_spending:
-#             self._draw_spending_table(
-#                 processor, outfile, total_spending_count, verbose=True
-#             )
-#
-#         if include_extras and len(processor.unrecognized_transactions):
-#             self._draw_extras_table(processor, outfile)
+def build_report_processors(report_data, batch_id):
+    all_processors = list()
+    for bank in report_data.institutions:
+        # logging.info(f"bank: {bank}")
+        institution_id = bank[0]
+        templates = db_access.query_templates_by_institution(institution_id)
+        if templates:
+            """
+                    0                1                 2                 3                      4
+           templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
+                        5              6
+         , bank.name as bank_name, bank.key
+                  7                   8
+         , t.id as tag_id, t.value as tag_value
+                  9            10 
+         , tt.template_id, tt.tag_id
+                    11                      12
+         , c.id as category_id, c.value as category_value
+                    13                      14 
+         , q.id AS qualifier_id, q.value as qualifier_value 
+
+
+            """
+            """
+         templates: [(7094,                             0  
+                      'Cinemark',                       1
+                      False,                            2
+                      None,                             3
+                      2,                                4
+                      'Wellsfargo Visa',                5
+                      'WLS_VISA',                       6
+                      3003,                             7    tag id
+                      'Recurring',                      8    tag
+                      7094,                             9   template id again
+                      3003,                             10   tag id again
+                      2005,                             11   category id
+                      'Entertainment',                  12   category value
+                      5229,                             13   qualifier id
+                      'CINEMARK MOVIE CLUB')            14   qualifier value
+            """
+            proc = report_processor.ReportProcessor(institution_id, templates)
+            proc.name = bank[2]
+            proc.analyze_data(processed_batch_id=batch_id)
+            all_processors.append(proc)
+
+    return all_processors
+
+
+@router.get("/processed/templates", summary="Template Matching Data")
+async def query_processed_templates(
+    processed_batch_id: int,
+    institution_id: Optional[int] = None,
+    include_spending: Optional[bool] = True,
+    include_missing: Optional[bool] = False,
+):
+    """
+    Builds a json model list transaction to template matches and omissions.
+    Grouped by institution
+    :param processed_batch_id:
+    :param institution_id:
+    :param include_spending:
+    :param include_missing:
+    :return:
+    """
+    logging.info({
+        "message": "Template data requested",
+        "batch": processed_batch_id,
+        "bank": institution_id,
+        "with spending": include_spending,
+        "with missing": include_missing
+    })
+
+    return template_report(processed_batch_id)
+
+
+def template_report(batch_id: int):
+    """Generate a Template Verification Report from a Processed Batch"""
+    report_data = generate_report_data()
+    all_processors = build_report_processors(report_data, batch_id)
+
+    reports.Reporting(report_data).template_verification_report(
+        all_processors,
+        "report_output/template_verification.html",
+        include_extras=True,
+        include_spending=True,
+    )
+
+
+@router.get("/processed/categories", summary="Category Breakdown Report")
+async def query_processed_categories(processed_batch_id: int):
+    """
+    Builds a json model list transactions broken down by categories
+    Grouped by institution
+    :param processed_batch_id:
+    :return:
+    """
+    logging.info({
+        "message": "Category data requested",
+        "batch": processed_batch_id
+    })
+
+    return category_report(processed_batch_id)
+
+
+def category_report(batch_id: int):
+    """Generate a Category Breakdown Report"""
+    report_data = generate_report_data()
+    all_processors = build_report_processors(report_data, batch_id)
+
+    reports.Reporting(report_data).category_verification_report(
+        all_processors,
+        "report_output/categories.html",
+    )

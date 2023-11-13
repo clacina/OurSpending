@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef} from 'react';
 
 import chroma from 'chroma-js';
 import { ColourOption } from './data.tsx';
@@ -63,6 +63,7 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
     //  -- .id
     //  -- .tags
     const tagSelectionRef = useRef();
+    // console.log("Tags Map: ", tagsMap);
 
     useEffect(() => {
         if(clearEntry !== undefined) {
@@ -95,17 +96,19 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
     }
 
     return (
-        <Select
-            onChange={changeTag}
-            closeMenuOnSelect={true}
-            ref={tagSelectionRef}
-            defaultValue={assigned}
-            isMulti
-            id="tagSelection"
-            options={tagColourOptions}
-            styles={colourStyles}
-            menuPortalTarget={document.body}
-        />
+        <div className='tagSelectDiv'>
+            <Select
+                onChange={changeTag}
+                closeMenuOnSelect={true}
+                ref={tagSelectionRef}
+                defaultValue={assigned}
+                isMulti
+                id="tagSelection"
+                options={tagColourOptions}
+                styles={colourStyles}
+                menuPortalTarget={document.body}
+            />
+        </div>
     );
 }
 

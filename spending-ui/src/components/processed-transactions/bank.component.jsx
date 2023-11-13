@@ -1,11 +1,22 @@
 import TemplateComponent from "./template.component";
 import {StaticDataContext} from "../../contexts/static_data.context";
-import {useContext} from "react";
+import {useContext, useEffect, useState} from "react";
 import Collapsible from 'react-collapsible';
 
 const BankComponent = ({bankData, eventHandler}) => {
     const {institutions} = useContext(StaticDataContext);
-    if (institutions && institutions.length > 0) {
+    const [isLoaded, setIsLoaded] = useState(false);
+
+
+    useEffect(() => {
+        if (institutions && institutions.length > 0) {
+            setIsLoaded(true);
+        } else {
+            console.log("No banks yet...");
+        }
+    }, [institutions.length]);
+
+    if(isLoaded) {
         const bankId = bankData[0];
         const templateBreakdown = Object.values(bankData[1]);
         const bank = institutions.find((i) => Number(i.id) === Number(bankId));
@@ -23,8 +34,6 @@ const BankComponent = ({bankData, eventHandler}) => {
                 })}
             </Collapsible>
         )
-    } else {
-        console.log("No banks yet...");
     }
 }
 

@@ -25,8 +25,6 @@ const HeaderComponent = ({eventHandler}) => {
     const [endDateFilter, setEndDateFilter] = useState();
     const [clearTags, setClearTags] = useState(false);
     const [matchAllTags, setMatchAllTags] = useState(false);
-    const [matchAllCategories, setMatchAllCategories] = useState(false);
-    const [matchAllInstitutins, setMatchAllInstitutions] = useState(false);
 
     const categorySelectionRef = useRef();
     const institutionSelectionRef = useRef();
@@ -103,11 +101,6 @@ const HeaderComponent = ({eventHandler}) => {
         eventHandler('matchAllTags');
     }
 
-    const changeAllCategories = () => {
-        setMatchAllCategories(!matchAllCategories);
-        eventHandler('matchAllCategories');
-    }
-
     function updateInstitution(event) {
         // event institutions is an array of active entries in the select
         const banks = []
@@ -115,11 +108,6 @@ const HeaderComponent = ({eventHandler}) => {
             banks.push(item.value);
         });
         eventHandler({'banks': banks});
-    }
-
-    const changeAllInstitutions = () => {
-        setMatchAllInstitutions(!matchAllInstitutins);
-        eventHandler('matchAllInstitutions');
     }
 
     const onInputChange = (inputValue: string, {action, prevInputValue}: InputActionMeta) => {
@@ -136,21 +124,57 @@ const HeaderComponent = ({eventHandler}) => {
         categorySelectionRef.current.clearValue();
         institutionSelectionRef.current.clearValue();
         setMatchAllTags(false);
-        setMatchAllCategories(false);
-        setMatchAllInstitutions(false);
     }
 
     return(
         <div>
+            <div className='llNavBar'>
+                <form>
+                    <div className='llNavTop'>
+                        <div className='llNavDisplay'>
+                            <ul>
+                                <li><button>Group by Template</button></li>
+                                <li><button>Group by Category</button></li>
+                                <li><button>Hide Categorized</button></li>
+                            </ul>
+                        </div>
+                        <div className='llNavSearch'>
+                            <label>Search</label>
+                            <input/>
+                            <button>Search Now</button>
+                        </div>
+                    </div>
+                    <div className='llNavBottom'>
+                        <label>Categories</label>
+                        <select >
+
+                        </select>
+
+                        <label>Tags</label>
+                        <select>
+
+                        </select>
+                        <button>Match all Tags</button>
+
+                        <label>Banks</label>
+                        <select>
+
+                        </select>
+                    </div>
+                </form>
+
+            </div>
+            <hr/>
             <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
                 <Navbar.Brand>Display and Filter Options</Navbar.Brand>
-                <Nav justify={false}
+                <Nav
                      className="me-auto"
                      justify-content="space-between"
                      activeKey="1"
                      onSelect={handleSelect}>
                     <Nav.Link eventKey="templateview">Group by Template</Nav.Link>
                     <Nav.Link eventKey="categoryview">Group by Category</Nav.Link>
+                    <Nav.Link eventKey="noncategoryview">Uncategorized</Nav.Link>
                     <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
                     <button onClick={onSearch} >Search</button>
                 </Nav>
@@ -179,13 +203,6 @@ const HeaderComponent = ({eventHandler}) => {
                               menuPortalTarget={document.body}
                               menuPosition={'fixed'}
                               onChange={updateCategory}/>
-                    <Form.Check
-                        type="switch"
-                        id="allCategories"
-                        label="Match ALL Categories"
-                        checked={matchAllCategories}
-                        onChange={changeAllCategories}
-                    />
                     <Nav.Link as={Select}
                               id="institutionSelection"
                               ref={institutionSelectionRef}
@@ -195,13 +212,6 @@ const HeaderComponent = ({eventHandler}) => {
                               menuPortalTarget={document.body}
                               menuPosition={'fixed'}
                               onChange={updateInstitution}/>
-                    <Form.Check
-                        type="switch"
-                        id="allInstitutions"
-                        label="Match ALL Banks"
-                        checked={matchAllInstitutins}
-                        onChange={changeAllInstitutions}
-                    />
                 </Nav>
             </Navbar>
             <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">

@@ -13,8 +13,8 @@ import HeaderComponent from "./header.component.jsx";
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
-    const [templateGroups, setTemplateGroups] = useState({})
-    const [categoryGroups, setCategoryGroups] = useState({})
+    let [templateGroups, setTemplateGroups] = useState({})
+    let [categoryGroups, setCategoryGroups] = useState({})
 
     const [transactionsMap, setTransactionsMap] = useState([]);
     const [institutionGroups, setInstitutionGroups] = useState({});
@@ -34,7 +34,6 @@ const ProcessedTransactions = () => {
     const [matchAllTags, setMatchAllTags] = useState(false);
     const [matchAllCategories, setMatchAllCategories] = useState(false);
     const [institutionFilter, setInstitutionFilter] = useState([]);
-    const [matchAllInstitutions, setMatchAllInstitutions] = useState(false);
     const [startDateFilter, setStartDateFilter] = useState(null);
     const [endDateFilter, setEndDateFilter] = useState(null);
 
@@ -42,7 +41,7 @@ const ProcessedTransactions = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [transactionResourcesLoaded, setTransactionResourcesLoaded] = useState(false);
     const [institutionsLoaded, setInstitutionsLoaded] = useState(false);
-    const [templatesGrouped, setTemplatesGrouped] = useState(false);
+    let [templatesGrouped, setTemplatesGrouped] = useState(false);
     const [entityMapCreated, setEntityMapCreated] = useState(false);
 
     const routeParams = useParams();
@@ -58,6 +57,8 @@ const ProcessedTransactions = () => {
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
     useEffect(() => {
         if (transactionsMap.length === 0) {
+            console.log("UE-06")
+
             console.log("Start - getting transactions");
             getTransactions().then((res) => setTransactionsMap(res));
             setTransactionResourcesLoaded(true);
@@ -65,10 +66,9 @@ const ProcessedTransactions = () => {
     }, [transactionsMap.length]);
 
     useEffect(() => {
+        console.log("UE-05")
+
         // Group transactions by institution
-        // console.log("Grouping Transactions by Institution: ", transactionsMap.length);
-        // console.log("--with templates: ", templatesMap.length);
-        // console.log("--and ", transactionResourcesLoaded);
         if (transactionResourcesLoaded && transactionsMap.length && templatesMap.length) {
             const institution_groups = {};
             transactionsMap.forEach((t) => {
@@ -84,7 +84,6 @@ const ProcessedTransactions = () => {
                 institution_groups[t.institution_id].push(t);
             })
             setInstitutionGroups(institution_groups);
-            // console.log("Unleash the Kraken!");
             setInstitutionsLoaded(true);
         } else {
             console.log("No definitions yet");
@@ -92,24 +91,50 @@ const ProcessedTransactions = () => {
 
     }, [transactionResourcesLoaded, transactionsMap.length, templatesMap.length, transactionsMap, templatesMap]);
 
+    const updateContent = () => {
+        console.log("--updateContent")
+
+        if (categoryView) {
+            if (!categorized) {
+                setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
+                    return (item[1][0].template === null && item[1][0].transaction.category === null);
+                }));
+            } else {
+                setCategoriesMap(Object.entries(categoryGroups));
+            }
+        } else {
+            setEntityMap(Object.entries(templateGroups));
+        }
+    }
+
     useEffect(() => {
         //  Populate our two data sets - one organized by template, the other organized by category
         //  - Apply any / all filters inside the two grouping routines.
 
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
-            console.log("Updating template groups");
+            console.log("UE - Filter update")
+            // setTemplateGroups(groupTransactionsByTemplate());
+            // setTemplatesGrouped(true);
+            // setCategoryGroups(groupTransactionsByCategory());
+            // updateContent();
+
+            templateGroups = groupTransactionsByTemplate();
+            templatesGrouped = true;
+            categoryGroups = groupTransactionsByCategory();
+            updateContent();
             setTemplateGroups(groupTransactionsByTemplate());
             setTemplatesGrouped(true);
-
-            console.log("Updating category groups");
             setCategoryGroups(groupTransactionsByCategory());
+
         }
-    }, [institutionGroups, institutionsLoaded, tagsFilter, categoriesFilter, institutionFilter, startDateFilter, endDateFilter, matchAllTags, matchAllCategories, matchAllInstitutions, searchString]);
+    }, [institutionGroups, institutionsLoaded,
+        tagsFilter, categoriesFilter, institutionFilter, startDateFilter, endDateFilter,
+        matchAllTags, matchAllCategories, searchString]);
 
     useEffect(() => {
         if (templatesGrouped) {
-            // console.log("Setting entity map with templateGroups");
+            console.log("UE-01")
             // This is triggered when setTemplateGroups() is called
             setEntityMap(Object.entries(templateGroups));
         }
@@ -118,7 +143,7 @@ const ProcessedTransactions = () => {
     useEffect(() => {
         // We're ready, so allow rendering
         if (!entityMapCreated && entityMap.length && !isLoaded) {
-            // console.log("Setting isLoaded to True - ", entityMap);
+            console.log("UE-02")
             setIsLoaded(true);
             setEntityMapCreated(true);
         }
@@ -126,25 +151,8 @@ const ProcessedTransactions = () => {
 
     useEffect(() => {
         // Triggered when setUsingGroup() is called
-        if (categoryView) {
-            // console.log("Set entity map with categories");
-            if (!categorized) {
-                // console.log("Filtering: ", categoryGroups);
-                setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
-                    // console.log(item[1][0]);
-                    return (item[1][0].template === null);
-                }));
-                // setCategorizedButtonTitle("Show Categorized");
-            } else {
-                setCategoriesMap(Object.entries(categoryGroups));
-                // setCategorizedButtonTitle("Hide Categorized");
-            }
-            // setGroupByCategoryButtonTitle("Group by Institution");
-        } else {
-            // console.log("Set entity map with template groups");
-            setEntityMap(Object.entries(templateGroups));
-            // setGroupByCategoryButtonTitle("Group by Category");
-        }
+        console.log("UE-03")
+        updateContent();
     }, [categoryView, categorized]);
 
     // ----------------------------------------------------------------
@@ -197,12 +205,12 @@ const ProcessedTransactions = () => {
         // Categories
         if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
             processTransaction = false;
-
+            console.log("Applying category filter: ", categoriesFilter);
             // check entity level category first.  If it exists use it over the template category
             // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
                 categoriesFilter.forEach((cat_id) => {
-                    if (cat_id === item.template.category.id) {
+                    if (cat_id === item.transaction.category.id) {
                         processTransaction = true;
                     }
                 })
@@ -263,24 +271,25 @@ const ProcessedTransactions = () => {
     }
 
     const headerEventHandler = (event) => {
-        console.log("PT - event: ", event);
-        console.log("---: ", typeof event);
+        console.log("PT - handlerEvent: ", event);
+        // console.log("---: ", typeof event);
         if (typeof event === "string") {
             switch (event) {
                 case 'templateview':
                     setCategoryView(false);
                     break;
                 case 'categoryview':
+                    setCategorized(true);
                     setCategoryView(true);
+                    break;
+                case 'noncategoryview':
+                    setCategorized(!categorized);
                     break;
                 case 'matchAllTags':
                     setMatchAllTags(!matchAllTags);
                     break;
                 case 'matchAllCategories':
                     setMatchAllCategories(!matchAllCategories);
-                    break;
-                case 'matchAllInstitutions':
-                    setMatchAllInstitutions(!matchAllInstitutions);
                     break;
                 default:
                     console.log("Unknown string event: ", event);

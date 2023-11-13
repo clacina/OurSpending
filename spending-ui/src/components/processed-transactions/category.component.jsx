@@ -23,11 +23,23 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
+    const [isCategorized, setIsCategorized] = useState(true);
+    // console.log("cat: ", category);
 
-    console.log("Category: ", category);
+    // Define table columns
+    const columns = []
 
     useEffect(() => {
         if (transactionDataDefinitions.length !== 0) {
+            if(category.length > 0) {
+                if(category[0].template === null && category[0].transaction.category === null) {
+                    setIsCategorized(false);
+                }
+            }
+            // Create unique id for each row
+            category.forEach((item) => {
+                item.keyid = nanoid();
+            })
             setIsLoaded(true);
         } else {
             console.log("No definitions yet");
@@ -48,8 +60,6 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
-        console.log("        : ", tag_list);
         eventHandler({
             'updateTags': {
                 'transaction_id': transaction_id,
@@ -71,7 +81,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
         if (columnIndex === 4) {  // tags column - it's a drop down
             e.stopPropagation();
         }
-        console.log({e, column, columnIndex, row, rowIndex})
+        // console.log({e, column, columnIndex, row, rowIndex})
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -81,54 +91,94 @@ const CategoryComponent = ({category, display, eventHandler}) => {
         })
         return (<div>{note_list}</div>);
     }
+
+    const columnOneFormater = (cell, row, rowIndex, formatExtraData) => {
+        return(row.transaction.institution.name);
+    }
+
+    const columnTwoFormater = (cell, row, rowIndex, formatExtraData) => {
+        if(row.transaction) {
+            return(row.transaction.description);
+        }
+        return("--")
+    }
+
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 5) {  // Notes column
-            console.log("Setting active row to: ", row.transaction);
             setActiveRow(row);
             e.preventDefault();
-            console.log("colNoteEvent: ", activeRow);
             e.stopPropagation();
             setOpenNotes(true);
         }
     }
 
-    // Define table columns
-    const columns = []
-    columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-    columns.push({dataField: 'template.hint', text: 'Template', editable: false, style: {cursor: 'pointer'}})
-    columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}})
-    columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
-    columns.push({
-        dataField: 'transaction.transaction_date',
-        style: {cursor: 'pointer'},
-        text: 'Date',
-        editable: false})
-    columns.push({
-        dataField: 'transaction.tags',
-        text: 'Tags',
-        formatter: tagColumnFormatter,
-        events: {
-            onClick: colEvent
-        },
-        style: {cursor: 'pointer'}
-    })
-    columns.push({dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
-            onClick: colNoteEvent
-        }, style: {cursor: 'pointer'}
-    })
-    columns.push({dataField: 'transaction.id', text: '', hidden: true})
+    const generateColumns = () => {
+        // console.log("Generating columns: ", isCategorized);
+        if(!isCategorized) {
+            columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
+            columns.push({
+                dataField: 'template.hint',
+                text: 'Template',
+                editable: false,
+                formatter: columnOneFormater,
+                style: {cursor: 'pointer'}
+            })
 
-    // Create unique id for each row
-    category.forEach((item) => {
-        item.keyid = nanoid();
-    })
+            columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}
+            , formatter: columnTwoFormater})
+            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+            columns.push({
+                dataField: 'transaction.transaction_date',
+                style: {cursor: 'pointer'},
+                text: 'Date',
+                editable: false
+            })
+            columns.push({
+                dataField: 'transaction.tags',
+                text: 'Tags',
+                formatter: tagColumnFormatter,
+                events: {
+                    onClick: colEvent
+                },
+                style: {cursor: 'pointer'}
+            })
+            columns.push({
+                dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+                    onClick: colNoteEvent
+                }, style: {cursor: 'pointer'}
+            })
+            columns.push({dataField: 'transaction.id', text: '', hidden: true})
+        } else {
+            columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
+            columns.push({dataField: 'transaction.institution.name', text: 'Bank', ediatable: false, style: {cursor: 'pointer'}})
+            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+            columns.push({
+                dataField: 'transaction.transaction_date',
+                style: {cursor: 'pointer'},
+                text: 'Date',
+                editable: false
+            })
+            columns.push({
+                dataField: 'transaction.tags',
+                text: 'Tags',
+                formatter: tagColumnFormatter,
+                events: {
+                    onClick: colEvent
+                },
+                style: {cursor: 'pointer'}
+            })
+            columns.push({
+                dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+                    onClick: colNoteEvent
+                }, style: {cursor: 'pointer'}
+            })
+            columns.push({dataField: 'transaction.id', text: '', hidden: true})
+        }
+    }
 
     // ----------------------- On Click Handlers ------------------------------
 
     const rowEvents = {
-        // onClick: (e, row, index) => {
-        //     setActiveRow(row);
-        // },
         onContextMenu: (e, row, index) => {
             e.stopPropagation();
             showContext(e, row);
@@ -136,7 +186,6 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     };
 
     const assignCategoryToTransaction = (event) => {
-        console.log(event);
         eventHandler({
             "updateCategory": {
                 "transaction_id": activeRow.transaction.id,
@@ -148,14 +197,12 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     const expandRow = {
         onlyOneExpanding: false,
         renderer: (row, rowIndex) => {
-            console.log("Expanding: ", rowIndex);
             setActiveRow(row);
             return(<TransactionDetailComponent row={row} eventHandler={assignCategoryToTransaction}/>);
         },
     }
 
     const showContext = (event, row) => {
-        console.log("showContext: ", event);
         setActiveRow(row);
         event.preventDefault();
         contextMenu.show({
@@ -171,6 +218,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     // ----------------------------------------------------------------
     if(isLoaded) {
+        generateColumns();
         return (
             <div>
                 <Collapsible trigger={<CategoryTitleComponent category={category}/>}>
