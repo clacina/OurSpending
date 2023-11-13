@@ -13,89 +13,20 @@ import {
     FilterRow,
     FilterSelect
 } from './reports.component.styles';
+
 import TagSelector from "../tag-selector/tag-selector.component";
 import './reports.component.styles.css';
 import DatePicker from "react-datepicker";
-
-// Sort comparators
-function compareLabels(a, b) {
-    return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
-}
-
-function compareValues(a, b) {
-    return ('' + a.value.toLowerCase()).localeCompare(b.value.toLowerCase());
-}
-
-const getTransactions = async () => {
-    const url = 'http://localhost:8000/resources/processed_transactions/501';
-    const data = await fetch(url, {method: 'GET'})
-    const str = await data.json();
-    return (str);
-};
-
-const lookupTemplateCategory = (template_list, template_id) => {
-    const item_id = template_list.find((item) => {
-        return (item.id === template_id);
-    })
-    return(item_id.category);
-}
-
-const sumTransactions = (transactions) => {
-    var total = 0.0;
-    transactions.forEach((item) => {
-        total += item.transaction.amount;
-    })
-    return (total);
-}
-
-const sortTransactionsIntoMonths = (txns) => {
-    // const txns = transactionsMap
-    const buckets = {};
-    txns.forEach((item) => {
-        const working_date = Date.parse(item.transaction.transaction_date);
-        var dateObject = new Date(working_date);
-        const year_bucket = dateObject.getFullYear();
-        const month_bucket = dateObject.getMonth();
-        if (!buckets.hasOwnProperty(year_bucket)) {
-            buckets[year_bucket] = {}
-        }
-        if (!buckets[year_bucket].hasOwnProperty(month_bucket)) {
-            buckets[year_bucket][month_bucket] = []
-        }
-        buckets[year_bucket][month_bucket].push(item);
-    })
-    return buckets;
-}
-
-const colorCodes = [
-    '#E74C3C',
-    '#FFC300',
-    '#884EA0',
-    '#3498DB',
-    '#17A589',
-    '#5D6D7E',
-    '#FF1111',
-    '#82E0AA',
-    '#000080',
-    '#4A235A',
-    '#808000',
-    '#DC7633',
-    '#00FF00'
-]
-
-const monthCodes = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'June',
-    'July',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec'
-]
+import {
+    lookupTemplateCategory,
+    monthCodes,
+    sumTransactions,
+    colorCodes,
+    getTransactions,
+    sortTransactionsIntoMonths,
+    compareLabels,
+    compareValues
+} from './report.utils.jsx';
 
 
 const Reports = () => {
@@ -367,7 +298,7 @@ const Reports = () => {
                 else if template_id -- get category from template lookup
              */
         } else if(templatesMap.length === 0 || tagsMap.length === 0) {
-
+            console.log("Not ready...")
         } else {
             const buckets = sortTransactionsIntoMonths(transactionsMap);
             setLegendData(buildGraphLines(buckets));
