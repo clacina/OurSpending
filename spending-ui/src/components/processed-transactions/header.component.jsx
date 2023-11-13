@@ -149,7 +149,6 @@ const HeaderComponent = ({eventHandler}) => {
                         <select >
 
                         </select>
-                        <button>Match all Categories</button>
 
                         <label>Tags</label>
                         <select>
