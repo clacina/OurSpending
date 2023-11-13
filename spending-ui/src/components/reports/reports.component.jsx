@@ -15,7 +15,6 @@ import {
 } from './reports.component.styles';
 import TagSelector from "../tag-selector/tag-selector.component";
 import './reports.component.styles.css';
-import Nav from "react-bootstrap/Nav";
 import DatePicker from "react-datepicker";
 
 // Sort comparators
@@ -104,10 +103,17 @@ const Reports = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [monthlyData, setMonthlyData] = useState([]);
     const [legendData, setLegendData] = useState([]);
-    const [startDateFilter, setStartDateFilter] = useState();
-    const [endDateFilter, setEndDateFilter] = useState();
-    const [clearTags, setClearTags] = useState(false);
 
+    // Filter Flags
+    const [tagsFilter, setTagsFilter] = useState([]);
+    const [categoriesFilter, setCategoriesFilter] = useState([]);
+    const [clearTags, setClearTags] = useState(false);
+    const [matchAllTags, setMatchAllTags] = useState(false);
+    const [institutionFilter, setInstitutionFilter] = useState([]);
+    const [startDateFilter, setStartDateFilter] = useState(null);
+    const [endDateFilter, setEndDateFilter] = useState(null);
+
+    // Lookup Tables
     const {templatesMap} = useContext(TemplatesContext);
     const {categoriesMap} = useContext(CategoriesContext);
     const {institutions} = useContext(StaticDataContext);
@@ -134,15 +140,31 @@ const Reports = () => {
     // Event Handlers
     const eventHandler = (event) => {
         console.log("Event: ", event);
-    }
+        if (event.hasOwnProperty('tag_list')) {
+            console.log("--Setting Tags Filter")
+            setTagsFilter(event['tag_list']);
+        } else if (event.hasOwnProperty('categories')) {
+            console.log("--Setting Categories Filter: ", event['categories'])
+            setCategoriesFilter(event['categories']);
+        } else if (event.hasOwnProperty('banks')) {
+            console.log("--Setting Banks Filter")
+            console.log(event);
+            setInstitutionFilter(event['banks']);
+        } else if (event.hasOwnProperty('startDate')) {
+            console.log("--Setting Start Date Filter")
+            setStartDateFilter(new Date(event['startDate']));
+        } else if (event.hasOwnProperty('endDate')) {
+            console.log("--Setting End Date Filter")
+            setEndDateFilter(new Date(event['endDate']));
+        } else {
+            console.error("Unknown event: ", event);
+        }
 
-    const handleSelect = (eventKey) => {
-        eventHandler(eventKey);
     }
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        eventHandler({'transaction_id': transaction_id, 'tag_list': tag_list})
+        eventHandler({'tag_list': tag_list})
     }
 
     const updateCategory = (event) => {
@@ -186,7 +208,75 @@ const Reports = () => {
     }
 
     const includeInFilter = (item) => {
-        return true;
+        var processTransaction = true;
+
+        // Banks
+        if (processTransaction && institutionFilter && institutionFilter.length > 0) {
+            processTransaction = institutionFilter.includes(item.transaction.institution.id);
+        }
+
+        // Start Date
+        if (processTransaction && startDateFilter) {
+            // Tue Jan 17 2023 00:00:00 GMT-0800
+            const filterDate = moment(startDateFilter);
+            const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
+            processTransaction = transactionDate >= filterDate;
+        }
+
+        // End Date
+        if (processTransaction && endDateFilter) {
+            const filterDate = moment(endDateFilter);
+            const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
+            processTransaction = transactionDate <= filterDate;
+        }
+
+        // Tags
+        if (tagsFilter && tagsFilter.length > 0) {
+            processTransaction = false;
+            if (matchAllTags) {
+
+            } else {
+                // if none of the search tags are in the entity tags, processTransaction is False
+                item.transaction.tags.forEach((tag) => {
+                    tagsFilter.forEach((filter) => {
+                        if (tag.id === filter.value) {
+                            processTransaction = true;
+                        }
+                    })
+                })
+            }
+        }
+
+        // Categories
+        if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
+            processTransaction = false;
+            const templateList = templatesMap.map((t) => {
+                return {...t}
+            })
+
+            // console.log("Applying category filter: ", categoriesFilter);
+            // check entity level category first.  If it exists use it over the template category
+            // -- Could be we just wanted this entity grouped here
+            if (item.transaction.category) {
+                categoriesFilter.forEach((cat_id) => {
+                    if (cat_id === item.transaction.category.id) {
+                        processTransaction = true;
+                    }
+                })
+            } else if (item.template_id) {
+                // find category id of this template
+                const category = lookupTemplateCategory(templateList, item.template_id);
+
+                // array of ids
+                categoriesFilter.forEach((cat_id) => {
+                    if (cat_id === category.id) {
+                        processTransaction = true;
+                    }
+                })
+            }
+        }
+
+        return processTransaction;
     }
 
     const groupTransactionsByCategory = (transactions) => {
@@ -228,7 +318,7 @@ const Reports = () => {
                 const category_groups = groupTransactionsByCategory(transactions);
                 var report_entry = {name: monthCodes[month]}
                 for (const [category_id, matches] of Object.entries(category_groups)) {
-                    if(!usedCategories.includes(category_id)) {
+                    if (!usedCategories.includes(category_id)) {
                         usedCategories.push(category_id);
                     }
                     report_entry[category_id] = sumTransactions(matches);
@@ -281,10 +371,9 @@ const Reports = () => {
         } else {
             const buckets = sortTransactionsIntoMonths(transactionsMap);
             setLegendData(buildGraphLines(buckets));
-            console.log("Starting with tags: ", tagsMap)
             setIsLoaded(true);
         }
-    }, [transactionsMap.length, templatesMap.length, tagsMap.length]);
+    }, [transactionsMap.length, templatesMap.length, tagsMap.length, categoriesFilter]);
 
     if (isLoaded) {
         return (<div>
@@ -366,6 +455,9 @@ const Reports = () => {
                                           onChange={(date)=>onChangeEndDate(date)} />
                                     </div>
                                 </div>
+                            </FilterRow>
+                            <FilterRow>
+                                <button onClick={clearFilters}>Clear Filters</button>
                             </FilterRow>
                         </FilterColumn>
                     </ReportRow>

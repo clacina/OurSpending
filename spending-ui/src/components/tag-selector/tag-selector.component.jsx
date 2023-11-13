@@ -63,7 +63,7 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
     //  -- .id
     //  -- .tags
     const tagSelectionRef = useRef();
-    console.log("Tags Map: ", tagsMap);
+    // console.log("Tags Map: ", tagsMap);
 
     useEffect(() => {
         if(clearEntry !== undefined) {

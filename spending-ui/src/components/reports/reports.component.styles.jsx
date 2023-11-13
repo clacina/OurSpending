@@ -19,7 +19,7 @@ export const ReportRow = styled.div`
 export const FilterRow = styled.div`
   width: 100%;
   //height: 40px;
-  border: 1px solid red;
+  //border: 1px solid red;
   padding-top: 15px;
   padding-bottom: 15px;
 
