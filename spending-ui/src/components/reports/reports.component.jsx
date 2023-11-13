@@ -27,6 +27,7 @@ import {
     compareLabels,
     compareValues
 } from './report.utils.jsx';
+import {endianness} from "os";
 
 
 const Reports = () => {
@@ -304,7 +305,8 @@ const Reports = () => {
             setLegendData(buildGraphLines(buckets));
             setIsLoaded(true);
         }
-    }, [transactionsMap.length, templatesMap.length, tagsMap.length, categoriesFilter]);
+    }, [transactionsMap.length, templatesMap.length, tagsMap.length, categoriesFilter, institutionFilter, tagsFilter,
+    startDateFilter, endDateFilter, matchAllTags]);
 
     if (isLoaded) {
         return (<div>
