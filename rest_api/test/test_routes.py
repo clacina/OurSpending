@@ -48,7 +48,7 @@ def test_get_batches():
 
 
 def test_get_category():
-    response = client.get("/category/5")
+    response = client.get("/category/2005")
     assert response.status_code == 200
     entry = response.json()
     assert "id" in entry
@@ -116,7 +116,7 @@ def test_get_institutions():
 
 
 def test_get_qualifier():
-    response = client.get("/qualifier/34")
+    response = client.get("/qualifier/5034")
     assert response.status_code == 200
     entry = response.json()
     assert "id" in entry
@@ -135,7 +135,7 @@ def test_get_qualifiers():
 
 
 def test_get_tag():
-    response = client.get("/tag/2")
+    response = client.get("/tag/3002")
     assert response.status_code == 200
     entry = response.json()
     assert "id" in entry
@@ -150,7 +150,7 @@ def test_get_tags():
 
 
 def test_get_template():
-    response = client.get("/template/23")
+    response = client.get("/template/7023")
     assert response.status_code == 200, print(f"Error response: {response.status_code}: {response.json()}")
     entry = response.json()
     logging.info(f"Template Resp: {entry}")
