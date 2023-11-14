@@ -20,6 +20,7 @@ class SimpleLUTModel(BaseModel):
 
 class CategoryModel(SimpleLUTModel):
     notes: Optional[str]
+    is_tax_deductible: Optional[bool] = False
 
 
 class TagModel(SimpleLUTModel):
@@ -76,6 +77,7 @@ class TransactionRecordModel(BaseModel):
     amount: Optional[float]
     notes: Optional[List[TransactionNoteModel]] = []
     category: Optional[CategoryModel]
+    is_tax_deductible: Optional[bool] = False
 
     def update(self, transaction):
         logging.info(f"In update: {transaction}")

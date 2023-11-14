@@ -25,8 +25,9 @@ DROP TABLE IF EXISTS categories CASCADE;
 CREATE TABLE categories
 (
     id    SERIAL PRIMARY KEY,
-    value TEXT,
+    value TEXT NOT NULL,
     notes TEXT DEFAULT NULL,
+    is_tax_deductible BOOLEAN DEFAULT FALSE,
     unique (value)
 );
 ALTER SEQUENCE categories_id_seq RESTART WITH 2000;
@@ -108,7 +109,8 @@ CREATE TABLE transaction_records
     transaction_data JSONB                                                       NOT NULL,
     description      TEXT,
     amount           DECIMAL(10, 4),
-    category_id      INTEGER REFERENCES categories (id) ON DELETE CASCADE        DEFAULT NULL
+    category_id      INTEGER REFERENCES categories (id) ON DELETE CASCADE        DEFAULT NULL,
+    is_tax_deductible BOOLEAN                                                    DEFAULT FALSE
 );
 
 DROP TABLE IF EXISTS transaction_notes CASCADE;
@@ -116,7 +118,8 @@ CREATE TABLE transaction_notes
 (
     id             SERIAL PRIMARY KEY,
     transaction_id INTEGER REFERENCES transaction_records (id) ON DELETE CASCADE NOT NULL,
-    note           TEXT
+    note           TEXT3
+
 );
 ALTER SEQUENCE transaction_notes_id_seq RESTART WITH 8000;
 
@@ -200,8 +203,8 @@ INSERT INTO categories(value)
 VALUES ('Groceries');
 INSERT INTO categories(value)
 VALUES ('Hobby');
-INSERT INTO categories(value)
-VALUES ('Home Improvement Supplies');
+INSERT INTO categories(value, is_tax_deductible)
+VALUES ('Home Improvement Supplies', TRUE);
 INSERT INTO categories(value)
 VALUES ('Interest');
 INSERT INTO categories(value)
@@ -214,8 +217,8 @@ INSERT INTO categories(value)
 VALUES ('PayPal Purchase');
 INSERT INTO categories(value)
 VALUES ('Pharmacy');
-INSERT INTO categories(value)
-VALUES ('Professional Services');
+INSERT INTO categories(value, is_tax_deductible)
+VALUES ('Professional Services', TRUE);
 INSERT INTO categories(value)
 VALUES ('Salary');
 INSERT INTO categories(value)

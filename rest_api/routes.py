@@ -786,7 +786,11 @@ async def get_processed_batches():
 )
 async def get_batch(batch_id: int):
     query_result = db_access.fetch_processed_batch(batch_id)
+    """
+    INFO     batch: (502, datetime.datetime(2023, 11, 14, 17, 15, 39, 652767), 'Test run', 3) 
+    """
     if query_result:
+        logging.info(f"batch: {query_result}")
         response = models.ProcessedTransactionBatchModel(
             id=query_result[0],
             run_date=query_result[1],
