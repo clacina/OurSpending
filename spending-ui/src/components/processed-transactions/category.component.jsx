@@ -78,7 +78,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 4) {  // tags column - it's a drop down
+        if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
         }
         // console.log({e, column, columnIndex, row, rowIndex})

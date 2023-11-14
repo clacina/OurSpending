@@ -58,7 +58,7 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
     }),
 };
 
-const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
+const TagSelector = ({tagsMap, entity, onChange, clearEntry, selectorId='tagSelection'}) => {
     // entity must contain 2 members:
     //  -- .id
     //  -- .tags
@@ -103,7 +103,7 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
                 ref={tagSelectionRef}
                 defaultValue={assigned}
                 isMulti
-                id="tagSelection"
+                id={selectorId}
                 options={tagColourOptions}
                 styles={colourStyles}
                 menuPortalTarget={document.body}

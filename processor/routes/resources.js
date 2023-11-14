@@ -147,7 +147,7 @@ resourcesRouter.put('/template/:id', async function(req, res, next) {
 
 resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'];
+  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&limit=1000";
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {

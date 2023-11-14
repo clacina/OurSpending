@@ -183,6 +183,7 @@ class DBAccess:
         conn = self.connect_to_db()
         assert conn
         sql = f"{TransactionSQl} WHERE BID=%(batch_id)s"
+        sql += " ORDER BY transaction_date"
         sql += " LIMIT %(limit)s OFFSET %(offset)s"
         query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
         cur = conn.cursor()

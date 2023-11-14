@@ -8,6 +8,7 @@ import Collapsible from 'react-collapsible';
 
 import {contextMenu, Item, Menu, Separator, Submenu} from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
+import "./template.component.styles.css";
 
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {TagsContext} from "../../contexts/tags.context.jsx";
@@ -134,7 +135,7 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
             id: row.id,
             tags: row.tags
         }
-        return (<TagSelector tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
+        return (<TagSelector tagsMap={tagsMap} entity={entity_info} onChange={changeTag} selectorId='tagSelection2'/>);
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
