@@ -189,7 +189,7 @@ class DBAccess:
         try:
             cur.execute(sql, query_params)
             result = cur.fetchall()
-            # logging.info(f"Fetched transactions: {result}")
+            logging.info(f"Fetched transactions: {result}")
             return result
         except Exception as e:
             logging.exception({"message": f"Error in transaction query: {str(e)}"})
@@ -273,7 +273,13 @@ class DBAccess:
     def fetch_processed_batch(self, batch_id: int):
         conn = self.connect_to_db()
         assert conn
-        sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch WHERE id=%(batch_id)s"
+        # sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch WHERE id=%(batch_id)s"
+        sql = """SELECT id, run_date, notes, transaction_batch_id, COALESCE(tr.cnt, 0) as tr_cnt FROM processed_transaction_batch
+                left join (select batch_id, count(batch_id) as cnt from transaction_records group by batch_id) tr
+                ON transaction_batch_id = tr.batch_id
+                WHERE id=%(batch_id)s
+              """
+
         query_params = {"batch_id": batch_id}
         cur = conn.cursor()
         try:
