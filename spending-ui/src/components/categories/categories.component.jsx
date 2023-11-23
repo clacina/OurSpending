@@ -9,9 +9,11 @@ import TableBaseComponent from '../table-base/table-base.component.jsx';
 import FormInput from "../form-input/form-input.component";
 import Button from "../button/button-component";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
+import {StaticDataContext} from "../../contexts/static_data.context";
 
 const CategoriesComponent = () => {
     const {categoriesMap} = useContext(CategoriesContext);
+    const {setSectionTitle} = useContext(StaticDataContext);
     const [isLoaded, setIsLoaded] = useState(false);
     const [newEntry, setNewEntry] = useState("");
     const [newNotes, setNewNotes] = useState("");
@@ -29,6 +31,7 @@ const CategoriesComponent = () => {
     useEffect(() => {
         console.log("Start");
         if (categoriesMap.length !== 0) {
+            setSectionTitle('Categories');
             setIsLoaded(true);
         } else {
             console.info("No definitions yet");

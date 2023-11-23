@@ -2,7 +2,7 @@
     Original code: https://codesandbox.io/s/react-sidebar-navigation-menu-0hkkj?file=/src/components/SlidebarData.js
  */
 
-import React, { useState } from "react";
+import React, {useContext, useEffect, useState} from "react";
 
 // ICONS
 import * as FaIcons from "react-icons/fa"; //Now i get access to all the icons
@@ -20,10 +20,17 @@ import { SidebarData } from "./SlidebarData";
 // STYLES
 import './navigation.component.styles.css';
 
+import {StaticDataContext} from "../../contexts/static_data.context";
+
 const MenuBar = () => {
     const [sidebar, setSidebar] = useState(false);
+    const {sectionTitle} = useContext(StaticDataContext);
 
     const showSidebar = () => setSidebar(!sidebar);
+
+    useEffect(() => {
+        console.log('Setting Section Title: ', sectionTitle);
+    }, [sectionTitle]);
 
     return (
         <>
@@ -33,7 +40,13 @@ const MenuBar = () => {
                     <Link to="#" className="menu-bars">
                         <FaIcons.FaBars onClick={showSidebar} />
                     </Link>
+                    <div>
+                        <h1>{sectionTitle}</h1>
+                    </div>
+                    <div>
                     <h2>Our Spending - Lacinas Lair</h2>
+                    </div>
+
                 </div>
                 <nav className={sidebar ? "nav-menu active" : "nav-menu"}>
                     <ul className="nav-menu-items" onClick={showSidebar}>

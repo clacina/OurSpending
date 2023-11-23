@@ -7,12 +7,13 @@ import TableBaseComponent from '../table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
 
 const BanksComponent = () => {
-    const {institutions} = useContext(StaticDataContext);
+    const {institutions, setSectionTitle} = useContext(StaticDataContext);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         console.log("Start");
         if (institutions.length !== 0) {
+            setSectionTitle('Banks');
             setIsLoaded(true);
         } else {
             console.info("No definitions yet");
@@ -27,9 +28,6 @@ const BanksComponent = () => {
 
         return (
             <div>
-                <Row>
-                    <h1>Banks</h1>
-                </Row>
                 <Row>
                     <TableBaseComponent columns={columns} data={institutions} keyField='id'/>
                 </Row>

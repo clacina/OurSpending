@@ -8,9 +8,10 @@ import TableBaseComponent from '../table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
 
 const BatchesComponent = () => {
-    const {batches} = useContext(StaticDataContext);
+    const {batches, setSectionTitle} = useContext(StaticDataContext);
     const [isLoaded, setIsLoaded] = useState(false);
     const navigate = useNavigate();
+    setSectionTitle('Transaction Batches');
 
     const columns = [];
     columns.push({dataField: 'id', text: 'Id', sort: true})

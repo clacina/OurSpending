@@ -1,6 +1,6 @@
 import './App.css';
 import {Route, Routes} from "react-router-dom";
-import {Fragment} from "react";
+import {Fragment, useState} from "react";
 
 import MenuBar from "./routes/navigation/navigation.component";
 import BanksComponent from "./components/banks/banks.component";
@@ -20,6 +20,7 @@ import TransactionsList from "./components/transaction/transactions-list.compone
 // jsLogger.setUseTimestamp(false);
 
 function App() {
+
     const PageNotFound = () => {
         return(
             <div>
