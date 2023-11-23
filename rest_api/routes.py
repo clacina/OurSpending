@@ -55,6 +55,7 @@ async def query_templates(institution_id: Optional[int] = Query(-1)):
 
 @router.post(
     "/templates",
+    summary="Add a new template for a given institituion",
     status_code=status.HTTP_201_CREATED,
     response_model=TemplateReportModel,
 )
@@ -72,7 +73,7 @@ def add_template(template: TemplateInputModel = Body(...)):
 
 @router.get(
     "/template/{template_id}",
-    summary="Get list of available templates. May restrict the search by Institution",
+    summary="Get details for a specific template.",
     response_model=TemplateDetailModel,
 )
 async def get_template(template_id: int):
@@ -147,7 +148,7 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
 
 @router.get(
     "/batches",
-    summary="List all batches in the system.",
+    summary="List all transaction batches in the system.",
     response_model=List[models.TransactionBatchModel],
 )
 async def get_batches():
@@ -187,7 +188,7 @@ async def get_batch(batch_id: int):
 
 @router.get(
     "/categories",
-    summary="Get list of available templates. May restrict the search by Institution",
+    summary="Get list of available categories.",
     response_model=List[models.CategoryModel],
 )
 async def get_categories():
@@ -421,7 +422,9 @@ async def update_tag(
 """ ---------- Transactions ----------------------------------------------------------------------"""
 
 
-@router.get("/transactions", response_model=List[models.TransactionRecordModel])
+@router.get("/transactions",
+            summary="Get list of Transactions from a given transaction Batch",
+            response_model=List[models.TransactionRecordModel])
 async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     transactions = db_access.query_transactions_from_batch(
         batch_id=batch_id, offset=offset, limit=limit
@@ -734,6 +737,7 @@ async def get_transaction_tags(transaction_id: int):
 
 @router.get(
     "/transactions_descriptions",
+    summary="List the column definitions for each bank's data format.",
     response_model=List[models.TransactionDescriptionModel],
 )
 async def get_transaction_descriptions():
@@ -761,7 +765,7 @@ async def get_transaction_descriptions():
 
 @router.get(
     "/processed_batches",
-    summary="List all processed batches in the system.",
+    summary="List all processed batches (PT) in the system.",
     response_model=List[models.ProcessedTransactionBatchModel],
 )
 async def get_processed_batches():
