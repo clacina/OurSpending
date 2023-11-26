@@ -53,7 +53,6 @@ const TransactionsList = () => {
     if (isLoaded) {
         return (
             <div>
-                <h1>Transactions</h1>
                 {groupingArray.map((item) => {
                     return (<TransactionList key={item[0].institution.id} transactions={item}
                                              institution_id={item[0].institution.id}/>);

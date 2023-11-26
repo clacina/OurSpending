@@ -29,6 +29,8 @@ const TransactionList = ({institution_id, transactions}) => {
 
     const generateColumns = () => {
         //-------------- Configure our table -----------------------------
+        const headerBackgroundColor = '#008080'
+
         // Create column definitions for this institution
         const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(institution_id));
         const cols = [];
@@ -57,7 +59,7 @@ const TransactionList = ({institution_id, transactions}) => {
                     editable: false,
                     resize: true,
                     headerStyle: {
-                        backgroundColor: '#6a89cc',
+                        backgroundColor: headerBackgroundColor,
                         color: 'white'
                     },
                     headerAttrs: {
@@ -73,7 +75,7 @@ const TransactionList = ({institution_id, transactions}) => {
             editable: false,
             resize: true,
             headerStyle: {
-                backgroundColor: '#6a89cc',
+                backgroundColor: headerBackgroundColor,
                 color: 'white'
             },
             headerAttrs: {
@@ -87,7 +89,7 @@ const TransactionList = ({institution_id, transactions}) => {
             editable: false,
             resize: true,
             headerStyle: {
-                backgroundColor: '#6a89cc',
+                backgroundColor: headerBackgroundColor,
                 color: 'white'
             },
             headerAttrs: {
@@ -109,7 +111,6 @@ const TransactionList = ({institution_id, transactions}) => {
                 <h1>{ourInstitution[0].name}</h1>
                 <div>
                     <BootstrapTable
-                        w-auto
                         keyField='keyid'
                         data={transactions}
                         columns={columns}

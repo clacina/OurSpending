@@ -3,12 +3,13 @@
 
 import {useContext, useEffect, useState} from "react";
 import '../collapsible.scss';
-import Select from "react-select";
+
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
+import {StaticDataContext} from "../../contexts/static_data.context";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
-import BootstrapTable from 'react-bootstrap-table-next';
 
+import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import React from "react";
 import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
@@ -57,6 +58,7 @@ const TemplateList = () => {
     const [editTitle, setEditTitle] = useState("");
     const [editPrompt, setEditPrompt] = useState("text")
 
+    const {setSectionTitle} = useContext(StaticDataContext);
     const {templatesMap} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
     const {categoriesMap} = useContext(CategoriesContext);
@@ -64,6 +66,7 @@ const TemplateList = () => {
     useEffect(() => {
         console.log("Start");
         if (templatesMap.length > 0 && tagsMap.length > 0) {
+            setSectionTitle('Templates');
             setIsLoaded(true);
         } else {
             console.info("No definitions yet");
@@ -262,7 +265,6 @@ const TemplateList = () => {
     if (isLoaded) {
         return (
             <div>
-                <h1>Templates</h1>
                 <BootstrapTable
                     keyField='id'
                     data={templateList}

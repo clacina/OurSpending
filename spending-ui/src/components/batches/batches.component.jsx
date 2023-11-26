@@ -3,7 +3,6 @@ import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 import "react-contexify/dist/ReactContexify.css";
-import { Row } from "react-bootstrap";
 import TableBaseComponent from '../table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
 
@@ -34,18 +33,11 @@ const BatchesComponent = () => {
 
     if(isLoaded) {
         return (
-            <div>
-                <Row>
-                    <h1>Batches</h1>
-                </Row>
-                <Row>
-                    <TableBaseComponent columns={columns}
-                                        data={batches}
-                                        keyField='id'
-                                        double_click_handler={double_click_handler}
-                                        />
-                </Row>
-            </div>
+            <TableBaseComponent columns={columns}
+                                data={batches}
+                                keyField='id'
+                                double_click_handler={double_click_handler}
+                                />
         )
     }
 }
