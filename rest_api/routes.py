@@ -390,6 +390,7 @@ async def add_tag(
     notes: str = Body(...),
     color: str = Body(...),
 ):
+    logging.info(f"CJL-{value}, {notes}, {color}")
     query_result = db_access.create_tag(value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(

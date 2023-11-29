@@ -2,9 +2,10 @@ import React from 'react';
 
 import Select from 'react-select';
 import {BuildOptions, colourStyles} from "./tag-selector-base.component";
+import CreatableSelect from "react-select/creatable";
 
 
-const TagSelectorForCategories = ({tagsMap, entity, onChange}) => {
+const TagSelectorForCategories = ({tagsMap, entity, onChange, canCreate=false}) => {
 
     const {assigned, tagColourOptions} = BuildOptions(tagsMap, entity);
 
@@ -15,18 +16,41 @@ const TagSelectorForCategories = ({tagsMap, entity, onChange}) => {
         onChange(entity.id, event);
     }
 
-    return (
-        <Select
-            onChange={changeTag}
-            closeMenuOnSelect={true}
-            defaultValue={assigned}
-            isMulti
-            options={tagColourOptions}
-            styles={colourStyles}
-            menuPortalTarget={document.body}
-            menuPosition={'fixed'}
-        />
-    );
+    const handleCreate = (inputValue: string) => {
+        console.log("In HandleCreate: ", inputValue);
+        onChange(entity.id, inputValue);
+
+    };
+
+    if(canCreate) {
+        return (
+            <CreatableSelect
+                onChange={changeTag}
+                closeMenuOnSelect={true}
+                defaultValue={assigned}
+                isMulti
+                options={tagColourOptions}
+                onCreateOption={handleCreate}
+                styles={colourStyles}
+                menuPortalTarget={document.body}
+                menuPosition={'fixed'}
+            />
+        );
+    } else {
+        return (
+            <Select
+                onChange={changeTag}
+                closeMenuOnSelect={true}
+                defaultValue={assigned}
+                isMulti
+                options={tagColourOptions}
+                // onCreateOption={handleCreate}
+                styles={colourStyles}
+                menuPortalTarget={document.body}
+                menuPosition={'fixed'}
+            />
+        );
+    }
 }
 
 export default TagSelectorForCategories;

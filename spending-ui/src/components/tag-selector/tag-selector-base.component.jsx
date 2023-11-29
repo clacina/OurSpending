@@ -5,6 +5,10 @@ import chroma from "chroma-js";
 export const colourStyles: StylesConfig<ColourOption, true> = {
     control: (styles) => ({ ...styles, backgroundColor: 'white' }),
     option: (styles, { data, isDisabled, isFocused, isSelected }) => {
+        if(data.hasOwnProperty('__isNew__') && data.__isNew__) {
+            // console.log("new tag so no data: ", data);
+            data.color = '#DC7633';  // default new color (Brick)
+        }
         const color = chroma(data.color);
         return {
             ...styles,
@@ -22,9 +26,7 @@ export const colourStyles: StylesConfig<ColourOption, true> = {
                         ? 'white'
                         : 'black'
                     : data.color,
-            cursor: isDisabled ? 'not-allowed' : 'default',
-
-            ':active': {
+            cursor: isDisabled ? 'not-allowed' : 'default', ':active': {
                 ...styles[':active'],
                 backgroundColor: !isDisabled
                     ? isSelected

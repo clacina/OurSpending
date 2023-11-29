@@ -135,7 +135,13 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
             id: row.id,
             tags: row.tags
         }
-        return (<TagSelector tagsMap={tagsMap} entity={entity_info} onChange={changeTag} selectorId='tagSelection2'/>);
+        return (<TagSelector
+                    tagsMap={tagsMap}
+                    entity={entity_info}
+                    onChange={changeTag}
+                    selectorId='tagSelection2'
+                    canCreate={true}
+        />);
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {

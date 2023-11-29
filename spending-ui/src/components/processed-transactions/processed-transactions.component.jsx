@@ -4,6 +4,7 @@ import {useParams} from "react-router-dom";
 
 import {FerrisWheelSpinner} from 'react-spinner-overlay';
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
+import {TagsContext} from "../../contexts/tags.context";
 import send from "../../utils/http_client.js";
 import '../collapsible.scss';
 
@@ -13,6 +14,7 @@ import HeaderComponent from "./header.component.jsx";
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
+    const {addTag} = useContext(TagsContext);
     let [templateGroups, setTemplateGroups] = useState({})
     let [categoryGroups, setCategoryGroups] = useState({})
 
@@ -323,12 +325,20 @@ const ProcessedTransactions = () => {
     //------------------------------ Server Callback ------------------------
     const updateTags = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
-        console.log("        : ", tag_list);
+        // console.log("Tags for: ", transaction_id);
+        // console.log("        : ", tag_list);
+        // console.log(" typeof : ", typeof tag_list);
         var body = []
-        tag_list.forEach((item) => {
-            body.push(item.value);
-        })
+
+        if(typeof tag_list === "string") {
+            // Have TagContext handle tag add
+            const newTagId = await addTag(tag_list);
+            body.push(newTagId);
+        } else {
+            tag_list.forEach((item) => {
+                body.push(item.value);
+            })
+        }
 
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';

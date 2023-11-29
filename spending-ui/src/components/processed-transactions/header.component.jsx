@@ -8,7 +8,7 @@ import Select from "react-select";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
-import TagSelectorComponent from "../tag-selector/tag-selector.component.jsx";
+import TagSelector from "../tag-selector/tag-selector.component.jsx";
 import './header.component.styles.css';
 import Form from 'react-bootstrap/Form';
 import DatePicker from "react-datepicker";
@@ -128,42 +128,6 @@ const HeaderComponent = ({eventHandler}) => {
 
     return(
         <div>
-            <div className='llNavBar'>
-                <form>
-                    <div className='llNavTop'>
-                        <div className='llNavDisplay'>
-                            <ul>
-                                <li><button>Group by Template</button></li>
-                                <li><button>Group by Category</button></li>
-                                <li><button>Hide Categorized</button></li>
-                            </ul>
-                        </div>
-                        <div className='llNavSearch'>
-                            <label>Search</label>
-                            <input/>
-                            <button>Search Now</button>
-                        </div>
-                    </div>
-                    <div className='llNavBottom'>
-                        <label>Categories</label>
-                        <select >
-
-                        </select>
-
-                        <label>Tags</label>
-                        <select>
-
-                        </select>
-                        <button>Match all Tags</button>
-
-                        <label>Banks</label>
-                        <select>
-
-                        </select>
-                    </div>
-                </form>
-
-            </div>
             <hr/>
             <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
                 <Navbar.Brand>Display and Filter Options</Navbar.Brand>
@@ -181,9 +145,10 @@ const HeaderComponent = ({eventHandler}) => {
             </Navbar>
             <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
                 <Nav justify={false} className="me-auto" justify-content="space-between">
-                    <Nav      as={TagSelectorComponent}
+                    <Nav      as={TagSelector}
                               clearEntry={clearTags}
                               tagsMap={tagsMap.sort(compareTags)}
+                              canCreate={false}
                               entity={transaction}
                               onChange={changeTag} />
                     <Form.Check

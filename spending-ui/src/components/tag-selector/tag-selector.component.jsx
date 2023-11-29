@@ -1,10 +1,11 @@
 import React, {useEffect, useRef} from 'react';
+import CreatableSelect from 'react-select/creatable';
 
-import Select from 'react-select';
 import {colourStyles, BuildOptions} from "./tag-selector-base.component";
+import Select from "react-select";
 
 
-const TagSelector = ({tagsMap, entity, onChange, clearEntry, selectorId='tagSelection'}) => {
+const TagSelector = ({tagsMap, entity, onChange, clearEntry, canCreate=false, selectorId='tagSelection'}) => {
     // entity must contain 2 members:
     //  -- .id
     //  -- .tags
@@ -27,21 +28,48 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry, selectorId='tagSele
         onChange(entity.id, event);
     }
 
-    return (
-        <div className='tagSelectDiv'>
-            <Select
-                onChange={changeTag}
-                closeMenuOnSelect={true}
-                defaultValue={assigned}
-                isMulti
-                options={tagColourOptions}
-                styles={colourStyles}
-                menuPortalTarget={document.body}
-                id={selectorId}
-                ref={tagSelectionRef}
-            />
-        </div>
-    );
+    const handleCreate = (inputValue: string) => {
+        console.log("In HandleCreate: ", inputValue);
+        onChange(entity.id, inputValue);
+
+    };
+
+    if(canCreate) {
+        return (
+            <div className='tagSelectDiv'>
+                <CreatableSelect
+                    onChange={changeTag}
+                    closeMenuOnSelect={true}
+                    defaultValue={assigned}
+                    isMulti
+                    options={tagColourOptions}
+                    styles={colourStyles}
+                    menuPortalTarget={document.body}
+                    onCreateOption={handleCreate}
+                    id={selectorId}
+                    ref={tagSelectionRef}
+                />
+            </div>
+        );
+    } else {
+        return (
+            <div className='tagSelectDiv'>
+                <Select
+                    onChange={changeTag}
+                    closeMenuOnSelect={true}
+                    defaultValue={assigned}
+                    isMulti
+                    options={tagColourOptions}
+                    styles={colourStyles}
+                    menuPortalTarget={document.body}
+                    // onCreateOption={handleCreate}
+                    id={selectorId}
+                    ref={tagSelectionRef}
+                />
+            </div>
+        );
+
+    }
 }
 
 export default TagSelector;

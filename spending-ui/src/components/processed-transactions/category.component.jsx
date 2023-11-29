@@ -60,6 +60,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
+        console.log("Taglist: ", typeof tag_list);
         eventHandler({
             'updateTags': {
                 'transaction_id': transaction_id,
@@ -74,7 +75,11 @@ const CategoryComponent = ({category, display, eventHandler}) => {
             id: row.transaction.id,
             tags: row.transaction.tags
         }
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
+        return (<TagSelectorCategoryComponent
+                    tagsMap={tagsMap}
+                    entity={entity_info}
+                    onChange={changeTag}
+                    canCreate={true}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
