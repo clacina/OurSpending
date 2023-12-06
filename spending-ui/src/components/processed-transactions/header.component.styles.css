@@ -1,11 +1,11 @@
-/* UTILITIES */
+/* UTILITIES - DON'T Touch */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* NAVBAR STYLING STARTS */
+/* NAVBAR STYLING STARTS - DON'T Touch */
 .navbar {
     display: flex;
     align-items: center;
@@ -15,12 +15,9 @@
     color: #fff;
 }
 
+/*****************-------------------------------- My Stuff -------------------------------***********************/
 .form-check {
     color: black;
-}
-
-.navbar-nav {
-    display: flex;
 }
 
 #search-input {
@@ -28,7 +25,8 @@
 }
 
 #tagSelection {
-    width: 400px;
+    width: 200px;
+
 }
 
 #categorySelection {
@@ -44,36 +42,16 @@
     color: black;
 }
 
-.llNavBar {
-    display: none;
+.filterHeader {
+    margin-left: 20px;
+    margin-top: 20px;
 }
 
-.llNavBar li {
-    margin: auto;
-    display: inline-block;
+.displayType {
+    border: 1px solid red;
+    padding: 10px;
 }
 
-.llNavBar input {
-    width: 300px;
-}
-
-.llNavSearch {
-    display: inline-block;
-
-}
-
-.llNavDisplay {
-    display: inline-block;
-}
-
-.llNavTop {
-
-}
-
-.llNavBottom {
-
-}
-
-.llNavBottom select {
-    width: 200px;
+.displayType Button {
+    padding: 5px;
 }

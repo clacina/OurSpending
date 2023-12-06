@@ -1,6 +1,10 @@
 import moment from "moment/moment.js";
-import {useContext, useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
+
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
+
 
 import {FerrisWheelSpinner} from 'react-spinner-overlay';
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
@@ -11,6 +15,7 @@ import '../collapsible.scss';
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
+import {StaticDataContext} from "../../contexts/static_data.context";
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
@@ -96,17 +101,14 @@ const ProcessedTransactions = () => {
     const updateContent = () => {
         console.log("--updateContent")
 
-        if (categoryView) {
-            if (!categorized) {
-                setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
-                    return (item[1][0].template === null && item[1][0].transaction.category === null);
-                }));
-            } else {
-                setCategoriesMap(Object.entries(categoryGroups));
-            }
+        if (!categorized) {
+            setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
+                return (item[1][0].template === null && item[1][0].transaction.category === null);
+            }));
         } else {
-            setEntityMap(Object.entries(templateGroups));
+            setCategoriesMap(Object.entries(categoryGroups));
         }
+        setEntityMap(Object.entries(templateGroups));
     }
 
     useEffect(() => {
@@ -249,13 +251,14 @@ const ProcessedTransactions = () => {
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-
+        console.log("Group by Category")
         // Key is bank, value is list of processed transactions
         for (const [bank, transactions] of Object.entries(institutionGroups)) {
             transactions.forEach((item) => {
                 if(includeInFilter(item)) {
                     var template_category = -1;  // no category
                     if(item.transaction.category) {
+                        console.log("Template " + item.transaction.id + " has category. " + item.transaction.category.value);
                         template_category = item.transaction.category.id;
                     }
                     else if (item.template && item.template.category) {
@@ -269,6 +272,7 @@ const ProcessedTransactions = () => {
                 }
             })
         }
+        console.log("Built category entries: ", categoryEntries)
         return (categoryEntries);
     }
 
@@ -385,186 +389,41 @@ const ProcessedTransactions = () => {
         }
     }
 
+    const {setSectionTitle} = useContext(StaticDataContext);
+    setSectionTitle('Processed Transactions');
+    console.log("tab panel for categories: ", categoriesMap);
+
     return (<>
-            {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div key='pb'>
-                <h1>Processed Transactions</h1>
-                <HeaderComponent eventHandler={headerEventHandler}/>
-                <div>
-                    {categoryView && categoriesMap.map((cat) => {
-                        return (cat[1].length > 0 && <CategoryComponent
-                            category={cat[1]}
-                            display={categorized}
-                            eventHandler={viewEventHandler}/>)
-                    })}
-                    {!categoryView && entityMap.map((bank) => {
-                        return (<BankComponent
-                            key={bank[0]}
-                            bankData={bank}
-                            eventHandler={viewEventHandler}/>)
-                    })}
-                </div>
+            {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div style={{ display: 'block', width: '100%', padding: 30 }}>
+
+                <HeaderComponent eventHandler={headerEventHandler} view={categoryView} limitUncategorized={categorized}/>
+                <Tabs>
+                    <TabList>
+                        <Tab>Template View</Tab>
+                        <Tab>Category View</Tab>
+                    </TabList>
+
+                    <TabPanel>
+                        {entityMap.map((bank) => {
+                            return (<BankComponent
+                                key={bank[0]}
+                                bankData={bank}
+                                eventHandler={viewEventHandler}/>)
+                        })}
+                    </TabPanel>
+                    <TabPanel>
+                        {
+                            categoriesMap.map((cat) => {
+                            console.log("Building cat: ", cat);
+                            return (cat[1].length > 0 && <CategoryComponent
+                                category={cat[1]}
+                                display={categorized}
+                                eventHandler={viewEventHandler}/>)
+                        })}
+                    </TabPanel>
+                </Tabs>
             </div>}
         </>)
 }
 
 export default ProcessedTransactions;
-
-/*
-
-Template View
-{
-    ----- Key is template id
-    "104": [
-        {
-            "id": 767,
-            "processed_batch_id": 2,
-            "entity": {
-                "id": 802,
-                "batch_id": 4,
-                "institution": {
-                    "id": 3,
-                    "key": "CONE_VISA",
-                    "name": "Capital One Visa",
-                    "notes": null
-                },
-                "transaction_date": "2023-01-02",
-                "transaction_data": [
-                    "2023-01-02",
-                    "2023-01-03",
-                    "7776",
-                    "Amazon web services",
-                    "Other Services",
-                    "1.76",
-                    ""
-                ],
-                "tags": [
-                    {
-                        "id": 14,
-                        "value": "Chris",
-                        "notes": null,
-                        "color": null
-                    }
-                ],
-                "description": "Amazon web services",
-                "amount": -1.76,
-                "notes": [
-                    {
-                        "id": 3,
-                        "note": "New note",
-                        "transaction_id": 802
-                    }
-                ],
-                "category": {
-                    "id": 4,
-                    "value": "Chris's Training / Development",
-                    "notes": null
-                },
-                "keyid": "SGzhvc0vFbZHHNCmkAlkN"
-            },
-            "template_id": 104,
-            "institution_id": 3,
-            "template": {
-                "id": 104,
-                "credit": false,
-                "hint": "Chris's Web Work",
-                "notes": null,
-                "category": {
-                    "id": 4,
-                    "value": "Chris's Training / Development",
-                    "notes": null
-                },
-                "institution": {
-                    "id": 3,
-                    "key": "CONE_VISA",
-                    "name": "Capital One Visa",
-                    "notes": null
-                },
-                "tags": [
-                    {
-                        "id": 4,
-                        "value": "Recurring",
-                        "notes": null,
-                        "color": "black"
-                    }
-                ],
-                "qualifiers": [
-                    {
-                        "id": 14,
-                        "value": "Amazon web services",
-                        "institution_id": 3
-                    }
-                ]
-            }
-        },
-    ]
-}
-
-Category View
-{
-    ---- Key is category id
-    "1": [
-    {
-        "id": 761,
-        "processed_batch_id": 2,
-        "entity": {
-            "id": 796,
-            "batch_id": 4,
-            "institution": {
-                "id": 3,
-                "key": "CONE_VISA",
-                "name": "Capital One Visa",
-                "notes": null
-            },
-            "transaction_date": "2023-02-18",
-            "transaction_data": [
-                "2023-02-18",
-                "2023-02-23",
-                "7776",
-                "U-HAUL-CTR-12TH-L #70221",
-                "Car Rental",
-                "99.10",
-                ""
-            ],
-            "tags": [],
-            "description": "U-HAUL-CTR-12TH-L #70221",
-            "amount": -99.1,
-            "notes": [
-                {
-                    "id": 4,
-                    "note": "Into the unknown",
-                    "transaction_id": 796
-                }
-            ],
-            "category": null,
-            "keyid": "dzLySBqVRIozNUt2auNcY"
-        },
-        "template_id": 113,
-        "institution_id": 3,
-        "template": {
-            "id": 113,
-            "credit": false,
-            "hint": "Car Rental",
-            "notes": null,
-            "category": {
-                "id": 1,
-                "value": "Unknown",
-                "notes": null
-            },
-            "institution": {
-                "id": 3,
-                "key": "CONE_VISA",
-                "name": "Capital One Visa",
-                "notes": null
-            },
-            "tags": [],
-            "qualifiers": [
-                {
-                    "id": 23,
-                    "value": "Car Rental",
-                    "institution_id": 3
-                }
-            ]
-        }
-    }
-
-*/

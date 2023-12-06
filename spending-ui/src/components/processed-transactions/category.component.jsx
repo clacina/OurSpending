@@ -24,7 +24,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
     const [isCategorized, setIsCategorized] = useState(true);
-    // console.log("cat: ", category);
+    console.log("cat: ", category);
 
     // Define table columns
     const columns = []

@@ -14,9 +14,11 @@ import Form from 'react-bootstrap/Form';
 import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
+import Button from "react-bootstrap/Button";
+import {ButtonGroup, ToggleButton} from "react-bootstrap";
 
 
-const HeaderComponent = ({eventHandler}) => {
+const HeaderComponent = ({eventHandler, view, limitUncategorized}) => {
     const {tagsMap} = useContext(TagsContext);
     const {categoriesMap} = useContext(CategoriesContext);
     const {institutions} = useContext(StaticDataContext);
@@ -127,25 +129,38 @@ const HeaderComponent = ({eventHandler}) => {
     }
 
     return(
-        <div>
-            <hr/>
-            <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
-                <Navbar.Brand>Display and Filter Options</Navbar.Brand>
-                <Nav
-                     className="me-auto"
-                     justify-content="space-between"
-                     activeKey="1"
-                     onSelect={handleSelect}>
-                    <Nav.Link eventKey="templateview">Group by Template</Nav.Link>
-                    <Nav.Link eventKey="categoryview">Group by Category</Nav.Link>
-                    <Nav.Link eventKey="noncategoryview">Uncategorized</Nav.Link>
+        <div className='filterHeader'>
+                <h4>Display and Filter Options</h4>
+                <div className='displayType'>
+                    <ButtonGroup className="mb-md-1">
+                        <ToggleButton
+                            id='TemplateView'
+                            type='checkbox'
+                            value={1}
+                            onClick={(e) => handleSelect('templateview')}
+                            checked={!view}>Group by Template</ToggleButton>
+                        <ToggleButton
+                            id='CategoryView'
+                            type='checkbox'
+                            value={2}
+                            onClick={(e) => handleSelect('categoryview')}
+                            checked={view}>Group by Category</ToggleButton>
+                    </ButtonGroup>
+                    <ButtonGroup>
+                    <ToggleButton  className="mb-md-1"
+                        active={limitUncategorized}
+                        disabled={!view}
+                        id="LimitView"
+                        value={3}
+                        checked={limitUncategorized}
+                        onClick={(e) => handleSelect('noncategoryview')}
+                        type='checkbox'>Uncategorized</ToggleButton>
+                    </ButtonGroup>
                     <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
-                    <button onClick={onSearch} >Search</button>
-                </Nav>
-            </Navbar>
-            <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
-                <Nav justify={false} className="me-auto" justify-content="space-between">
-                    <Nav      as={TagSelector}
+                    <Button onClick={onSearch}  className="mb-md-1">Search</Button>
+                </div>
+                <div>
+                    <TagSelector
                               clearEntry={clearTags}
                               tagsMap={tagsMap.sort(compareTags)}
                               canCreate={false}
@@ -158,7 +173,7 @@ const HeaderComponent = ({eventHandler}) => {
                         checked={matchAllTags}
                         onChange={changeAllTags}
                     />
-                    <Nav.Link as={Select}
+                    <Select
                               id="categorySelection"
                               ref={categorySelectionRef}
                               closeMenuOnSelect={true}
@@ -168,7 +183,7 @@ const HeaderComponent = ({eventHandler}) => {
                               menuPortalTarget={document.body}
                               menuPosition={'fixed'}
                               onChange={updateCategory}/>
-                    <Nav.Link as={Select}
+                    <Select
                               id="institutionSelection"
                               ref={institutionSelectionRef}
                               closeMenuOnSelect={true}
@@ -177,26 +192,23 @@ const HeaderComponent = ({eventHandler}) => {
                               menuPortalTarget={document.body}
                               menuPosition={'fixed'}
                               onChange={updateInstitution}/>
-                </Nav>
-            </Navbar>
-            <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
-                <Nav justify={false} className="me-auto" justify-content="space-between">
+                </div>
+                <div>
                     <span className="dateLabel">Start Date</span>
-                    <Nav.Link as={DatePicker}
+                    <DatePicker
                               id="startDate"
                               selected={startDateFilter}
                               calandarClassName="rasta-stripes"
                               isClearable
                               onChange={(date)=>onChangeStartDate(date)} />
                     <span className='dateLabel'>End Date</span>
-                    <Nav.Link as={DatePicker}
+                    <DatePicker
                               id="endDate"
                               selected={endDateFilter}
                               isClearable
                               onChange={(date)=>onChangeEndDate(date)} />
-                    <button onClick={clearFilters} >Clear Filters</button>
-                </Nav>
-            </Navbar>
+                    <Button onClick={clearFilters}  className="mb-md-1">Clear Filters</Button>
+                </div>
         </div>
     )
 }

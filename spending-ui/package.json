@@ -57,6 +57,7 @@
     "react-scripts": "5.0.1",
     "react-select": "^5.7.5",
     "react-spinner-overlay": "^0.1.33",
+    "react-tabs": "^6.0.2",
     "reactcss": "^1.2.3",
     "recharts": "^2.9.3",
     "request": "^2.88.2",
