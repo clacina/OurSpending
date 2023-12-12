@@ -118,11 +118,6 @@ const ProcessedTransactions = () => {
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
             console.log("UE - Filter update")
-            // setTemplateGroups(groupTransactionsByTemplate());
-            // setTemplatesGrouped(true);
-            // setCategoryGroups(groupTransactionsByCategory());
-            // updateContent();
-
             templateGroups = groupTransactionsByTemplate();
             templatesGrouped = true;
             categoryGroups = groupTransactionsByCategory();
@@ -209,7 +204,6 @@ const ProcessedTransactions = () => {
         // Categories
         if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
             processTransaction = false;
-            console.log("Applying category filter: ", categoriesFilter);
             // check entity level category first.  If it exists use it over the template category
             // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
@@ -251,7 +245,6 @@ const ProcessedTransactions = () => {
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-        console.log("Group by Category")
         // Key is bank, value is list of processed transactions
         for (const [bank, transactions] of Object.entries(institutionGroups)) {
             transactions.forEach((item) => {
@@ -272,7 +265,6 @@ const ProcessedTransactions = () => {
                 }
             })
         }
-        console.log("Built category entries: ", categoryEntries)
         return (categoryEntries);
     }
 
@@ -391,7 +383,6 @@ const ProcessedTransactions = () => {
 
     const {setSectionTitle} = useContext(StaticDataContext);
     setSectionTitle('Processed Transactions');
-    console.log("tab panel for categories: ", categoriesMap);
 
     return (<>
             {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div style={{ display: 'block', width: '100%', padding: 30 }}>
@@ -414,7 +405,6 @@ const ProcessedTransactions = () => {
                     <TabPanel>
                         {
                             categoriesMap.map((cat) => {
-                            console.log("Building cat: ", cat);
                             return (cat[1].length > 0 && <CategoryComponent
                                 category={cat[1]}
                                 display={categorized}

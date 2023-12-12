@@ -16,6 +16,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Button from "react-bootstrap/Button";
 import {ButtonGroup, ToggleButton} from "react-bootstrap";
+import Collapsible from "react-collapsible";
 
 
 const HeaderComponent = ({eventHandler, view, limitUncategorized}) => {
@@ -129,33 +130,83 @@ const HeaderComponent = ({eventHandler, view, limitUncategorized}) => {
     }
 
     return(
-        <div className='filterHeader'>
+        <div id='filterPanel'>
+            <Collapsible trigger='Display and Filter Options'>
+                <div className='filterHeader'>
+                    <div className='searchArea'>
+                        <label>Search</label>
+                        <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
+                        <Button onClick={onSearch}  className="mb-md-1">Search</Button>
+                    </div>
+                    <div className='tagsAndSuch'>
+                        <label className='tagLabel'>Assigned Tags</label>
+                        <TagSelector
+                            clearEntry={clearTags}
+                            tagsMap={tagsMap.sort(compareTags)}
+                            canCreate={false}
+                            entity={transaction}
+                            selectorClass='headerTagSelector'
+                            onChange={changeTag} />
+                        <Form.Check
+                            className='matchAll'
+                            type="switch"
+                            id="allTags"
+                            label="Match ALL Tags"
+                            checked={matchAllTags}
+                            onChange={changeAllTags}
+                        />
+                    </div>
+                    <div className='categoryFilters'>
+                        <label>Categories</label>
+                        <Select
+                            id="categorySelection"
+                            ref={categorySelectionRef}
+                            closeMenuOnSelect={true}
+                            options={options.sort(compareCategories)}
+                            isMulti
+                            onInputChange={onInputChange}
+                            menuPortalTarget={document.body}
+                            menuPosition={'fixed'}
+                            onChange={updateCategory}/>
+                        <label>Banks</label>
+                        <Select
+                            id="institutionSelection"
+                            ref={institutionSelectionRef}
+                            closeMenuOnSelect={true}
+                            options={banks.sort(compareInstitutions)}
+                            isMulti
+                            menuPortalTarget={document.body}
+                            menuPosition={'fixed'}
+                            onChange={updateInstitution}/>
+                    </div>
+                    <div className='dateFilters'>
+                        <label className="dateLabel">Start Date</label>
+                        <DatePicker
+                            id="startDate"
+                            selected={startDateFilter}
+                            calandarClassName="rasta-stripes"
+                            isClearable
+                            onChange={(date)=>onChangeStartDate(date)} />
+                        <label className='dateLabelEnd'>End Date</label>
+                        <DatePicker
+                            id="endDate"
+                            selected={endDateFilter}
+                            isClearable
+                            onChange={(date)=>onChangeEndDate(date)} />
+                        <Button onClick={clearFilters} id='clearFilterButton' className="mb-md-1">Clear Filters</Button>
+                    </div>
+                </div>
+            </Collapsible>
+        </div>
+    )
+}
+
+export default HeaderComponent;
+
+/*
+
                 <h4>Display and Filter Options</h4>
                 <div className='displayType'>
-                    <ButtonGroup className="mb-md-1">
-                        <ToggleButton
-                            id='TemplateView'
-                            type='checkbox'
-                            value={1}
-                            onClick={(e) => handleSelect('templateview')}
-                            checked={!view}>Group by Template</ToggleButton>
-                        <ToggleButton
-                            id='CategoryView'
-                            type='checkbox'
-                            value={2}
-                            onClick={(e) => handleSelect('categoryview')}
-                            checked={view}>Group by Category</ToggleButton>
-                    </ButtonGroup>
-                    <ButtonGroup>
-                    <ToggleButton  className="mb-md-1"
-                        active={limitUncategorized}
-                        disabled={!view}
-                        id="LimitView"
-                        value={3}
-                        checked={limitUncategorized}
-                        onClick={(e) => handleSelect('noncategoryview')}
-                        type='checkbox'>Uncategorized</ToggleButton>
-                    </ButtonGroup>
                     <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
                     <Button onClick={onSearch}  className="mb-md-1">Search</Button>
                 </div>
@@ -209,34 +260,20 @@ const HeaderComponent = ({eventHandler, view, limitUncategorized}) => {
                               onChange={(date)=>onChangeEndDate(date)} />
                     <Button onClick={clearFilters}  className="mb-md-1">Clear Filters</Button>
                 </div>
-        </div>
-    )
-}
-
-export default HeaderComponent;
-
-/**********************************
-export const componentB = () => {
-    return (
-        <Select />
-    );
-}
-
-const changeComponentB = () => {
-    ?? How do I get component b and operate on the properties of the Select
-}
-
-export const main = () => {
-    return(
-        <div>
-            <button onClick={changeComponentB}/>
-            <componentA>
-                <componentB />
-            </componentA>
-        </div>
-    );
-}
 
 
 
-**********************************/
+
+                    <ButtonGroup>
+                    <ToggleButton  className="mb-md-1"
+                        active={limitUncategorized}
+                        disabled={!view}
+                        id="LimitView"
+                        value={3}
+                        checked={limitUncategorized}
+                        onClick={(e) => handleSelect('noncategoryview')}
+                        type='checkbox'>Hide Categorized</ToggleButton>
+                    </ButtonGroup>
+
+
+ */

@@ -35,12 +35,17 @@ const ProcessedBatches = () => {
 
     if(isLoaded) {
         return(
-            <TableBaseComponent
-                columns={columns}
-                data={processedBatches}
-                keyField='id'
-                double_click_handler={double_click_handler}
-            />
+            <>
+                <h2>Double click a batch below to see the related transactions.</h2>
+                <div id='processedBatchList'>
+                    <TableBaseComponent
+                        columns={columns}
+                        data={processedBatches}
+                        keyField='id'
+                        double_click_handler={double_click_handler}
+                    />
+                </div>
+            </>
         )
     }
 }

@@ -5,7 +5,9 @@ import {colourStyles, BuildOptions} from "./tag-selector-base.component";
 import Select from "react-select";
 
 
-const TagSelector = ({tagsMap, entity, onChange, clearEntry, canCreate=false, selectorId='tagSelection'}) => {
+const TagSelector = ({tagsMap, entity, onChange, clearEntry,
+                         canCreate=false, selectorId='tagSelection',
+                         selectorClass='tagSelectDiv'}) => {
     // entity must contain 2 members:
     //  -- .id
     //  -- .tags
@@ -36,7 +38,7 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry, canCreate=false, se
 
     if(canCreate) {
         return (
-            <div className='tagSelectDiv'>
+            <div className={selectorClass}>
                 <CreatableSelect
                     onChange={changeTag}
                     closeMenuOnSelect={true}
@@ -53,7 +55,7 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry, canCreate=false, se
         );
     } else {
         return (
-            <div className='tagSelectDiv'>
+            <div className={selectorClass}>
                 <Select
                     onChange={changeTag}
                     closeMenuOnSelect={true}
