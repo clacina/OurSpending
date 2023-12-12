@@ -65,7 +65,4 @@ export const CButton = styled(BaseButton)`
   transform: translate(-50%, -15px);
 `;
 
-export const sub_format = styled.p`
-    margin-left: 10px;
-    color: red;
-`;
+// See header.component.styles.css for more styling in this component

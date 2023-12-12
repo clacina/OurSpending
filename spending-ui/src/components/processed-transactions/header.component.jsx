@@ -1,8 +1,6 @@
 
 import moment from "moment";
 import React, {useContext, useRef, useState} from "react";
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
 import {InputActionMeta} from "react-select";
 import Select from "react-select";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
@@ -15,11 +13,10 @@ import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 import Button from "react-bootstrap/Button";
-import {ButtonGroup, ToggleButton} from "react-bootstrap";
 import Collapsible from "react-collapsible";
 
 
-const HeaderComponent = ({eventHandler, view, limitUncategorized}) => {
+const HeaderComponent = ({eventHandler}) => {
     const {tagsMap} = useContext(TagsContext);
     const {categoriesMap} = useContext(CategoriesContext);
     const {institutions} = useContext(StaticDataContext);
@@ -202,78 +199,3 @@ const HeaderComponent = ({eventHandler, view, limitUncategorized}) => {
 }
 
 export default HeaderComponent;
-
-/*
-
-                <h4>Display and Filter Options</h4>
-                <div className='displayType'>
-                    <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
-                    <Button onClick={onSearch}  className="mb-md-1">Search</Button>
-                </div>
-                <div>
-                    <TagSelector
-                              clearEntry={clearTags}
-                              tagsMap={tagsMap.sort(compareTags)}
-                              canCreate={false}
-                              entity={transaction}
-                              onChange={changeTag} />
-                    <Form.Check
-                        type="switch"
-                        id="allTags"
-                        label="Match ALL Tags"
-                        checked={matchAllTags}
-                        onChange={changeAllTags}
-                    />
-                    <Select
-                              id="categorySelection"
-                              ref={categorySelectionRef}
-                              closeMenuOnSelect={true}
-                              options={options.sort(compareCategories)}
-                              isMulti
-                              onInputChange={onInputChange}
-                              menuPortalTarget={document.body}
-                              menuPosition={'fixed'}
-                              onChange={updateCategory}/>
-                    <Select
-                              id="institutionSelection"
-                              ref={institutionSelectionRef}
-                              closeMenuOnSelect={true}
-                              options={banks.sort(compareInstitutions)}
-                              isMulti
-                              menuPortalTarget={document.body}
-                              menuPosition={'fixed'}
-                              onChange={updateInstitution}/>
-                </div>
-                <div>
-                    <span className="dateLabel">Start Date</span>
-                    <DatePicker
-                              id="startDate"
-                              selected={startDateFilter}
-                              calandarClassName="rasta-stripes"
-                              isClearable
-                              onChange={(date)=>onChangeStartDate(date)} />
-                    <span className='dateLabel'>End Date</span>
-                    <DatePicker
-                              id="endDate"
-                              selected={endDateFilter}
-                              isClearable
-                              onChange={(date)=>onChangeEndDate(date)} />
-                    <Button onClick={clearFilters}  className="mb-md-1">Clear Filters</Button>
-                </div>
-
-
-
-
-                    <ButtonGroup>
-                    <ToggleButton  className="mb-md-1"
-                        active={limitUncategorized}
-                        disabled={!view}
-                        id="LimitView"
-                        value={3}
-                        checked={limitUncategorized}
-                        onClick={(e) => handleSelect('noncategoryview')}
-                        type='checkbox'>Hide Categorized</ToggleButton>
-                    </ButtonGroup>
-
-
- */

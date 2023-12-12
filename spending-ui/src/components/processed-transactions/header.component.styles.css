@@ -128,3 +128,16 @@
     color: black;
 }
 
+/* -----------------------------Transaction Detail Overrides----------------------------  */
+
+#TransactionDetailHeader {
+    display: flex;
+}
+
+#SetCategoryDiv {
+    display: flex;
+}
+
+#testCategoryLabel {
+    margin: 10px;
+}

@@ -17,7 +17,7 @@ import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 
-const CategoryComponent = ({category, display, eventHandler}) => {
+const CategoryComponent = ({category, eventHandler}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {tagsMap} = useContext(TagsContext);
@@ -25,6 +25,8 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     const [openNotes, setOpenNotes] = useState(false);
     const [isCategorized, setIsCategorized] = useState(true);
     console.log("cat: ", category);
+    console.log("temp: ", category[0].template_id)
+    // console.log("trans: ", category[0])
 
     // Define table columns
     const columns = []
@@ -191,6 +193,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     };
 
     const assignCategoryToTransaction = (event) => {
+        console.log("assignCategoryToTransaction: ", event);
         eventHandler({
             "updateCategory": {
                 "transaction_id": activeRow.transaction.id,

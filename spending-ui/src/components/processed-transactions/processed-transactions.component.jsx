@@ -16,6 +16,8 @@ import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context";
+import {ButtonGroup, TabPane, ToggleButton} from "react-bootstrap";
+import * as assert from "assert";
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
@@ -29,6 +31,7 @@ const ProcessedTransactions = () => {
     // Content for display
     const [entityMap, setEntityMap] = useState([]);
     const [categoriesMap, setCategoriesMap] = useState([]);
+    const [uncategorizedMap, setUncategorizedMap] = useState([]);
 
     // UI Display Flags
     const [categoryView, setCategoryView] = useState(false);
@@ -50,6 +53,9 @@ const ProcessedTransactions = () => {
     const [institutionsLoaded, setInstitutionsLoaded] = useState(false);
     let [templatesGrouped, setTemplatesGrouped] = useState(false);
     const [entityMapCreated, setEntityMapCreated] = useState(false);
+
+    // Updated Content Flags
+    const [contentUpdated, setContentUpdated] = useState(false);
 
     const routeParams = useParams();
 
@@ -101,13 +107,12 @@ const ProcessedTransactions = () => {
     const updateContent = () => {
         console.log("--updateContent")
 
-        if (!categorized) {
-            setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
-                return (item[1][0].template === null && item[1][0].transaction.category === null);
-            }));
-        } else {
-            setCategoriesMap(Object.entries(categoryGroups));
-        }
+        setUncategorizedMap(Object.entries(categoryGroups).filter((item) => {
+            return (item[1][0].template === null && item[1][0].transaction.category === null);
+        }));
+
+        setCategoriesMap(Object.entries(categoryGroups));
+
         setEntityMap(Object.entries(templateGroups));
     }
 
@@ -125,11 +130,11 @@ const ProcessedTransactions = () => {
             setTemplateGroups(groupTransactionsByTemplate());
             setTemplatesGrouped(true);
             setCategoryGroups(groupTransactionsByCategory());
-
+            setContentUpdated(false);
         }
     }, [institutionGroups, institutionsLoaded,
         tagsFilter, categoriesFilter, institutionFilter, startDateFilter, endDateFilter,
-        matchAllTags, matchAllCategories, searchString]);
+        matchAllTags, matchAllCategories, searchString, contentUpdated]);
 
     useEffect(() => {
         if (templatesGrouped) {
@@ -359,6 +364,7 @@ const ProcessedTransactions = () => {
     }
 
     const updateCategory = async (transaction_id, category_id) => {
+        console.log("Update category: " + transaction_id + ", " + category_id);
         const body = {
             'category_id': category_id
         }
@@ -367,6 +373,18 @@ const ProcessedTransactions = () => {
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+
+        // Need to refresh data and re-render
+        for (const [bank, transactions] of Object.entries(institutionGroups)) {
+            const transaction = transactions.find((t) => t.transaction.id === transaction_id)
+            console.log("Transaction: ", transaction);
+            if(transaction) {
+                transaction.transaction.category = category_id;
+                break;
+            }
+        }
+
+        setContentUpdated(true);
     }
 
     const viewEventHandler = (event) => {
@@ -387,11 +405,12 @@ const ProcessedTransactions = () => {
     return (<>
             {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div style={{ display: 'block', width: '100%', padding: 30 }}>
 
-                <HeaderComponent eventHandler={headerEventHandler} view={categoryView} limitUncategorized={categorized}/>
+                <HeaderComponent eventHandler={headerEventHandler}/>
                 <Tabs>
                     <TabList>
                         <Tab>Template View</Tab>
                         <Tab>Category View</Tab>
+                        <Tab>Uncategorized</Tab>
                     </TabList>
 
                     <TabPanel>
@@ -405,11 +424,18 @@ const ProcessedTransactions = () => {
                     <TabPanel>
                         {
                             categoriesMap.map((cat) => {
-                            return (cat[1].length > 0 && <CategoryComponent
+                            return (cat[1].length > 0 && cat[1][0].template && <CategoryComponent
                                 category={cat[1]}
-                                display={categorized}
                                 eventHandler={viewEventHandler}/>)
                         })}
+                    </TabPanel>
+                    <TabPanel>
+                        {
+                            uncategorizedMap.map((cat) => {
+                                return (cat[1].length > 0 && !cat[1][0].template && <CategoryComponent
+                                    category={cat[1]}
+                                    eventHandler={viewEventHandler}/>)
+                            })}
                     </TabPanel>
                 </Tabs>
             </div>}

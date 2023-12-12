@@ -4,7 +4,7 @@ import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import CategorySelectDialog from "../category-select-dialog/category_select_dialog.component.jsx";
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
-import {ItemTable, sub_format} from './transaction_detail.component.styles.jsx';
+import {ItemTable, sub_format, transactionCategoryDiv} from './transaction_detail.component.styles.jsx';
 import 'react-dropdown/style.css';
 
 const TransactionDetailComponent = ({row, eventHandler}) => {
@@ -67,17 +67,22 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
 
     return(
         <div>
-            <h2>{row.transaction.institution.name}</h2>
-            <sub_format>{row.transaction.id}</sub_format>
+            <div id='TransactionDetailHeader'>
+                <h2>{row.transaction.institution.name}</h2>
+                <sub_format>{row.transaction.id}</sub_format>
+            </div>
 
-            <Select
-                id="categorySelection"
-                ref={categorySelectionRef}
-                closeMenuOnSelect={true}
-                options={options.sort(compareCategories)}
-                menuPortalTarget={document.body}
-                menuPosition={'fixed'}
-                onChange={eventHandler}/>
+            <div id='SetCategoryDiv'>
+                <label id='testCategoryLabel'>Select Category</label>
+                <Select
+                    id="categorySelection"
+                    ref={categorySelectionRef}
+                    closeMenuOnSelect={true}
+                    options={options.sort(compareCategories)}
+                    menuPortalTarget={document.body}
+                    menuPosition={'fixed'}
+                    onChange={eventHandler}/>
+            </div>
 
             {/*<span><button onClick={showModal}>Assign Category</button></span>*/}
             {/*<span><button>Create Template</button></span>*/}
