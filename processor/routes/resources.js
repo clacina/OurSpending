@@ -143,6 +143,27 @@ resourcesRouter.put('/template/:id', async function(req, res, next) {
   }
 });
 
+resourcesRouter.patch('/template/:id', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/template/' + req.params['id'];
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.patch(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
 
 
 resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {

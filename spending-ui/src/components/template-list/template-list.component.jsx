@@ -4,7 +4,6 @@
 import {useContext, useEffect, useState} from "react";
 import '../collapsible.scss';
 
-import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
@@ -20,36 +19,6 @@ import ModalPromptComponent from "../modal-prompt/modal-prompt.component.jsx";
 import TemplateDetailComponent from "../template/template.component.jsx";
 
 
-const data = {
-    "id": 5,
-    "credit": false,
-    "hint": "Life Insurance",
-    "notes": null,
-    "category": {
-        "id": 21,
-        "value": "Service"
-    },
-    "institution": {
-        "id": 1,
-        "key": "WLS_CHK",
-        "name": "Wellsfargo Checking"
-    },
-    "tags": [
-        {
-            "id": 4,
-            "value": "Recurring"
-        }
-    ],
-    "qualifiers": [
-        {
-            "id": 68,
-            "value": "AAA LIFE INS PREM",
-            "institution_id": 1
-        }
-    ]
-}
-
-
 const TemplateList = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [activeRow, setActiveRow] = useState(0);
@@ -59,15 +28,15 @@ const TemplateList = () => {
     const [editPrompt, setEditPrompt] = useState("text")
 
     const {setSectionTitle} = useContext(StaticDataContext);
-    const {templatesMap} = useContext(TemplatesContext);
+    const {templatesMap, setUpdate} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
-    const {categoriesMap} = useContext(CategoriesContext);
 
     useEffect(() => {
         console.log("Start");
         if (templatesMap.length > 0 && tagsMap.length > 0) {
             setSectionTitle('Templates');
             setIsLoaded(true);
+            // console.log("TList: ", templatesMap)
         } else {
             console.info("No definitions yet");
         }
@@ -82,9 +51,10 @@ const TemplateList = () => {
     const callUpdate = async (template_id, body) => {
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/template/' + template_id;
-        const method = 'PUT'
+        const method = 'PATCH'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+        setUpdate(true);
     }
 
     const updateTags = async (template_id, tag_list) => {
@@ -97,7 +67,7 @@ const TemplateList = () => {
 
     const updateNotes = async (template_id, note) => {
         const body = {
-            notes: note
+            'notes': note
         }
 
         await callUpdate(template_id, body);
@@ -105,7 +75,7 @@ const TemplateList = () => {
 
     const updateHint = async (template_id, hint) => {
         const body = {
-            hint: hint
+            'hint': hint
         }
 
         await callUpdate(template_id, body);
@@ -113,7 +83,7 @@ const TemplateList = () => {
 
     const updateCategory = async (template_id, category_id) => {
         const body = {
-            category: {'id': category_id, 'value': ''}
+            'category': category_id
         }
         await callUpdate(template_id, body);
     }
@@ -253,6 +223,7 @@ const TemplateList = () => {
         }, style: {cursor: 'pointer'},
     });
     columns.push({dataField: 'institution.name', text: 'Bank', sort: true});
+    columns.push({dataField: 'category.is_tax_deductible', text: 'Tax Deductible', sort: true});
 
     const expandRow = {
         onlyOneExpanding: false,

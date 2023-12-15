@@ -66,7 +66,6 @@ const TemplateDetailComponent = ({template, eventHandler}) => {
     const {categoriesMap} = useContext(CategoriesContext);
     const [templateFields, setTemplateFields] = useState(templateData);
     const [isLoaded, setIsLoaded] = useState(false);
-    const [selection, setSelection] = useState();
 
     useEffect(() => {
         if (!isLoaded && template.institution !== null) {
@@ -81,13 +80,14 @@ const TemplateDetailComponent = ({template, eventHandler}) => {
 
     const updateCategory = (event) => {
         console.log("Update Category: ", event);
+        console.log("For template: ", template);
+
         // contact parent to store....
-        // const payload = {
-        //     template_id: template.id,
-        //     category_id: event.value
-        // }
-        // setSelection(event.value);
-        // eventHandler(payload);
+        const payload = {
+            template_id: template.id,
+            category_id: event.value
+        }
+        eventHandler(payload);
     }
 
     // Sort comparator

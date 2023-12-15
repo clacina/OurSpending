@@ -85,9 +85,21 @@ export const TagsProvider = ({children}) => {
         return(request.id);
     }
 
+    const queryTags = (tag_list) => {
+        const tags = []
+
+        tagsMap.forEach((tag) => {
+            if(tag.id in tag_list) {
+                tags.push(tag);
+            }
+        })
+
+        return tags;
+    }
+
     useEffect(() => {
         try {
-            console.log("TagsContext");
+            console.log("TagsContext - loading tags");
             getTags().then((res) => setTagsMap(res));
             setUpdate(false);
         } catch (e) {
@@ -95,6 +107,6 @@ export const TagsProvider = ({children}) => {
         }
     }, [update===true]);
 
-    const value = {tagsMap, setTagsMap, addTag};
+    const value = {tagsMap, setTagsMap, addTag, queryTags};
     return <TagsContext.Provider value={value}>{children}</TagsContext.Provider>
 };

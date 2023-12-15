@@ -1,10 +1,9 @@
 """
     uvicorn app.app:app, port=8080
 """
-import decimal
-import json
+from __future__ import annotations
+
 import logging
-from datetime import datetime
 from typing import Optional, List
 from typing import Annotated
 
@@ -26,6 +25,10 @@ from rest_api.template_models import (
 )
 from rest_api.reports import reports
 from rest_api.reports import report_processor
+from rest_api.models import CategoryModel
+from rest_api.models import TagModel
+from rest_api.models import QualifierModel
+
 
 router = APIRouter()
 db_access = DBAccess()
@@ -142,6 +145,66 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
 
     return new_template
 
+
+class TemplateUpdate(BaseModel):
+    institution_id: int | None = None
+    category: CategoryModel | None = None
+    credit: bool | None = None
+    tags: List[TagModel] | None = None
+    qualifiers: List[QualifierModel] | None = None
+    hint: str | None = None
+    notes: str | None = None
+
+
+@router.patch(
+    "/template/{template_id}",
+    summary="Update the category for a specific template",
+    response_model=TemplateReportModel,
+)
+def patch_template(template_id: int,
+                   template: TemplateUpdate):
+    query_result = db_access.query_templates_by_id(template_id)
+    if not query_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unable to find template with id: {template_id}",
+        )
+
+    logging.info(f"Query Result: {query_result}")
+    logging.info(f"Patch Parameters: {template}")
+
+    existing_template = SingleTemplateReportBuilder(query_result).process()
+
+    update_data = template.dict(exclude_unset=True)
+    new_template = existing_template.copy(update=update_data)
+
+    """
+     tags=[TagModel(id=1, value=None, notes=None, color=None), 
+     TagModel(id=5, value=None, notes=None, color=None), 
+     TagModel(id=6, value=None, notes=None, color=None), 
+     TagModel(id=8, value=None, notes=None, color=None)]    
+    """
+
+    # Store updated template in database
+    logging.info({
+        "message": "Modifying template",
+        "original": existing_template,
+        "updated ": new_template
+    })
+
+    if hasattr(template, 'category'):
+        new_template.category = models.CategoryModel(
+            id=query_result[0][13],
+            value=query_result[0][14],
+            notes=query_result[0][15]
+        )
+    if template.tags:
+        new_template.tags = template.tags
+
+    logging.info(f"New Template: {new_template}")
+    db_access.update_template(new_template)
+
+    return new_template
 
 """ ---------- Batches ---------------------------------------------------------------------------"""
 

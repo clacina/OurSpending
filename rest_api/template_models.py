@@ -99,11 +99,37 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
                             13                     14
                  , q.id AS qualifier_id, q.value as qualifier_value
         """
+        qualifiers = []
+        tags = []
         for row in self.data:
             if row[0] is None:
                 # TODO: Should never happen, need to fix query
                 break
-            tags, qualifiers = parse_template_record(row)
+            tag_list, qualifier_list = parse_template_record(row)
+            logging.info(f"Row data: {row}")
+            logging.info(f"parsed data: {tag_list}, {qualifier_list}")
+
+            """
+              0       1         2      3    4        5          6    7      8     9    10
+            7000, 'New Hint', False, None, 11, 'Care Credit', 'CC', None, None, None, None,
+              11   12    13    14     15    16              17   
+            None, None, 2026, 'Vet', None, 5000, 'SOUNDVIEW VETERINARY HOSPTA'            
+            """
+            category = None
+            if row[13] is not None:
+                logging.info(f"Setting category id to: {row[13]}")
+                category = CategoryModel(
+                    id=row[13],
+                    value=row[14],
+                    notes=row[15]
+                )
+            if row[16] is not None:
+                qualifier = QualifierModel(
+                    id=row[16],
+                    value=row[17],
+                    institution_id=row[4]
+                )
+                qualifiers.append(qualifier)
 
             tr = TemplateReportModel(
                 institution_id=row[4],
@@ -113,10 +139,7 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
                 hint=row[1],
                 notes=row[3],
                 qualifiers=qualifiers,
-                category=CategoryModel(
-                    value=row[12],
-                    id=1,
-                    notes='')
+                category=category
             )
             if not self.tr:
                 self.tr = tr
@@ -125,57 +148,57 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
         return self.tr
 
 
-class TemplatesReportBuilder:  # NOT USED
-    """
-    Returns a list of TemplateRemoteModel objects
-                   0                     1               2                3                  4
-    SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id
-                         5                 6
-             , bank.name as bank_name, bank.key
-                         7              8
-             , t.id as tag_id, t.value as tag_value
-                        9               10
-             , tt.template_id, tt.tag_id
-                        11                      12
-             , c.id as category_id, c.value as category_value
-                        13                      14
-             , q.id AS qualifier_id, q.value as qualifier_value
-
-    """
-
-    def __init__(self, data):
-        self.data = data
-
-    def process(self):
-        # logging.info(f"query result: {self.data}")
-        # logging.info(f"Found {len(self.data)} records to parse")
-
-        templates = {}
-        for row in self.data:
-            if row[0] is None:
-                # TODO: Should never happen, need to fix query
-                break
-            tags, qualifiers = parse_template_record(row)
-
-            tr = TemplateReportModel(
-                institution_id=row[4],
-                id=row[0],
-                credit=row[2],
-                tags=tags,
-                hint=row[1],
-                notes=row[3],
-                qualifiers=qualifiers,
-                category=row[12],
-            )
-            if tr.id not in templates:
-                templates[tr.id] = tr
-            else:
-                templates[tr.id].update(tr)
-
-        template_list = list()
-        for k, v in templates.items():
-            template_list.append(v)
-        return template_list
+# class TemplatesReportBuilder:  # NOT USED
+#     """
+#     Returns a list of TemplateRemoteModel objects
+#                    0                     1               2                3                  4
+#     SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id
+#                          5                 6
+#              , bank.name as bank_name, bank.key
+#                          7              8
+#              , t.id as tag_id, t.value as tag_value
+#                         9               10
+#              , tt.template_id, tt.tag_id
+#                         11                      12
+#              , c.id as category_id, c.value as category_value
+#                         13                      14
+#              , q.id AS qualifier_id, q.value as qualifier_value
+#
+#     """
+#
+#     def __init__(self, data):
+#         self.data = data
+#
+#     def process(self):
+#         # logging.info(f"query result: {self.data}")
+#         # logging.info(f"Found {len(self.data)} records to parse")
+#
+#         templates = {}
+#         for row in self.data:
+#             if row[0] is None:
+#                 # TODO: Should never happen, need to fix query
+#                 break
+#             tags, qualifiers = parse_template_record(row)
+#
+#             tr = TemplateReportModel(
+#                 institution_id=row[4],
+#                 id=row[0],
+#                 credit=row[2],
+#                 tags=tags,
+#                 hint=row[1],
+#                 notes=row[3],
+#                 qualifiers=qualifiers,
+#                 category=row[12],
+#             )
+#             if tr.id not in templates:
+#                 templates[tr.id] = tr
+#             else:
+#                 templates[tr.id].update(tr)
+#
+#         template_list = list()
+#         for k, v in templates.items():
+#             template_list.append(v)
+#         return template_list
 
 
 class TemplateDetailReportBuilder:  # called by single template and by template list

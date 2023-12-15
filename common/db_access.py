@@ -7,10 +7,10 @@ TemplateSQl = """
 WITH tlist AS(
 SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
          , bank.name as bank_name, bank.key
-         , t.id as tag_id, t.value as tag_value 
+         , t.id as tag_id, t.value as tag_value, t.notes as tag_notes, t.color as tag_color 
          , tt.template_id, tt.tag_id
-         , c.id as category_id, c.value as category_value 
-         , q.id AS qualifier_id, q.value as qualifier_value 
+         , c.id as category_id, c.value as category_value, c.notes as category_notes 
+         , q.id AS qualifier_id, q.value as qualifier_value
          FROM templates
          JOIN institutions bank on templates.institution_id = bank.id
          full outer JOIN template_tags tt on tt.template_id = templates.id
@@ -472,8 +472,8 @@ class DBAccess:
             cur = conn.cursor()
             cur.execute(sql, query_params)
             rows = cur.fetchall()
-            # logging.info(f"Returned {len(rows)} matching records.")
-            # logging.info(f"Rows: {rows}")
+            logging.info(f"Returned {len(rows)} matching records.")
+            logging.info(f"Rows: {rows}")
             return rows
         except Exception as e:
             logging.exception(f"Error loading Template {template_id}: {str(e)}")

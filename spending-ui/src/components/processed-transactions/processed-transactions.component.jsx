@@ -5,23 +5,22 @@ import {useParams} from "react-router-dom";
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
-
 import {FerrisWheelSpinner} from 'react-spinner-overlay';
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import {TagsContext} from "../../contexts/tags.context";
+import {StaticDataContext} from "../../contexts/static_data.context";
 import send from "../../utils/http_client.js";
 import '../collapsible.scss';
 
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
-import {StaticDataContext} from "../../contexts/static_data.context";
-import {ButtonGroup, TabPane, ToggleButton} from "react-bootstrap";
-import * as assert from "assert";
+
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
-    const {addTag} = useContext(TagsContext);
+    const {addTag, queryTags} = useContext(TagsContext);
+    const {setSectionTitle} = useContext(StaticDataContext);
     let [templateGroups, setTemplateGroups] = useState({})
     let [categoryGroups, setCategoryGroups] = useState({})
 
@@ -61,10 +60,11 @@ const ProcessedTransactions = () => {
 
     const getTransactions = async () => {
         const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
-        console.log("URL: ", url);
-        const data = await fetch(url, {method: 'GET'})
-        const str = await data.json();
-        return (str);
+        const headers = {'Content-Type': 'application/json'}
+        const method = 'GET'
+        const response = await send({url}, {method}, {headers}, {});
+        console.log("Response: ", response);
+        return (response);
     };
 
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
@@ -273,6 +273,23 @@ const ProcessedTransactions = () => {
         return (categoryEntries);
     }
 
+    /********************************** Event Handlers ***************************************************/
+
+    const findTransactionRecord = (transaction_id) => {
+        /*
+            Search our institutionGroups data set for the matching transaction
+            NOTE: Not efficient without knowing the bank id
+         */
+        for (const [bank, transactions] of Object.entries(institutionGroups)) {
+            const transaction = transactions.find((t) => t.transaction.id === transaction_id)
+            console.log("Transaction: ", transaction);
+            if (transaction) {
+                return (transaction);
+            }
+        }
+        return null;
+    }
+
     const headerEventHandler = (event) => {
         console.log("PT - handlerEvent: ", event);
         // console.log("---: ", typeof event);
@@ -326,16 +343,13 @@ const ProcessedTransactions = () => {
     //------------------------------ Server Callback ------------------------
     const updateTags = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        // console.log("Tags for: ", transaction_id);
-        // console.log("        : ", tag_list);
-        // console.log(" typeof : ", typeof tag_list);
         var body = []
 
-        if(typeof tag_list === "string") {
-            // Have TagContext handle tag add
+        if(typeof tag_list === "string") {  // creating a new tag
+            // Have TagContext handle adding the new tag to the system
             const newTagId = await addTag(tag_list);
             body.push(newTagId);
-        } else {
+        } else {  // assign an existing tag
             tag_list.forEach((item) => {
                 body.push(item.value);
             })
@@ -346,6 +360,13 @@ const ProcessedTransactions = () => {
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+
+        const transaction = findTransactionRecord(transaction_id)
+        if(transaction) {
+            transaction.transaction.tags = queryTags(tag_list);
+        }
+
+        setContentUpdated(true);
     }
 
     const updateNotes = async (transaction_id, note) => {
@@ -356,11 +377,27 @@ const ProcessedTransactions = () => {
                 body.push({"id": item.id, "text": item.text})
             })
         }
+
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
         const method = 'POST'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+
+        // Need to refresh data and re-render
+        const transaction = findTransactionRecord(transaction_id)
+        console.log("Transaction: ", transaction);
+        if(transaction) {
+            if (note) {
+                note.forEach((item) => {
+                    transaction.transaction.notes.push(item.text);
+                })
+            } else {
+                transaction.transaction.notes = [];
+            }
+        }
+
+        setContentUpdated(true);
     }
 
     const updateCategory = async (transaction_id, category_id) => {
@@ -375,13 +412,9 @@ const ProcessedTransactions = () => {
         console.log("Response: ", request);
 
         // Need to refresh data and re-render
-        for (const [bank, transactions] of Object.entries(institutionGroups)) {
-            const transaction = transactions.find((t) => t.transaction.id === transaction_id)
-            console.log("Transaction: ", transaction);
-            if(transaction) {
-                transaction.transaction.category = category_id;
-                break;
-            }
+        const transaction = findTransactionRecord(transaction_id)
+        if(transaction) {
+            transaction.transaction.category = category_id;
         }
 
         setContentUpdated(true);
@@ -399,7 +432,6 @@ const ProcessedTransactions = () => {
         }
     }
 
-    const {setSectionTitle} = useContext(StaticDataContext);
     setSectionTitle('Processed Transactions');
 
     return (<>
