@@ -30,7 +30,7 @@ class TemplateReportModel(TemplateInputModel):
         self.hint = data.hint
         self.notes = data.notes
         self.category = data.category
-        self.institution_id = data.institution.id
+        self.institution_id = data.institution_id
 
         for t in data.tags:
             if t not in self.tags:
