@@ -36,7 +36,7 @@ const TemplateList = () => {
         if (templatesMap.length > 0 && tagsMap.length > 0) {
             setSectionTitle('Templates');
             setIsLoaded(true);
-            // console.log("TList: ", templatesMap)
+            console.log("TList: ", templatesMap)
         } else {
             console.info("No definitions yet");
         }
@@ -59,8 +59,9 @@ const TemplateList = () => {
 
     const updateTags = async (template_id, tag_list) => {
         var body = {tags: []}
+        console.log("tag_list: ", tag_list);
         tag_list.forEach((item) => {
-            body.tags.push({id:item.value});
+            body.tags.push({id:item.value, value:item.label, color:item.color, notes:item.notes});
         })
         await callUpdate(template_id, body);
     }
@@ -69,7 +70,6 @@ const TemplateList = () => {
         const body = {
             'notes': note
         }
-
         await callUpdate(template_id, body);
     }
 
@@ -77,7 +77,6 @@ const TemplateList = () => {
         const body = {
             'hint': hint
         }
-
         await callUpdate(template_id, body);
     }
 
@@ -146,7 +145,6 @@ const TemplateList = () => {
     function compareTags(a, b) {
         return ('' + a.value.toLowerCase()).localeCompare(b.value.toLowerCase());
     }
-
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -222,13 +220,20 @@ const TemplateList = () => {
             onClick: colEvent
         }, style: {cursor: 'pointer'},
     });
-    columns.push({dataField: 'institution.name', text: 'Bank', sort: true});
-    columns.push({dataField: 'category.is_tax_deductible', text: 'Tax Deductible', sort: true});
+    columns.push({dataField: 'institution.name', text: 'Bank', sort: true, events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'},
+    });
+    columns.push({dataField: 'category.is_tax_deductible', text: 'Tax Deductible', sort: true, events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'},
+    });
 
     const expandRow = {
         onlyOneExpanding: false,
         showExpandColumn: false,
         renderer: (row, rowIndex) => {
+            console.log(row);
             return(<TemplateDetailComponent template={row} eventHandler={detailEventHandler}/>);
         },
     }

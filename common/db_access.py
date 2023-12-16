@@ -539,6 +539,8 @@ class DBAccess:
         assert conn
         try:
             cur = conn.cursor()
+            mog = cur.mogrify(sql, query_params)
+            logging.info(f"MOG: {mog}")
             cur.execute(sql, query_params)
             conn.commit()
         except Exception as e:
@@ -561,7 +563,7 @@ class DBAccess:
         if new_template.tags:
             sql = "INSERT INTO template_tags (template_id, tag_id) VALUES "
             for t in new_template.tags:
-                sql += f"({new_template.id},{t}),"
+                sql += f"({new_template.id},{t.id}),"
             sql = sql[:-1]  # remove last ','
         try:
             cur = conn.cursor()

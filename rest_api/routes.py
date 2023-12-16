@@ -92,42 +92,23 @@ async def get_template(template_id: int):
 @router.put(
     "/template/{template_id}",
     summary="Update a specific template",
-    response_model=TemplateReportModel,
+    response_model=TemplateDetailModel,
 )
 def update_template(template_id: int, template: TemplateReportModel = Body(...)):
     query_result = db_access.query_templates_by_id(template_id)
     if not query_result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    """                  0              1                 2                 3                       4
-    SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
-                           5               6
-             , bank.name as bank_name, bank.key
-                      7                 8
-             , t.id as tag_id, t.value as tag_value
-                      9           10 
-             , tt.template_id, tt.tag_id
-                        11                     12
-             , c.id as category_id, c.value as category_value
-                        13                     14
-             , q.id AS qualifier_id, q.value as qualifier_value 
-    """
+
     existing_template = SingleTemplateReportBuilder(query_result).process()
     update_data = template.dict(exclude_unset=True)
     new_template = existing_template.copy(update=update_data)
 
-    """
-     tags=[TagModel(id=1, value=None, notes=None, color=None), 
-     TagModel(id=5, value=None, notes=None, color=None), 
-     TagModel(id=6, value=None, notes=None, color=None), 
-     TagModel(id=8, value=None, notes=None, color=None)]    
-    """
-
     # Store updated template in database
-    # logging.info({
-    #     "message": "Modifying template",
-    #     "original": existing_template,
-    #     "updated ": new_template
-    # })
+    logging.info({
+        "message": "Modifying template",
+        "original": existing_template,
+        "updated ": new_template
+    })
 
     new_template.category = models.CategoryModel(
         id=query_result[0][11],
@@ -159,10 +140,11 @@ class TemplateUpdate(BaseModel):
 @router.patch(
     "/template/{template_id}",
     summary="Update the category for a specific template",
-    response_model=TemplateReportModel,
+    response_model=TemplateDetailModel,
 )
 def patch_template(template_id: int,
                    template: TemplateUpdate):
+    logging.info("\n\n\n------------------Patching template")
     query_result = db_access.query_templates_by_id(template_id)
     if not query_result:
         raise HTTPException(
@@ -176,6 +158,7 @@ def patch_template(template_id: int,
     existing_template = SingleTemplateReportBuilder(query_result).process()
 
     update_data = template.dict(exclude_unset=True)
+    logging.info(f"Update_data: {update_data}")
     new_template = existing_template.copy(update=update_data)
 
     """
@@ -199,6 +182,7 @@ def patch_template(template_id: int,
             notes=query_result[0][15]
         )
     if template.tags:
+        logging.info(f"Tags: {template.tags}")
         new_template.tags = template.tags
 
     logging.info(f"New Template: {new_template}")

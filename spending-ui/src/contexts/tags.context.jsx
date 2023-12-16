@@ -74,7 +74,7 @@ export const TagsProvider = ({children}) => {
         const body = {
             'value': value,
             'notes': '',
-            'color': getRandomColor()
+            'color': getRandomColor(),
         }
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/tags';
