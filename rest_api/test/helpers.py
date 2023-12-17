@@ -1,4 +1,5 @@
 # Helper functions for test routines
+import logging
 
 from common.db_access import DBAccess
 
@@ -53,7 +54,6 @@ def get_processed_batch_ids_with_transactions():
 
 def get_transaction_ids_from_batch(bid):
     result = db_access.query_transactions_from_batch(bid)
-
     id_list = [x[0] for x in result]
     return id_list
 
