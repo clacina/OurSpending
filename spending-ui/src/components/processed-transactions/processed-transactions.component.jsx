@@ -1,9 +1,14 @@
 import moment from "moment/moment.js";
-import {useContext, useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
+
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import 'react-tabs/style/react-tabs.css';
 
 import {FerrisWheelSpinner} from 'react-spinner-overlay';
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
+import {TagsContext} from "../../contexts/tags.context";
+import {StaticDataContext} from "../../contexts/static_data.context";
 import send from "../../utils/http_client.js";
 import '../collapsible.scss';
 
@@ -11,8 +16,11 @@ import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
 
+
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
+    const {addTag, queryTags} = useContext(TagsContext);
+    const {setSectionTitle} = useContext(StaticDataContext);
     let [templateGroups, setTemplateGroups] = useState({})
     let [categoryGroups, setCategoryGroups] = useState({})
 
@@ -22,6 +30,7 @@ const ProcessedTransactions = () => {
     // Content for display
     const [entityMap, setEntityMap] = useState([]);
     const [categoriesMap, setCategoriesMap] = useState([]);
+    const [uncategorizedMap, setUncategorizedMap] = useState([]);
 
     // UI Display Flags
     const [categoryView, setCategoryView] = useState(false);
@@ -44,14 +53,18 @@ const ProcessedTransactions = () => {
     let [templatesGrouped, setTemplatesGrouped] = useState(false);
     const [entityMapCreated, setEntityMapCreated] = useState(false);
 
+    // Updated Content Flags
+    const [contentUpdated, setContentUpdated] = useState(false);
+
     const routeParams = useParams();
 
     const getTransactions = async () => {
         const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
-        console.log("URL: ", url);
-        const data = await fetch(url, {method: 'GET'})
-        const str = await data.json();
-        return (str);
+        const headers = {'Content-Type': 'application/json'}
+        const method = 'GET'
+        const response = await send({url}, {method}, {headers}, {});
+        console.log("Response: ", response);
+        return (response);
     };
 
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
@@ -94,17 +107,13 @@ const ProcessedTransactions = () => {
     const updateContent = () => {
         console.log("--updateContent")
 
-        if (categoryView) {
-            if (!categorized) {
-                setCategoriesMap(Object.entries(categoryGroups).filter((item) => {
-                    return (item[1][0].template === null && item[1][0].transaction.category === null);
-                }));
-            } else {
-                setCategoriesMap(Object.entries(categoryGroups));
-            }
-        } else {
-            setEntityMap(Object.entries(templateGroups));
-        }
+        setUncategorizedMap(Object.entries(categoryGroups).filter((item) => {
+            return (item[1][0].template === null && item[1][0].transaction.category === null);
+        }));
+
+        setCategoriesMap(Object.entries(categoryGroups));
+
+        setEntityMap(Object.entries(templateGroups));
     }
 
     useEffect(() => {
@@ -114,11 +123,6 @@ const ProcessedTransactions = () => {
         // This is triggered when setInstitutionGroups() is called
         if (institutionsLoaded) {
             console.log("UE - Filter update")
-            // setTemplateGroups(groupTransactionsByTemplate());
-            // setTemplatesGrouped(true);
-            // setCategoryGroups(groupTransactionsByCategory());
-            // updateContent();
-
             templateGroups = groupTransactionsByTemplate();
             templatesGrouped = true;
             categoryGroups = groupTransactionsByCategory();
@@ -126,11 +130,11 @@ const ProcessedTransactions = () => {
             setTemplateGroups(groupTransactionsByTemplate());
             setTemplatesGrouped(true);
             setCategoryGroups(groupTransactionsByCategory());
-
+            setContentUpdated(false);
         }
     }, [institutionGroups, institutionsLoaded,
         tagsFilter, categoriesFilter, institutionFilter, startDateFilter, endDateFilter,
-        matchAllTags, matchAllCategories, searchString]);
+        matchAllTags, matchAllCategories, searchString, contentUpdated]);
 
     useEffect(() => {
         if (templatesGrouped) {
@@ -205,7 +209,6 @@ const ProcessedTransactions = () => {
         // Categories
         if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
             processTransaction = false;
-            console.log("Applying category filter: ", categoriesFilter);
             // check entity level category first.  If it exists use it over the template category
             // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
@@ -247,13 +250,13 @@ const ProcessedTransactions = () => {
 
     const groupTransactionsByCategory = () => {
         const categoryEntries = {}
-
         // Key is bank, value is list of processed transactions
         for (const [bank, transactions] of Object.entries(institutionGroups)) {
             transactions.forEach((item) => {
                 if(includeInFilter(item)) {
                     var template_category = -1;  // no category
                     if(item.transaction.category) {
+                        console.log("Template " + item.transaction.id + " has category. " + item.transaction.category.value);
                         template_category = item.transaction.category.id;
                     }
                     else if (item.template && item.template.category) {
@@ -268,6 +271,23 @@ const ProcessedTransactions = () => {
             })
         }
         return (categoryEntries);
+    }
+
+    /********************************** Event Handlers ***************************************************/
+
+    const findTransactionRecord = (transaction_id) => {
+        /*
+            Search our institutionGroups data set for the matching transaction
+            NOTE: Not efficient without knowing the bank id
+         */
+        for (const [bank, transactions] of Object.entries(institutionGroups)) {
+            const transaction = transactions.find((t) => t.transaction.id === transaction_id)
+            console.log("Transaction: ", transaction);
+            if (transaction) {
+                return (transaction);
+            }
+        }
+        return null;
     }
 
     const headerEventHandler = (event) => {
@@ -323,18 +343,30 @@ const ProcessedTransactions = () => {
     //------------------------------ Server Callback ------------------------
     const updateTags = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Tags for: ", transaction_id);
-        console.log("        : ", tag_list);
         var body = []
-        tag_list.forEach((item) => {
-            body.push(item.value);
-        })
+
+        if(typeof tag_list === "string") {  // creating a new tag
+            // Have TagContext handle adding the new tag to the system
+            const newTagId = await addTag(tag_list);
+            body.push(newTagId);
+        } else {  // assign an existing tag
+            tag_list.forEach((item) => {
+                body.push(item.value);
+            })
+        }
 
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+
+        const transaction = findTransactionRecord(transaction_id)
+        if(transaction) {
+            transaction.transaction.tags = queryTags(tag_list);
+        }
+
+        setContentUpdated(true);
     }
 
     const updateNotes = async (transaction_id, note) => {
@@ -345,14 +377,31 @@ const ProcessedTransactions = () => {
                 body.push({"id": item.id, "text": item.text})
             })
         }
+
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
         const method = 'POST'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+
+        // Need to refresh data and re-render
+        const transaction = findTransactionRecord(transaction_id)
+        console.log("Transaction: ", transaction);
+        if(transaction) {
+            if (note) {
+                note.forEach((item) => {
+                    transaction.transaction.notes.push(item.text);
+                })
+            } else {
+                transaction.transaction.notes = [];
+            }
+        }
+
+        setContentUpdated(true);
     }
 
     const updateCategory = async (transaction_id, category_id) => {
+        console.log("Update category: " + transaction_id + ", " + category_id);
         const body = {
             'category_id': category_id
         }
@@ -361,6 +410,14 @@ const ProcessedTransactions = () => {
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+
+        // Need to refresh data and re-render
+        const transaction = findTransactionRecord(transaction_id)
+        if(transaction) {
+            transaction.transaction.category = category_id;
+        }
+
+        setContentUpdated(true);
     }
 
     const viewEventHandler = (event) => {
@@ -375,186 +432,46 @@ const ProcessedTransactions = () => {
         }
     }
 
+    setSectionTitle('Processed Transactions');
+
     return (<>
-            {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div key='pb'>
-                <h1>Processed Transactions</h1>
+            {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div style={{ display: 'block', width: '100%', padding: 30 }}>
+
                 <HeaderComponent eventHandler={headerEventHandler}/>
-                <div>
-                    {categoryView && categoriesMap.map((cat) => {
-                        return (cat[1].length > 0 && <CategoryComponent
-                            category={cat[1]}
-                            display={categorized}
-                            eventHandler={viewEventHandler}/>)
-                    })}
-                    {!categoryView && entityMap.map((bank) => {
-                        return (<BankComponent
-                            key={bank[0]}
-                            bankData={bank}
-                            eventHandler={viewEventHandler}/>)
-                    })}
-                </div>
+                <Tabs>
+                    <TabList>
+                        <Tab>Template View</Tab>
+                        <Tab>Category View</Tab>
+                        <Tab>Uncategorized</Tab>
+                    </TabList>
+
+                    <TabPanel>
+                        {entityMap.map((bank) => {
+                            return (<BankComponent
+                                key={bank[0]}
+                                bankData={bank}
+                                eventHandler={viewEventHandler}/>)
+                        })}
+                    </TabPanel>
+                    <TabPanel>
+                        {
+                            categoriesMap.map((cat) => {
+                            return (cat[1].length > 0 && cat[1][0].template && <CategoryComponent
+                                category={cat[1]}
+                                eventHandler={viewEventHandler}/>)
+                        })}
+                    </TabPanel>
+                    <TabPanel>
+                        {
+                            uncategorizedMap.map((cat) => {
+                                return (cat[1].length > 0 && !cat[1][0].template && <CategoryComponent
+                                    category={cat[1]}
+                                    eventHandler={viewEventHandler}/>)
+                            })}
+                    </TabPanel>
+                </Tabs>
             </div>}
         </>)
 }
 
 export default ProcessedTransactions;
-
-/*
-
-Template View
-{
-    ----- Key is template id
-    "104": [
-        {
-            "id": 767,
-            "processed_batch_id": 2,
-            "entity": {
-                "id": 802,
-                "batch_id": 4,
-                "institution": {
-                    "id": 3,
-                    "key": "CONE_VISA",
-                    "name": "Capital One Visa",
-                    "notes": null
-                },
-                "transaction_date": "2023-01-02",
-                "transaction_data": [
-                    "2023-01-02",
-                    "2023-01-03",
-                    "7776",
-                    "Amazon web services",
-                    "Other Services",
-                    "1.76",
-                    ""
-                ],
-                "tags": [
-                    {
-                        "id": 14,
-                        "value": "Chris",
-                        "notes": null,
-                        "color": null
-                    }
-                ],
-                "description": "Amazon web services",
-                "amount": -1.76,
-                "notes": [
-                    {
-                        "id": 3,
-                        "note": "New note",
-                        "transaction_id": 802
-                    }
-                ],
-                "category": {
-                    "id": 4,
-                    "value": "Chris's Training / Development",
-                    "notes": null
-                },
-                "keyid": "SGzhvc0vFbZHHNCmkAlkN"
-            },
-            "template_id": 104,
-            "institution_id": 3,
-            "template": {
-                "id": 104,
-                "credit": false,
-                "hint": "Chris's Web Work",
-                "notes": null,
-                "category": {
-                    "id": 4,
-                    "value": "Chris's Training / Development",
-                    "notes": null
-                },
-                "institution": {
-                    "id": 3,
-                    "key": "CONE_VISA",
-                    "name": "Capital One Visa",
-                    "notes": null
-                },
-                "tags": [
-                    {
-                        "id": 4,
-                        "value": "Recurring",
-                        "notes": null,
-                        "color": "black"
-                    }
-                ],
-                "qualifiers": [
-                    {
-                        "id": 14,
-                        "value": "Amazon web services",
-                        "institution_id": 3
-                    }
-                ]
-            }
-        },
-    ]
-}
-
-Category View
-{
-    ---- Key is category id
-    "1": [
-    {
-        "id": 761,
-        "processed_batch_id": 2,
-        "entity": {
-            "id": 796,
-            "batch_id": 4,
-            "institution": {
-                "id": 3,
-                "key": "CONE_VISA",
-                "name": "Capital One Visa",
-                "notes": null
-            },
-            "transaction_date": "2023-02-18",
-            "transaction_data": [
-                "2023-02-18",
-                "2023-02-23",
-                "7776",
-                "U-HAUL-CTR-12TH-L #70221",
-                "Car Rental",
-                "99.10",
-                ""
-            ],
-            "tags": [],
-            "description": "U-HAUL-CTR-12TH-L #70221",
-            "amount": -99.1,
-            "notes": [
-                {
-                    "id": 4,
-                    "note": "Into the unknown",
-                    "transaction_id": 796
-                }
-            ],
-            "category": null,
-            "keyid": "dzLySBqVRIozNUt2auNcY"
-        },
-        "template_id": 113,
-        "institution_id": 3,
-        "template": {
-            "id": 113,
-            "credit": false,
-            "hint": "Car Rental",
-            "notes": null,
-            "category": {
-                "id": 1,
-                "value": "Unknown",
-                "notes": null
-            },
-            "institution": {
-                "id": 3,
-                "key": "CONE_VISA",
-                "name": "Capital One Visa",
-                "notes": null
-            },
-            "tags": [],
-            "qualifiers": [
-                {
-                    "id": 23,
-                    "value": "Car Rental",
-                    "institution_id": 3
-                }
-            ]
-        }
-    }
-
-*/

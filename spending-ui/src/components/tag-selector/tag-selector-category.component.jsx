@@ -1,64 +1,14 @@
 import React from 'react';
 
-import chroma from 'chroma-js';
-import { ColourOption } from './data.tsx';
-import Select, { StylesConfig } from 'react-select';
+import Select from 'react-select';
+import {BuildOptions, colourStyles} from "./tag-selector-base.component";
+import CreatableSelect from "react-select/creatable";
 
 
-export const colourStyles: StylesConfig<ColourOption, true> = {
-    control: (styles) => ({ ...styles, backgroundColor: 'white' }),
-    option: (styles, { data, isDisabled, isFocused, isSelected }) => {
-        const color = chroma(data.color);
-        return {
-            ...styles,
-            backgroundColor: isDisabled
-                ? undefined
-                : isSelected
-                    ? data.color
-                    : isFocused
-                        ? color.alpha(0.1).css()
-                        : undefined,
-            color: isDisabled
-                ? '#ccc'
-                : isSelected
-                    ? chroma.contrast(color, 'white') > 2
-                        ? 'white'
-                        : 'black'
-                    : data.color,
-            cursor: isDisabled ? 'not-allowed' : 'default',
+const TagSelectorForCategories = ({tagsMap, entity, onChange, canCreate=false}) => {
 
-            ':active': {
-                ...styles[':active'],
-                backgroundColor: !isDisabled
-                    ? isSelected
-                        ? data.color
-                        : color.alpha(0.3).css()
-                    : undefined,
-            },
-        };
-    },
-    multiValue: (styles, { data }) => {
-        const color = chroma(data.color);
-        return {
-            ...styles,
-            backgroundColor: color.alpha(0.1).css(),
-        };
-    },
-    multiValueLabel: (styles, { data }) => ({
-        ...styles,
-        color: data.color,
-    }),
-    multiValueRemove: (styles, { data }) => ({
-        ...styles,
-        color: data.color,
-        ':hover': {
-            backgroundColor: data.color,
-            color: 'white',
-        },
-    }),
-};
+    const {assigned, tagColourOptions} = BuildOptions(tagsMap, entity);
 
-const TagSelectorForCategories = ({tagsMap, entity, onChange}) => {
     const changeTag = (event) => {
         // update entity tags list
         entity.tags = event
@@ -66,34 +16,41 @@ const TagSelectorForCategories = ({tagsMap, entity, onChange}) => {
         onChange(entity.id, event);
     }
 
-    const tagColourOptions = []
-    tagsMap.forEach((item) => {
-        const tagOption = {}
-        tagOption['value'] = item.id;
-        tagOption['label'] = item.value;
-        tagOption['color'] = item.color;
-        tagColourOptions.push(tagOption);
-    });
+    const handleCreate = (inputValue: string) => {
+        console.log("In HandleCreate: ", inputValue);
+        onChange(entity.id, inputValue);
 
-    const assigned = []
-    entity.tags.forEach((tag) => {
-        assigned.push(tagColourOptions.find((item) => {
-            return (item['value'] === tag.id)
-        }))
-    })
+    };
 
-    return (
-        <Select
-            closeMenuOnSelect={true}
-            defaultValue={assigned}
-            isMulti
-            onChange={changeTag}
-            options={tagColourOptions}
-            styles={colourStyles}
-            menuPortalTarget={document.body}
-            menuPosition={'fixed'}
-        />
-    );
+    if(canCreate) {
+        return (
+            <CreatableSelect
+                onChange={changeTag}
+                closeMenuOnSelect={true}
+                defaultValue={assigned}
+                isMulti
+                options={tagColourOptions}
+                onCreateOption={handleCreate}
+                styles={colourStyles}
+                menuPortalTarget={document.body}
+                menuPosition={'fixed'}
+            />
+        );
+    } else {
+        return (
+            <Select
+                onChange={changeTag}
+                closeMenuOnSelect={true}
+                defaultValue={assigned}
+                isMulti
+                options={tagColourOptions}
+                // onCreateOption={handleCreate}
+                styles={colourStyles}
+                menuPortalTarget={document.body}
+                menuPosition={'fixed'}
+            />
+        );
+    }
 }
 
 export default TagSelectorForCategories;

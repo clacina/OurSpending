@@ -1,10 +1,13 @@
 /*************************************************************************************
- Transactions UI
- TransactionsList - grouping of transactions by institution
- TransactionList - list of transactions for a given institution
- Transaction - container for TransactionRow below - possibly redundant?
- TransactionRow - row in TransactionList
- TransactionEntry - single entity edit form
+ Transactions UI Page
+
+ TransactionsList       grouping of transactions by institution                     transactions-list.component.jsx
+    TransactionList     list of transactions for a given institution                transaction-list.component.jsx
+
+       Transaction     container for TransactionRow below - possibly redundant?     transaction.component.jsx
+          TransactionRow - row in TransactionList                                   transaction-row.component.jsx
+
+ TransactionEntry - single entity edit form - NO LONGER USED                  transaction-entry.component.jsx
  *************************************************************************************/
 import TransactionList from "./transaction-list.component.jsx";
 import {useEffect, useState} from "react";
@@ -20,11 +23,13 @@ const TransactionsList = () => {
         const url = 'http://localhost:8000/resources/transactions/' + routeParams.batch_id;
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
+        console.log("Loaded: " + str.length + " transactions");
         return(str);
     };
 
     useEffect(() => {
-        console.log("Start");
+        console.log("Starting API Call...")
+        console.time("Load Time");
         getTransactions().then((res) => setTransactionsMap(res));
 
         if (transactionsMap.length !== 0) {
@@ -39,6 +44,7 @@ const TransactionsList = () => {
 
             setGroupingArray(Object.values(trans_groups));
             setIsLoaded(true);
+            console.timeEnd("Load Time")
         } else {
             console.info("No definitions yet");
         }
@@ -47,7 +53,6 @@ const TransactionsList = () => {
     if (isLoaded) {
         return (
             <div>
-                <h1>Transactions</h1>
                 {groupingArray.map((item) => {
                     return (<TransactionList key={item[0].institution.id} transactions={item}
                                              institution_id={item[0].institution.id}/>);

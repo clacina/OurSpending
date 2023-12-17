@@ -3,12 +3,11 @@ import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 import "react-contexify/dist/ReactContexify.css";
-import { Row } from "react-bootstrap";
 import TableBaseComponent from '../table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
 
 const ProcessedBatches = () => {
-    const {processedBatches} = useContext(StaticDataContext);
+    const {processedBatches, setSectionTitle} = useContext(StaticDataContext);
     const [isLoaded, setIsLoaded] = useState(false);
     const navigate = useNavigate();
 
@@ -22,6 +21,7 @@ const ProcessedBatches = () => {
     useEffect(() => {
         console.log("Start");
         if (processedBatches.length !== 0) {
+            setSectionTitle('Processed Batches');
             setIsLoaded(true);
             console.log(processedBatches);
         } else {
@@ -35,19 +35,17 @@ const ProcessedBatches = () => {
 
     if(isLoaded) {
         return(
-            <div>
-                <Row>
-                    <h1>Processed Batches</h1>
-                </Row>
-                <Row>
+            <>
+                <h2>Double click a batch below to see the related transactions.</h2>
+                <div id='processedBatchList'>
                     <TableBaseComponent
                         columns={columns}
                         data={processedBatches}
                         keyField='id'
                         double_click_handler={double_click_handler}
                     />
-                </Row>
-            </div>
+                </div>
+            </>
         )
     }
 }

@@ -17,14 +17,16 @@ import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 
-const CategoryComponent = ({category, display, eventHandler}) => {
+const CategoryComponent = ({category, eventHandler}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {tagsMap} = useContext(TagsContext);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
     const [isCategorized, setIsCategorized] = useState(true);
-    // console.log("cat: ", category);
+    console.log("cat: ", category);
+    console.log("temp: ", category[0].template_id)
+    // console.log("trans: ", category[0])
 
     // Define table columns
     const columns = []
@@ -60,6 +62,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
+        console.log("Taglist: ", typeof tag_list);
         eventHandler({
             'updateTags': {
                 'transaction_id': transaction_id,
@@ -74,7 +77,11 @@ const CategoryComponent = ({category, display, eventHandler}) => {
             id: row.transaction.id,
             tags: row.transaction.tags
         }
-        return (<TagSelectorCategoryComponent tagsMap={tagsMap} entity={entity_info} onChange={changeTag}/>);
+        return (<TagSelectorCategoryComponent
+                    tagsMap={tagsMap}
+                    entity={entity_info}
+                    onChange={changeTag}
+                    canCreate={true}/>);
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
@@ -186,6 +193,7 @@ const CategoryComponent = ({category, display, eventHandler}) => {
     };
 
     const assignCategoryToTransaction = (event) => {
+        console.log("assignCategoryToTransaction: ", event);
         eventHandler({
             "updateCategory": {
                 "transaction_id": activeRow.transaction.id,

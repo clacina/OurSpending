@@ -1,19 +1,19 @@
 
 import moment from "moment";
 import React, {useContext, useRef, useState} from "react";
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
 import {InputActionMeta} from "react-select";
 import Select from "react-select";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
-import TagSelectorComponent from "../tag-selector/tag-selector.component.jsx";
+import TagSelector from "../tag-selector/tag-selector.component.jsx";
 import './header.component.styles.css';
 import Form from 'react-bootstrap/Form';
 import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
+import Button from "react-bootstrap/Button";
+import Collapsible from "react-collapsible";
 
 
 const HeaderComponent = ({eventHandler}) => {
@@ -127,139 +127,75 @@ const HeaderComponent = ({eventHandler}) => {
     }
 
     return(
-        <div>
-            <div className='llNavBar'>
-                <form>
-                    <div className='llNavTop'>
-                        <div className='llNavDisplay'>
-                            <ul>
-                                <li><button>Group by Template</button></li>
-                                <li><button>Group by Category</button></li>
-                                <li><button>Hide Categorized</button></li>
-                            </ul>
-                        </div>
-                        <div className='llNavSearch'>
-                            <label>Search</label>
-                            <input/>
-                            <button>Search Now</button>
-                        </div>
+        <div id='filterPanel'>
+            <Collapsible trigger='Display and Filter Options'>
+                <div className='filterHeader'>
+                    <div className='searchArea'>
+                        <label>Search</label>
+                        <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
+                        <Button onClick={onSearch}  className="mb-md-1">Search</Button>
                     </div>
-                    <div className='llNavBottom'>
+                    <div className='tagsAndSuch'>
+                        <label className='tagLabel'>Assigned Tags</label>
+                        <TagSelector
+                            clearEntry={clearTags}
+                            tagsMap={tagsMap.sort(compareTags)}
+                            canCreate={false}
+                            entity={transaction}
+                            selectorClass='headerTagSelector'
+                            onChange={changeTag} />
+                        <Form.Check
+                            className='matchAll'
+                            type="switch"
+                            id="allTags"
+                            label="Match ALL Tags"
+                            checked={matchAllTags}
+                            onChange={changeAllTags}
+                        />
+                    </div>
+                    <div className='categoryFilters'>
                         <label>Categories</label>
-                        <select >
-
-                        </select>
-
-                        <label>Tags</label>
-                        <select>
-
-                        </select>
-                        <button>Match all Tags</button>
-
+                        <Select
+                            id="categorySelection"
+                            ref={categorySelectionRef}
+                            closeMenuOnSelect={true}
+                            options={options.sort(compareCategories)}
+                            isMulti
+                            onInputChange={onInputChange}
+                            menuPortalTarget={document.body}
+                            menuPosition={'fixed'}
+                            onChange={updateCategory}/>
                         <label>Banks</label>
-                        <select>
-
-                        </select>
+                        <Select
+                            id="institutionSelection"
+                            ref={institutionSelectionRef}
+                            closeMenuOnSelect={true}
+                            options={banks.sort(compareInstitutions)}
+                            isMulti
+                            menuPortalTarget={document.body}
+                            menuPosition={'fixed'}
+                            onChange={updateInstitution}/>
                     </div>
-                </form>
-
-            </div>
-            <hr/>
-            <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
-                <Navbar.Brand>Display and Filter Options</Navbar.Brand>
-                <Nav
-                     className="me-auto"
-                     justify-content="space-between"
-                     activeKey="1"
-                     onSelect={handleSelect}>
-                    <Nav.Link eventKey="templateview">Group by Template</Nav.Link>
-                    <Nav.Link eventKey="categoryview">Group by Category</Nav.Link>
-                    <Nav.Link eventKey="noncategoryview">Uncategorized</Nav.Link>
-                    <input id="search-input" value={searchText} type="text" onChange={onChangeSearch}/>
-                    <button onClick={onSearch} >Search</button>
-                </Nav>
-            </Navbar>
-            <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
-                <Nav justify={false} className="me-auto" justify-content="space-between">
-                    <Nav      as={TagSelectorComponent}
-                              clearEntry={clearTags}
-                              tagsMap={tagsMap.sort(compareTags)}
-                              entity={transaction}
-                              onChange={changeTag} />
-                    <Form.Check
-                        type="switch"
-                        id="allTags"
-                        label="Match ALL Tags"
-                        checked={matchAllTags}
-                        onChange={changeAllTags}
-                    />
-                    <Nav.Link as={Select}
-                              id="categorySelection"
-                              ref={categorySelectionRef}
-                              closeMenuOnSelect={true}
-                              options={options.sort(compareCategories)}
-                              isMulti
-                              onInputChange={onInputChange}
-                              menuPortalTarget={document.body}
-                              menuPosition={'fixed'}
-                              onChange={updateCategory}/>
-                    <Nav.Link as={Select}
-                              id="institutionSelection"
-                              ref={institutionSelectionRef}
-                              closeMenuOnSelect={true}
-                              options={banks.sort(compareInstitutions)}
-                              isMulti
-                              menuPortalTarget={document.body}
-                              menuPosition={'fixed'}
-                              onChange={updateInstitution}/>
-                </Nav>
-            </Navbar>
-            <Navbar expand="xxl" expanded={true} className="bg-body-tertiary">
-                <Nav justify={false} className="me-auto" justify-content="space-between">
-                    <span className="dateLabel">Start Date</span>
-                    <Nav.Link as={DatePicker}
-                              id="startDate"
-                              selected={startDateFilter}
-                              calandarClassName="rasta-stripes"
-                              isClearable
-                              onChange={(date)=>onChangeStartDate(date)} />
-                    <span className='dateLabel'>End Date</span>
-                    <Nav.Link as={DatePicker}
-                              id="endDate"
-                              selected={endDateFilter}
-                              isClearable
-                              onChange={(date)=>onChangeEndDate(date)} />
-                    <button onClick={clearFilters} >Clear Filters</button>
-                </Nav>
-            </Navbar>
+                    <div className='dateFilters'>
+                        <label className="dateLabel">Start Date</label>
+                        <DatePicker
+                            id="startDate"
+                            selected={startDateFilter}
+                            calandarClassName="rasta-stripes"
+                            isClearable
+                            onChange={(date)=>onChangeStartDate(date)} />
+                        <label className='dateLabelEnd'>End Date</label>
+                        <DatePicker
+                            id="endDate"
+                            selected={endDateFilter}
+                            isClearable
+                            onChange={(date)=>onChangeEndDate(date)} />
+                        <Button onClick={clearFilters} id='clearFilterButton' className="mb-md-1">Clear Filters</Button>
+                    </div>
+                </div>
+            </Collapsible>
         </div>
     )
 }
 
 export default HeaderComponent;
-
-/**********************************
-export const componentB = () => {
-    return (
-        <Select />
-    );
-}
-
-const changeComponentB = () => {
-    ?? How do I get component b and operate on the properties of the Select
-}
-
-export const main = () => {
-    return(
-        <div>
-            <button onClick={changeComponentB}/>
-            <componentA>
-                <componentB />
-            </componentA>
-        </div>
-    );
-}
-
-
-
-**********************************/

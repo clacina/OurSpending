@@ -30,7 +30,7 @@ class TemplateReportModel(TemplateInputModel):
         self.hint = data.hint
         self.notes = data.notes
         self.category = data.category
-        self.institution_id = data.institution.id
+        self.institution_id = data.institution_id
 
         for t in data.tags:
             if t not in self.tags:
@@ -82,6 +82,7 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
         self.tr = None
 
     def process(self):
+        logging.info("\n--------------- Processing template")
         # logging.info(f"query result: {self.data}")
         # logging.info(f"Found {len(self.data)} records to parse")
         #      0              1               2              3        4        5            6                     7
@@ -99,11 +100,38 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
                             13                     14
                  , q.id AS qualifier_id, q.value as qualifier_value
         """
+        qualifiers = []
+        tags = []
         for row in self.data:
             if row[0] is None:
                 # TODO: Should never happen, need to fix query
                 break
-            tags, qualifiers = parse_template_record(row)
+            tag_list, qualifier_list = parse_template_record(row)
+            # logging.info(f"Row data: {row}")
+            # logging.info(f"parsed data: {tag_list}, {qualifier_list}")
+
+            """
+              0       1         2      3    4        5          6    7      8     9    10
+            7000, 'New Hint', False, None, 11, 'Care Credit', 'CC', None, None, None, None,
+              11   12    13    14     15    16              17   
+            None, None, 2026, 'Vet', None, 5000, 'SOUNDVIEW VETERINARY HOSPTA'            
+            """
+            category = None
+            if row[13] is not None:
+                # logging.info(f"Setting category id to: {row[13]}")
+                category = CategoryModel(
+                    id=row[13],
+                    value=row[14],
+                    notes=row[15]
+                )
+            if row[16] is not None:
+                qualifier = QualifierModel(
+                    id=row[16],
+                    value=row[17],
+                    institution_id=row[4]
+                )
+                if qualifier not in qualifiers:
+                    qualifiers.append(qualifier)
 
             tr = TemplateReportModel(
                 institution_id=row[4],
@@ -113,69 +141,17 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
                 hint=row[1],
                 notes=row[3],
                 qualifiers=qualifiers,
-                category=CategoryModel(
-                    value=row[12],
-                    id=1,
-                    notes='')
+                category=category
             )
+            # logging.info(f"tr: {tr}")
+
             if not self.tr:
                 self.tr = tr
             else:
                 self.tr.update(tr)
+
+            # logging.info(f"self.tr: {self.tr}")
         return self.tr
-
-
-class TemplatesReportBuilder:  # NOT USED
-    """
-    Returns a list of TemplateRemoteModel objects
-                   0                     1               2                3                  4
-    SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id
-                         5                 6
-             , bank.name as bank_name, bank.key
-                         7              8
-             , t.id as tag_id, t.value as tag_value
-                        9               10
-             , tt.template_id, tt.tag_id
-                        11                      12
-             , c.id as category_id, c.value as category_value
-                        13                      14
-             , q.id AS qualifier_id, q.value as qualifier_value
-
-    """
-
-    def __init__(self, data):
-        self.data = data
-
-    def process(self):
-        # logging.info(f"query result: {self.data}")
-        # logging.info(f"Found {len(self.data)} records to parse")
-
-        templates = {}
-        for row in self.data:
-            if row[0] is None:
-                # TODO: Should never happen, need to fix query
-                break
-            tags, qualifiers = parse_template_record(row)
-
-            tr = TemplateReportModel(
-                institution_id=row[4],
-                id=row[0],
-                credit=row[2],
-                tags=tags,
-                hint=row[1],
-                notes=row[3],
-                qualifiers=qualifiers,
-                category=row[12],
-            )
-            if tr.id not in templates:
-                templates[tr.id] = tr
-            else:
-                templates[tr.id].update(tr)
-
-        template_list = list()
-        for k, v in templates.items():
-            template_list.append(v)
-        return template_list
 
 
 class TemplateDetailReportBuilder:  # called by single template and by template list
@@ -189,6 +165,7 @@ class TemplateDetailReportBuilder:  # called by single template and by template 
     def process(self):
         for rec in self.data:
             tdm = parse_template_detail_record(rec)
+            # logging.info(f"record: {tdm}")
             self.tdm.update(tdm)
         return self.tdm
 
@@ -203,15 +180,20 @@ class TemplatesDetailReportBuilder:
         for row in self.data:
             if row[0] is None:
                 # TODO: Should never happen, need to fix query
+                # logging.error(f"Got empty data: {row}")
                 # raise
-                break
+                continue
+            # logging.info(f"template: {row}")
             # tdrb = TemplateDetailReportBuilder([row]).process()
-            tdrb = parse_template_detail_record(row)
-            if tdrb.id not in usage:
-                usage[tdrb.id] = {}
-            usage[tdrb.id].update(tdrb)
+            model_record = parse_template_detail_record(row)
+            if model_record.id not in usage:
+                usage[model_record.id] = model_record
+            else:
+                usage[model_record.id].update(model_record)
+
         for k, v in usage.items():
             templates.append(v)
+
         return templates
 
 
@@ -238,18 +220,10 @@ def parse_template_record(row):
 
 def parse_template_detail_record(row):
     """
-           0                   1                 2                 3                 4
-    templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
-                          5               6
-             , bank.name as bank_name, bank.key
-                      7                 8
-             , t.id as tag_id, t.value as tag_value
-                      9            10
-             , tt.template_id, tt.tag_id
-                      11                        12
-             , c.id as category_id, c.value as category_value
-                      13                        14
-             , q.id AS qualifier_id, q.value as qualifier_value
+      0       1         2           3        4      5            6    7       8      9      10
+    7000, 'New Hint', False, 'For kitties', 11, 'Care Credit', 'CC', 3013, 'Pizza', '', '#B20058',
+      11    12    13    14    15    16                17
+    7000, 3013, 2026, 'Vet', None, 5000, 'SOUNDVIEW VETERINARY HOSPTA'
     """
     tr = TemplateDetailModel()
     tr.id = row[0]
@@ -257,11 +231,11 @@ def parse_template_detail_record(row):
     tr.credit = row[2]
     tr.notes = row[3]
 
-    category_id = row[11]
-    category_value = row[12]
+    category_id = row[13]
+    category_value = row[14]
 
-    qualifier_id = row[13]
-    qualifier_value = row[14]
+    qualifier_id = row[16]
+    qualifier_value = row[17]
 
     institution_id = row[4]
     institution_name = row[5]
@@ -269,6 +243,8 @@ def parse_template_detail_record(row):
 
     tag_id = row[7]
     tag_value = row[8]
+    tag_note = row[9]
+    tag_color = row[10]
 
     tr.institution = InstitutionsModel(id=institution_id, name=institution_name, key=institution_key)
     if category_id and category_value:
@@ -279,7 +255,7 @@ def parse_template_detail_record(row):
         tr.qualifiers.append(qm)
 
     if tag_id:
-        tm = TagModel(id=tag_id, value=tag_value, color='black')
+        tm = TagModel(id=tag_id, value=tag_value, color=tag_color, notes=tag_note)
         tr.tags.append(tm)
 
     return tr

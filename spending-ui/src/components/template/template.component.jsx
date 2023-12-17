@@ -4,7 +4,7 @@ import 'react-dropdown/style.css';
 import Select from "react-select";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 
-import {TemplateContainer} from "./template.component.styles";
+import {TemplateContainer, TemplateCategoryDiv} from "./template.component.styles";
 import EntityList from "../entity-list/entity-list.component";
 
 /*
@@ -66,7 +66,6 @@ const TemplateDetailComponent = ({template, eventHandler}) => {
     const {categoriesMap} = useContext(CategoriesContext);
     const [templateFields, setTemplateFields] = useState(templateData);
     const [isLoaded, setIsLoaded] = useState(false);
-    const [selection, setSelection] = useState();
 
     useEffect(() => {
         if (!isLoaded && template.institution !== null) {
@@ -81,13 +80,14 @@ const TemplateDetailComponent = ({template, eventHandler}) => {
 
     const updateCategory = (event) => {
         console.log("Update Category: ", event);
+        console.log("For template: ", template);
+
         // contact parent to store....
-        // const payload = {
-        //     template_id: template.id,
-        //     category_id: event.value
-        // }
-        // setSelection(event.value);
-        // eventHandler(payload);
+        const payload = {
+            template_id: template.id,
+            category: {"id": event.value, "value": event.label}
+        }
+        eventHandler(payload);
     }
 
     // Sort comparator
@@ -105,18 +105,19 @@ const TemplateDetailComponent = ({template, eventHandler}) => {
         const defaultValue={ label: template.category.value, value: template.category.id }
 
         return (
-            <TemplateContainer>
-                <form>
-                    <span>Qualifiers: </span><EntityList nodes={templateFields.qualifiers}/>
-                    <label>Category</label>
+            <TemplateCategoryDiv>
+                <span>Current Qualifiers</span><EntityList nodes={templateFields.qualifiers}/>
+                <label>Assign Category</label>
+
+                <TemplateContainer>
                     <Select
                         options={options.sort(compareCategories)}
                         onChange={updateCategory}
                         defaultValue={defaultValue}
                     />
-                </form>
+                </TemplateContainer>
+            </TemplateCategoryDiv>
 
-            </TemplateContainer>
         )
     }
 }

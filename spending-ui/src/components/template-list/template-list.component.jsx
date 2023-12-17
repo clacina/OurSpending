@@ -3,12 +3,12 @@
 
 import {useContext, useEffect, useState} from "react";
 import '../collapsible.scss';
-import Select from "react-select";
-import {CategoriesContext} from "../../contexts/categories.context.jsx";
+
+import {StaticDataContext} from "../../contexts/static_data.context";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
-import BootstrapTable from 'react-bootstrap-table-next';
 
+import BootstrapTable from 'react-bootstrap-table-next';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import React from "react";
 import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
@@ -19,36 +19,6 @@ import ModalPromptComponent from "../modal-prompt/modal-prompt.component.jsx";
 import TemplateDetailComponent from "../template/template.component.jsx";
 
 
-const data = {
-    "id": 5,
-    "credit": false,
-    "hint": "Life Insurance",
-    "notes": null,
-    "category": {
-        "id": 21,
-        "value": "Service"
-    },
-    "institution": {
-        "id": 1,
-        "key": "WLS_CHK",
-        "name": "Wellsfargo Checking"
-    },
-    "tags": [
-        {
-            "id": 4,
-            "value": "Recurring"
-        }
-    ],
-    "qualifiers": [
-        {
-            "id": 68,
-            "value": "AAA LIFE INS PREM",
-            "institution_id": 1
-        }
-    ]
-}
-
-
 const TemplateList = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [activeRow, setActiveRow] = useState(0);
@@ -56,15 +26,18 @@ const TemplateList = () => {
     const [editColumn, setEditColumn] = useState(-1);
     const [editTitle, setEditTitle] = useState("");
     const [editPrompt, setEditPrompt] = useState("text")
+    const [editContent, setEditContent] = useState("");
 
-    const {templatesMap} = useContext(TemplatesContext);
+    const {setSectionTitle} = useContext(StaticDataContext);
+    const {templatesMap, setUpdate} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
-    const {categoriesMap} = useContext(CategoriesContext);
 
     useEffect(() => {
         console.log("Start");
         if (templatesMap.length > 0 && tagsMap.length > 0) {
+            setSectionTitle('Templates');
             setIsLoaded(true);
+            console.log("TList: ", templatesMap)
         } else {
             console.info("No definitions yet");
         }
@@ -79,38 +52,40 @@ const TemplateList = () => {
     const callUpdate = async (template_id, body) => {
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/template/' + template_id;
-        const method = 'PUT'
+        const method = 'PATCH'
+        console.log("Sending update: ", body);
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
+        setUpdate(true);
     }
 
     const updateTags = async (template_id, tag_list) => {
         var body = {tags: []}
+        console.log("tag_list: ", tag_list);
         tag_list.forEach((item) => {
-            body.tags.push({id:item.value});
+            body.tags.push({id:item.value, value:item.label, color:item.color, notes:item.notes});
         })
         await callUpdate(template_id, body);
     }
 
     const updateNotes = async (template_id, note) => {
         const body = {
-            notes: note
+            'notes': note
         }
-
         await callUpdate(template_id, body);
     }
 
     const updateHint = async (template_id, hint) => {
         const body = {
-            hint: hint
+            'hint': hint
         }
-
         await callUpdate(template_id, body);
     }
 
-    const updateCategory = async (template_id, category_id) => {
+    const updateCategory = async (template_id, category) => {
+        console.log("Sending category: ", category);
         const body = {
-            category: {'id': category_id, 'value': ''}
+            'category': category
         }
         await callUpdate(template_id, body);
     }
@@ -123,21 +98,25 @@ const TemplateList = () => {
     }
 
     //-------------------- Event Handlers ---------------------------------
-    const closeModal = async (id, note, save_result) => {
+    const closeModal = async (id, value, save_result) => {
         if (openNotes) {
-            console.log("Close notes: ", note);
+            console.log("Close Modal: ", value);
             setOpenNotes(false);
             if(save_result) {
                 console.log("---Saving: ", editColumn);
                 switch(editColumn) {
                     case 1: // hint
-                        await updateHint(id, note);
+                        if(value.length === 0) {
+                            alert("Cannot set the hint to an empty string.");
+                            return;
+                        }
+                        await updateHint(id, value);
                         break;
                     case 2: // credit
-                        await updateCredit(id, note);
+                        await updateCredit(id, value);
                         break;
                     case 4: // notes
-                        await updateNotes(id, note);
+                        await updateNotes(id, value);
                         break;
                     default: break;
                 }
@@ -163,7 +142,7 @@ const TemplateList = () => {
 
     const detailEventHandler = (event) => {
         console.log('dt: ', event);
-        updateCategory(event.template_id, event.category_id);
+        updateCategory(event.template_id, event.category);
     }
 
     function compareCategories(a, b) {
@@ -173,7 +152,6 @@ const TemplateList = () => {
     function compareTags(a, b) {
         return ('' + a.value.toLowerCase()).localeCompare(b.value.toLowerCase());
     }
-
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -187,13 +165,17 @@ const TemplateList = () => {
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         setActiveRow(row);
         console.log("Click col: ", columnIndex);
+        console.log("Click row: ", rowIndex);
+        console.log("Row: ", row);
         switch (columnIndex) {
             case 1: // hint
+                console.log("Edit hint: ", row.notes);
                 e.preventDefault();
                 e.stopPropagation();
                 setEditColumn(1);
                 setEditTitle("Template Hint");
                 setEditPrompt("text");
+                setEditContent(row.hint);
                 setOpenNotes(true);
                 break;
             case 2: // credit
@@ -202,6 +184,7 @@ const TemplateList = () => {
                 setEditColumn(2);
                 setEditPrompt("check");
                 setEditTitle("Template Credit");
+                setEditContent(row.credit);
                 setOpenNotes(true);
                 break;
             case 3: // tags
@@ -214,6 +197,7 @@ const TemplateList = () => {
                 setEditColumn(4);
                 setEditPrompt("text");
                 setEditTitle("Template Note");
+                setEditContent(row.notes);
                 setOpenNotes(true);
                 break;
             default:
@@ -249,12 +233,20 @@ const TemplateList = () => {
             onClick: colEvent
         }, style: {cursor: 'pointer'},
     });
-    columns.push({dataField: 'institution.name', text: 'Bank', sort: true});
+    columns.push({dataField: 'institution.name', text: 'Bank', sort: true, events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'},
+    });
+    columns.push({dataField: 'category.is_tax_deductible', text: 'Tax Deductible', sort: true, events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'},
+    });
 
     const expandRow = {
         onlyOneExpanding: false,
         showExpandColumn: false,
         renderer: (row, rowIndex) => {
+            console.log(row);
             return(<TemplateDetailComponent template={row} eventHandler={detailEventHandler}/>);
         },
     }
@@ -262,7 +254,6 @@ const TemplateList = () => {
     if (isLoaded) {
         return (
             <div>
-                <h1>Templates</h1>
                 <BootstrapTable
                     keyField='id'
                     data={templateList}
@@ -288,7 +279,7 @@ const TemplateList = () => {
                 {
                     openNotes && activeRow && <ModalPromptComponent
                                                 closeHandler={closeModal}
-                                                content={activeRow.notes}
+                                                content={editContent}
                                                 title={editTitle}
                                                 prompt_type={editPrompt}
                                                 entity_id={activeRow.id}/>

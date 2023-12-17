@@ -108,7 +108,6 @@ const TagFormComponent = () => {
     }
 
     // --------------------------- Render ----------------------------------------
-    console.log("Render");
     return (
         <div>
             <Row>

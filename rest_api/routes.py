@@ -1,10 +1,9 @@
 """
     uvicorn app.app:app, port=8080
 """
-import decimal
-import json
+from __future__ import annotations
+
 import logging
-from datetime import datetime
 from typing import Optional, List
 from typing import Annotated
 
@@ -26,6 +25,10 @@ from rest_api.template_models import (
 )
 from rest_api.reports import reports
 from rest_api.reports import report_processor
+from rest_api.models import CategoryModel
+from rest_api.models import TagModel
+from rest_api.models import QualifierModel
+
 
 router = APIRouter()
 db_access = DBAccess()
@@ -55,6 +58,7 @@ async def query_templates(institution_id: Optional[int] = Query(-1)):
 
 @router.post(
     "/templates",
+    summary="Add a new template for a given institituion",
     status_code=status.HTTP_201_CREATED,
     response_model=TemplateReportModel,
 )
@@ -72,7 +76,7 @@ def add_template(template: TemplateInputModel = Body(...)):
 
 @router.get(
     "/template/{template_id}",
-    summary="Get list of available templates. May restrict the search by Institution",
+    summary="Get details for a specific template.",
     response_model=TemplateDetailModel,
 )
 async def get_template(template_id: int):
@@ -88,42 +92,23 @@ async def get_template(template_id: int):
 @router.put(
     "/template/{template_id}",
     summary="Update a specific template",
-    response_model=TemplateReportModel,
+    response_model=TemplateDetailModel,
 )
 def update_template(template_id: int, template: TemplateReportModel = Body(...)):
     query_result = db_access.query_templates_by_id(template_id)
     if not query_result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    """                  0              1                 2                 3                       4
-    SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
-                           5               6
-             , bank.name as bank_name, bank.key
-                      7                 8
-             , t.id as tag_id, t.value as tag_value
-                      9           10 
-             , tt.template_id, tt.tag_id
-                        11                     12
-             , c.id as category_id, c.value as category_value
-                        13                     14
-             , q.id AS qualifier_id, q.value as qualifier_value 
-    """
+
     existing_template = SingleTemplateReportBuilder(query_result).process()
     update_data = template.dict(exclude_unset=True)
     new_template = existing_template.copy(update=update_data)
 
-    """
-     tags=[TagModel(id=1, value=None, notes=None, color=None), 
-     TagModel(id=5, value=None, notes=None, color=None), 
-     TagModel(id=6, value=None, notes=None, color=None), 
-     TagModel(id=8, value=None, notes=None, color=None)]    
-    """
-
     # Store updated template in database
-    # logging.info({
-    #     "message": "Modifying template",
-    #     "original": existing_template,
-    #     "updated ": new_template
-    # })
+    logging.info({
+        "message": "Modifying template",
+        "original": existing_template,
+        "updated ": new_template
+    })
 
     new_template.category = models.CategoryModel(
         id=query_result[0][11],
@@ -142,12 +127,67 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
     return new_template
 
 
+class TemplateUpdate(BaseModel):
+    institution_id: int | None = None
+    category: CategoryModel | None = None
+    credit: bool | None = None
+    tags: List[TagModel] | None = None
+    qualifiers: List[QualifierModel] | None = None
+    hint: str | None = None
+    notes: str | None = None
+
+
+@router.patch(
+    "/template/{template_id}",
+    summary="Update the category for a specific template",
+    response_model=TemplateDetailModel,
+)
+def patch_template(template_id: int,
+                   template: TemplateUpdate):
+    logging.info("\n\n\n------------------Patching template")
+    query_result = db_access.query_templates_by_id(template_id)
+    if not query_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unable to find template with id: {template_id}",
+        )
+
+    logging.info(f"Query Result: {query_result}")
+    logging.info(f"Patch Parameters: {template}")
+
+    existing_template = SingleTemplateReportBuilder(query_result).process()
+
+    update_data = template.dict(exclude_unset=True)
+    # logging.info(f"Update_data: {update_data}")
+    new_template = existing_template.copy(update=update_data)
+
+    # Store updated template in database
+    logging.info({
+        "message": "Modifying template",
+        "original": existing_template,
+        "updated ": new_template
+    })
+
+    if hasattr(template, 'category') and template.category is not None:
+        new_template.category = models.CategoryModel(
+            id=template.category.id,
+            value=template.category.value
+        )
+    if template.tags:
+        # logging.info(f"Tags: {template.tags}")
+        new_template.tags = template.tags
+
+    # logging.info(f"New Template: {new_template}")
+    db_access.update_template(new_template)
+
+    return new_template
+
 """ ---------- Batches ---------------------------------------------------------------------------"""
 
 
 @router.get(
     "/batches",
-    summary="List all batches in the system.",
+    summary="List all transaction batches in the system.",
     response_model=List[models.TransactionBatchModel],
 )
 async def get_batches():
@@ -187,7 +227,7 @@ async def get_batch(batch_id: int):
 
 @router.get(
     "/categories",
-    summary="Get list of available templates. May restrict the search by Institution",
+    summary="Get list of available categories.",
     response_model=List[models.CategoryModel],
 )
 async def get_categories():
@@ -421,7 +461,9 @@ async def update_tag(
 """ ---------- Transactions ----------------------------------------------------------------------"""
 
 
-@router.get("/transactions", response_model=List[models.TransactionRecordModel])
+@router.get("/transactions",
+            summary="Get list of Transactions from a given transaction Batch",
+            response_model=List[models.TransactionRecordModel])
 async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     transactions = db_access.query_transactions_from_batch(
         batch_id=batch_id, offset=offset, limit=limit
@@ -734,6 +776,7 @@ async def get_transaction_tags(transaction_id: int):
 
 @router.get(
     "/transactions_descriptions",
+    summary="List the column definitions for each bank's data format.",
     response_model=List[models.TransactionDescriptionModel],
 )
 async def get_transaction_descriptions():
@@ -761,7 +804,7 @@ async def get_transaction_descriptions():
 
 @router.get(
     "/processed_batches",
-    summary="List all processed batches in the system.",
+    summary="List all processed batches (PT) in the system.",
     response_model=List[models.ProcessedTransactionBatchModel],
 )
 async def get_processed_batches():
@@ -790,7 +833,6 @@ async def get_batch(batch_id: int):
     INFO     batch: (502, datetime.datetime(2023, 11, 14, 17, 15, 39, 652767), 'Test run', 3) 
     """
     if query_result:
-        logging.info(f"batch: {query_result}")
         response = models.ProcessedTransactionBatchModel(
             id=query_result[0],
             run_date=query_result[1],
@@ -922,7 +964,6 @@ def generate_report_data():
 def build_report_processors(report_data, batch_id):
     all_processors = list()
     for bank in report_data.institutions:
-        # logging.info(f"bank: {bank}")
         institution_id = bank[0]
         templates = db_access.query_templates_by_institution(institution_id)
         if templates:

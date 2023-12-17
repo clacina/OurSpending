@@ -10,7 +10,9 @@ export const StaticDataContext = createContext({
     qualifiers: [],
     setQualifiers: () => null,
     processedBatches: [],
-    setProcessedBatches: () => null
+    setProcessedBatches: () => null,
+    sectionTitle: 'Section Title',
+    setSectionTitle: () => null,
 });
 
 export const StaticDataProvider = ({children}) => {
@@ -19,6 +21,7 @@ export const StaticDataProvider = ({children}) => {
     const [batches, setBatches] = useState([]);
     const [qualifiers, setQualifiers] = useState([]);
     const [processedBatches, setProcessedBatches] = useState([]);
+    const [sectionTitle, setSectionTitle] = useState('Opening Section');
 
     const getBanks = async () => {
         const url = 'http://localhost:8000/resources/banks'
@@ -77,7 +80,9 @@ export const StaticDataProvider = ({children}) => {
         qualifiers,
         setQualifiers,
         processedBatches,
-        // setProcessedBatches
+        // setProcessedBatches,
+        sectionTitle,
+        setSectionTitle
     };
     return <StaticDataContext.Provider value={value}>{children}</StaticDataContext.Provider>
 };

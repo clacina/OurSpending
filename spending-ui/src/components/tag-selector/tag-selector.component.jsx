@@ -1,64 +1,13 @@
 import React, {useEffect, useRef} from 'react';
+import CreatableSelect from 'react-select/creatable';
 
-import chroma from 'chroma-js';
-import { ColourOption } from './data.tsx';
-import Select, {StylesConfig} from 'react-select';
+import {colourStyles, BuildOptions} from "./tag-selector-base.component";
+import Select from "react-select";
 
 
-export const colourStyles: StylesConfig<ColourOption, true> = {
-    control: (styles) => ({ ...styles, backgroundColor: 'white' }),
-    option: (styles, { data, isDisabled, isFocused, isSelected }) => {
-        const color = chroma(data.color);
-        return {
-            ...styles,
-            backgroundColor: isDisabled
-                ? undefined
-                : isSelected
-                    ? data.color
-                    : isFocused
-                        ? color.alpha(0.1).css()
-                        : undefined,
-            color: isDisabled
-                ? '#ccc'
-                : isSelected
-                    ? chroma.contrast(color, 'white') > 2
-                        ? 'white'
-                        : 'black'
-                    : data.color,
-            cursor: isDisabled ? 'not-allowed' : 'default',
-
-            ':active': {
-                ...styles[':active'],
-                backgroundColor: !isDisabled
-                    ? isSelected
-                        ? data.color
-                        : color.alpha(0.3).css()
-                    : undefined,
-            },
-        };
-    },
-    multiValue: (styles, { data }) => {
-        const color = chroma(data.color);
-        return {
-            ...styles,
-            backgroundColor: color.alpha(0.1).css(),
-        };
-    },
-    multiValueLabel: (styles, { data }) => ({
-        ...styles,
-        color: data.color,
-    }),
-    multiValueRemove: (styles, { data }) => ({
-        ...styles,
-        color: data.color,
-        ':hover': {
-            backgroundColor: data.color,
-            color: 'white',
-        },
-    }),
-};
-
-const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
+const TagSelector = ({tagsMap, entity, onChange, clearEntry,
+                         canCreate=false, selectorId='tagSelection',
+                         selectorClass='tagSelectDiv'}) => {
     // entity must contain 2 members:
     //  -- .id
     //  -- .tags
@@ -72,21 +21,7 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
         }
     }, [clearEntry]);
 
-    const tagColourOptions = []
-    tagsMap.forEach((item) => {
-        const tagOption = {}
-        tagOption['value'] = item.id;
-        tagOption['label'] = item.value;
-        tagOption['color'] = item.color;
-        tagColourOptions.push(tagOption);
-    });
-
-    const assigned = []
-    entity.tags.forEach((tag) => {
-        assigned.push(tagColourOptions.find((item) => {
-            return (item['value'] === tag.id)
-        }))
-    })
+    const {assigned, tagColourOptions} = BuildOptions(tagsMap, entity);
 
     const changeTag = (event) => {
         // update entity tags list
@@ -95,21 +30,48 @@ const TagSelector = ({tagsMap, entity, onChange, clearEntry}) => {
         onChange(entity.id, event);
     }
 
-    return (
-        <div className='tagSelectDiv'>
-            <Select
-                onChange={changeTag}
-                closeMenuOnSelect={true}
-                ref={tagSelectionRef}
-                defaultValue={assigned}
-                isMulti
-                id="tagSelection"
-                options={tagColourOptions}
-                styles={colourStyles}
-                menuPortalTarget={document.body}
-            />
-        </div>
-    );
+    const handleCreate = (inputValue: string) => {
+        console.log("In HandleCreate: ", inputValue);
+        onChange(entity.id, inputValue);
+
+    };
+
+    if(canCreate) {
+        return (
+            <div className={selectorClass}>
+                <CreatableSelect
+                    onChange={changeTag}
+                    closeMenuOnSelect={true}
+                    defaultValue={assigned}
+                    isMulti
+                    options={tagColourOptions}
+                    styles={colourStyles}
+                    menuPortalTarget={document.body}
+                    onCreateOption={handleCreate}
+                    id={selectorId}
+                    ref={tagSelectionRef}
+                />
+            </div>
+        );
+    } else {
+        return (
+            <div className={selectorClass}>
+                <Select
+                    onChange={changeTag}
+                    closeMenuOnSelect={true}
+                    defaultValue={assigned}
+                    isMulti
+                    options={tagColourOptions}
+                    styles={colourStyles}
+                    menuPortalTarget={document.body}
+                    // onCreateOption={handleCreate}
+                    id={selectorId}
+                    ref={tagSelectionRef}
+                />
+            </div>
+        );
+
+    }
 }
 
 export default TagSelector;

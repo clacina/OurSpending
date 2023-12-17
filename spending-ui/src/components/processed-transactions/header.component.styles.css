@@ -1,11 +1,11 @@
-/* UTILITIES */
+/* UTILITIES - DON'T Touch */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* NAVBAR STYLING STARTS */
+/* NAVBAR STYLING STARTS - DON'T Touch */
 .navbar {
     display: flex;
     align-items: center;
@@ -15,28 +15,112 @@
     color: #fff;
 }
 
+/*****************-------------------------------- My Stuff -------------------------------***********************/
 .form-check {
     color: black;
 }
 
-.navbar-nav {
+.filterHeader {
+    padding-left: 20px;
+}
+
+#clearFilterButton {
+    margin-left: 30px;
+}
+
+#filterPanel {
+    margin-bottom: 20px;
+}
+
+/* ----------------------------------------Search Bar---------------------------------------- */
+#search-input {
+    width: 400px;
+}
+
+.searchArea {
+    padding: 10px;
+}
+
+.searchArea Button {
+    padding: 5px;
+    margin-left: 10px;
+}
+
+.searchArea label {
+    margin-right: 10px;
+}
+
+/* ----------------------------------------Tag Selection---------------------------------------- */
+.headerTagSelector {
+    width: 400px;
+}
+
+.matchAll {
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+.tagsAndSuch {
     display: flex;
 }
 
-#search-input {
-    width: 200px;
+.tagsAndSuch label {
+    margin-right: 10px;
 }
 
-#tagSelection {
-    width: 400px;
+.tagLabel {
+    margin-top: 5px;
+}
+
+.headerTagSelector {
+}
+
+.headerTagSelector label {
+    margin-top: 5px;
+}
+
+/* --------------------------------------Categories--------------------------------------  */
+.categoryFilters {
+    display: flex;
+}
+
+.categoryFilters label {
+    margin-top: 5px;
+    margin-right: 10px;
 }
 
 #categorySelection {
     width: 400px;
+    margin-right: 30px;
+}
+
+#institutionSelection {
+    width: 400px;
+}
+
+/* ----------------------------------------Dates----------------------------------------  */
+.dateFilters {
+    margin-top: 20px;
 }
 
 .dateLabel {
     color: black;
+    margin-right: 10px;
+}
+
+#startDate {
+    width: 300px;
+    border: 1px solid black;
+}
+
+.dateLabelEnd {
+    margin-left: 30px;
+    margin-right: 10px;
+}
+
+#endDate {
+    width: 300px;
+    border: 1px solid black;
 }
 
 .react-datepicker__input-container input {
@@ -44,36 +128,16 @@
     color: black;
 }
 
-.llNavBar {
-    display: none;
+/* -----------------------------Transaction Detail Overrides----------------------------  */
+
+#TransactionDetailHeader {
+    display: flex;
 }
 
-.llNavBar li {
-    margin: auto;
-    display: inline-block;
+#SetCategoryDiv {
+    display: flex;
 }
 
-.llNavBar input {
-    width: 300px;
-}
-
-.llNavSearch {
-    display: inline-block;
-
-}
-
-.llNavDisplay {
-    display: inline-block;
-}
-
-.llNavTop {
-
-}
-
-.llNavBottom {
-
-}
-
-.llNavBottom select {
-    width: 200px;
+#testCategoryLabel {
+    margin: 10px;
 }

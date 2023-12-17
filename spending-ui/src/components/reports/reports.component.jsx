@@ -351,6 +351,7 @@ const Reports = () => {
                                     <label>Tags</label>
                                     <TagSelector
                                       clearEntry={clearTags}
+                                      selectorId='tagSelection'
                                       tagsMap={tagsMap.sort(compareValues)}
                                       entity={tagSelectorHack}
                                       onChange={changeTag} />
