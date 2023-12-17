@@ -26,6 +26,7 @@ const TemplateList = () => {
     const [editColumn, setEditColumn] = useState(-1);
     const [editTitle, setEditTitle] = useState("");
     const [editPrompt, setEditPrompt] = useState("text")
+    const [editContent, setEditContent] = useState("");
 
     const {setSectionTitle} = useContext(StaticDataContext);
     const {templatesMap, setUpdate} = useContext(TemplatesContext);
@@ -52,6 +53,7 @@ const TemplateList = () => {
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/template/' + template_id;
         const method = 'PATCH'
+        console.log("Sending update: ", body);
         const request = await send({url}, {method}, {headers}, {body});
         console.log("Response: ", request);
         setUpdate(true);
@@ -80,9 +82,10 @@ const TemplateList = () => {
         await callUpdate(template_id, body);
     }
 
-    const updateCategory = async (template_id, category_id) => {
+    const updateCategory = async (template_id, category) => {
+        console.log("Sending category: ", category);
         const body = {
-            'category': category_id
+            'category': category
         }
         await callUpdate(template_id, body);
     }
@@ -95,21 +98,25 @@ const TemplateList = () => {
     }
 
     //-------------------- Event Handlers ---------------------------------
-    const closeModal = async (id, note, save_result) => {
+    const closeModal = async (id, value, save_result) => {
         if (openNotes) {
-            console.log("Close notes: ", note);
+            console.log("Close Modal: ", value);
             setOpenNotes(false);
             if(save_result) {
                 console.log("---Saving: ", editColumn);
                 switch(editColumn) {
                     case 1: // hint
-                        await updateHint(id, note);
+                        if(value.length === 0) {
+                            alert("Cannot set the hint to an empty string.");
+                            return;
+                        }
+                        await updateHint(id, value);
                         break;
                     case 2: // credit
-                        await updateCredit(id, note);
+                        await updateCredit(id, value);
                         break;
                     case 4: // notes
-                        await updateNotes(id, note);
+                        await updateNotes(id, value);
                         break;
                     default: break;
                 }
@@ -135,7 +142,7 @@ const TemplateList = () => {
 
     const detailEventHandler = (event) => {
         console.log('dt: ', event);
-        updateCategory(event.template_id, event.category_id);
+        updateCategory(event.template_id, event.category);
     }
 
     function compareCategories(a, b) {
@@ -158,13 +165,17 @@ const TemplateList = () => {
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         setActiveRow(row);
         console.log("Click col: ", columnIndex);
+        console.log("Click row: ", rowIndex);
+        console.log("Row: ", row);
         switch (columnIndex) {
             case 1: // hint
+                console.log("Edit hint: ", row.notes);
                 e.preventDefault();
                 e.stopPropagation();
                 setEditColumn(1);
                 setEditTitle("Template Hint");
                 setEditPrompt("text");
+                setEditContent(row.hint);
                 setOpenNotes(true);
                 break;
             case 2: // credit
@@ -173,6 +184,7 @@ const TemplateList = () => {
                 setEditColumn(2);
                 setEditPrompt("check");
                 setEditTitle("Template Credit");
+                setEditContent(row.credit);
                 setOpenNotes(true);
                 break;
             case 3: // tags
@@ -185,6 +197,7 @@ const TemplateList = () => {
                 setEditColumn(4);
                 setEditPrompt("text");
                 setEditTitle("Template Note");
+                setEditContent(row.notes);
                 setOpenNotes(true);
                 break;
             default:
@@ -266,7 +279,7 @@ const TemplateList = () => {
                 {
                     openNotes && activeRow && <ModalPromptComponent
                                                 closeHandler={closeModal}
-                                                content={activeRow.notes}
+                                                content={editContent}
                                                 title={editTitle}
                                                 prompt_type={editPrompt}
                                                 entity_id={activeRow.id}/>

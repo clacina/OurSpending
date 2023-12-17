@@ -107,8 +107,8 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
                 # TODO: Should never happen, need to fix query
                 break
             tag_list, qualifier_list = parse_template_record(row)
-            logging.info(f"Row data: {row}")
-            logging.info(f"parsed data: {tag_list}, {qualifier_list}")
+            # logging.info(f"Row data: {row}")
+            # logging.info(f"parsed data: {tag_list}, {qualifier_list}")
 
             """
               0       1         2      3    4        5          6    7      8     9    10
@@ -118,7 +118,7 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
             """
             category = None
             if row[13] is not None:
-                logging.info(f"Setting category id to: {row[13]}")
+                # logging.info(f"Setting category id to: {row[13]}")
                 category = CategoryModel(
                     id=row[13],
                     value=row[14],
@@ -143,14 +143,14 @@ class SingleTemplateReportBuilder:  # NOTE: Only used in template update route
                 qualifiers=qualifiers,
                 category=category
             )
-            logging.info(f"tr: {tr}")
+            # logging.info(f"tr: {tr}")
 
             if not self.tr:
                 self.tr = tr
             else:
                 self.tr.update(tr)
 
-            logging.info(f"self.tr: {self.tr}")
+            # logging.info(f"self.tr: {self.tr}")
         return self.tr
 
 
@@ -165,7 +165,7 @@ class TemplateDetailReportBuilder:  # called by single template and by template 
     def process(self):
         for rec in self.data:
             tdm = parse_template_detail_record(rec)
-            logging.info(f"record: {tdm}")
+            # logging.info(f"record: {tdm}")
             self.tdm.update(tdm)
         return self.tdm
 
@@ -183,7 +183,7 @@ class TemplatesDetailReportBuilder:
                 # logging.error(f"Got empty data: {row}")
                 # raise
                 continue
-            logging.info(f"template: {row}")
+            # logging.info(f"template: {row}")
             # tdrb = TemplateDetailReportBuilder([row]).process()
             model_record = parse_template_detail_record(row)
             if model_record.id not in usage:

@@ -158,15 +158,8 @@ def patch_template(template_id: int,
     existing_template = SingleTemplateReportBuilder(query_result).process()
 
     update_data = template.dict(exclude_unset=True)
-    logging.info(f"Update_data: {update_data}")
+    # logging.info(f"Update_data: {update_data}")
     new_template = existing_template.copy(update=update_data)
-
-    """
-     tags=[TagModel(id=1, value=None, notes=None, color=None), 
-     TagModel(id=5, value=None, notes=None, color=None), 
-     TagModel(id=6, value=None, notes=None, color=None), 
-     TagModel(id=8, value=None, notes=None, color=None)]    
-    """
 
     # Store updated template in database
     logging.info({
@@ -175,17 +168,16 @@ def patch_template(template_id: int,
         "updated ": new_template
     })
 
-    if hasattr(template, 'category'):
+    if hasattr(template, 'category') and template.category is not None:
         new_template.category = models.CategoryModel(
-            id=query_result[0][13],
-            value=query_result[0][14],
-            notes=query_result[0][15]
+            id=template.category.id,
+            value=template.category.value
         )
     if template.tags:
-        logging.info(f"Tags: {template.tags}")
+        # logging.info(f"Tags: {template.tags}")
         new_template.tags = template.tags
 
-    logging.info(f"New Template: {new_template}")
+    # logging.info(f"New Template: {new_template}")
     db_access.update_template(new_template)
 
     return new_template
@@ -437,7 +429,6 @@ async def add_tag(
     notes: str = Body(...),
     color: str = Body(...),
 ):
-    logging.info(f"CJL-{value}, {notes}, {color}")
     query_result = db_access.create_tag(value=value, notes=notes, color=color)
     if not query_result:  # tag exists
         raise HTTPException(
@@ -842,7 +833,6 @@ async def get_batch(batch_id: int):
     INFO     batch: (502, datetime.datetime(2023, 11, 14, 17, 15, 39, 652767), 'Test run', 3) 
     """
     if query_result:
-        logging.info(f"batch: {query_result}")
         response = models.ProcessedTransactionBatchModel(
             id=query_result[0],
             run_date=query_result[1],
@@ -974,7 +964,6 @@ def generate_report_data():
 def build_report_processors(report_data, batch_id):
     all_processors = list()
     for bank in report_data.institutions:
-        # logging.info(f"bank: {bank}")
         institution_id = bank[0]
         templates = db_access.query_templates_by_institution(institution_id)
         if templates:
