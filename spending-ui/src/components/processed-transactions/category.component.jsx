@@ -111,7 +111,7 @@ const CategoryComponent = ({category, eventHandler}) => {
     }
 
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 5) {  // Notes column
+        if (columnIndex === 4) {  // Notes column
             setActiveRow(row);
             e.preventDefault();
             e.stopPropagation();
