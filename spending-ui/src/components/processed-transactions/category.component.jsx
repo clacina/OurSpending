@@ -131,13 +131,18 @@ const CategoryComponent = ({category, eventHandler}) => {
                 style: {cursor: 'pointer'}
             })
 
-            columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}
+            columns.push({dataField: 'template.credit', text: 'Credit', editable: false,
+                sort: true,
+                style: {cursor: 'pointer'}
             , formatter: columnTwoFormater})
-            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
+                sort: true,
+                style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
                 style: {cursor: 'pointer'},
                 text: 'Date',
+                sort: true,
                 editable: false
             })
             columns.push({
@@ -157,12 +162,17 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({dataField: 'transaction.id', text: '', hidden: true})
         } else {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-            columns.push({dataField: 'transaction.institution.name', text: 'Bank', ediatable: false, style: {cursor: 'pointer'}})
-            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+            columns.push({dataField: 'transaction.institution.name', text: 'Bank', ediatable: false,
+                sort: true,
+                style: {cursor: 'pointer'}})
+            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
+                sort: true,
+                style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
                 style: {cursor: 'pointer'},
                 text: 'Date',
+                sort: true,
                 editable: false
             })
             columns.push({

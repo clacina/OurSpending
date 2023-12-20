@@ -89,6 +89,26 @@ resourcesRouter.post('/processed_batch/:id', async function(req, res, next) {
   }
 });
 
+resourcesRouter.get('/processed_batch/:id', async function(req, res, next) {
+  req.accepts('application/json');
+  const url = 'http://localhost:8080/processed_batch/' + req.params['id'];
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.get(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
 
 resourcesRouter.get('/qualifiers', function(req, res, next) {
   const url = 'http://localhost:8080/qualifiers';

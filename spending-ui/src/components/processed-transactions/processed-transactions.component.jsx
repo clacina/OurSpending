@@ -15,6 +15,7 @@ import '../collapsible.scss';
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
+import {PT_TitleBlock} from "./processed-transactions.component.styles";
 
 
 const ProcessedTransactions = () => {
@@ -26,6 +27,7 @@ const ProcessedTransactions = () => {
 
     const [transactionsMap, setTransactionsMap] = useState([]);
     const [institutionGroups, setInstitutionGroups] = useState({});
+    const [batchDetails, setBatchDetails] = useState({});
 
     // Content for display
     const [entityMap, setEntityMap] = useState([]);
@@ -67,6 +69,21 @@ const ProcessedTransactions = () => {
         return (response);
     };
 
+    const getBatchDetails = async () => {
+        const url = 'http://localhost:8000/resources/processed_batch/' + routeParams.batch_id;
+        const headers = {'Content-Type': 'application/json'}
+        const method = 'GET'
+        const response = await send({url}, {method}, {headers}, {});
+        console.log("batch details: ", response);
+
+        var utc = new Date(response.run_date);
+        var offset = utc.getTimezoneOffset();
+        response.run_date = new Date(utc.getTime() + offset * 60000).toDateString();
+
+        console.log("Run Date: ", response.run_date);
+        return (response);
+    }
+
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
     useEffect(() => {
         if (transactionsMap.length === 0) {
@@ -74,6 +91,7 @@ const ProcessedTransactions = () => {
 
             console.log("Start - getting transactions");
             getTransactions().then((res) => setTransactionsMap(res));
+            getBatchDetails().then((res) => setBatchDetails(res));
             setTransactionResourcesLoaded(true);
         }
     }, [transactionsMap.length]);
@@ -436,7 +454,14 @@ const ProcessedTransactions = () => {
 
     return (<>
             {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div style={{ display: 'block', width: '100%', padding: 30 }}>
-
+                <PT_TitleBlock>
+                    <ul>
+                        <li>Processed Batch: {routeParams.batch_id}</li>
+                        <li>{transactionsMap.length} Transactions</li>
+                        <li>Run Date: {batchDetails.run_date}</li>
+                        <li>Notes: {batchDetails.notes}</li>
+                    </ul>
+                </PT_TitleBlock>
                 <HeaderComponent eventHandler={headerEventHandler}/>
                 <Tabs>
                     <TabList>
