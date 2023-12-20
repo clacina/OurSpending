@@ -291,6 +291,19 @@ class DBAccess:
             logging.exception(f"Error: {str(e)}")
             raise e
 
+    def update_processed_batch_note(self, batch_id, notes):
+        sql = """UPDATE processed_transaction_batch SET notes=%(notes)s WHERE id=%(batch_id)s"""
+        query_params = {"batch_id": batch_id, "notes": notes}
+        conn = self.connect_to_db()
+        assert conn
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception({"message": f"Error updating processed batch notes: {str(e)}"})
+            raise e
+
     def get_processed_transaction_records(self, batch_id, offset=0, limit=10):
         conn = self.connect_to_db()
         assert conn

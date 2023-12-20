@@ -846,6 +846,33 @@ async def get_batch(batch_id: int):
     )
 
 
+@router.post(
+    "/processed_batch/{batch_id}",
+    summary="Update details for a specific processed batch of transactions",
+    status_code=status.HTTP_200_OK,
+    response_model=models.ProcessedTransactionBatchModel,
+)
+async def update_processed_batch(batch_id: int, info: Request):
+    json_data = await info.json()
+    try:
+        new_note = json_data.get('notes')
+        db_access.update_processed_batch_note(batch_id, new_note)
+        query_result = db_access.fetch_processed_batch(batch_id)
+        response = models.ProcessedTransactionBatchModel(
+            id=query_result[0],
+            run_date=query_result[1],
+            notes=query_result[2],
+            transaction_batch_id=query_result[3],
+            transaction_count=query_result[4],
+        )
+        return response
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Unable to update processed batch details.",
+        )
+
+
 """ ---------- Processed Transactions ----------------------------------------------------------------------"""
 
 
