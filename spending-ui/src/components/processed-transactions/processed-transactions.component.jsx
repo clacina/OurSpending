@@ -57,6 +57,7 @@ const ProcessedTransactions = () => {
 
     // Updated Content Flags
     const [contentUpdated, setContentUpdated] = useState(false);
+    const [transactionContentUpdated, setTransactionContentUpdated] = useState(false);
 
     const routeParams = useParams();
 
@@ -65,7 +66,6 @@ const ProcessedTransactions = () => {
         const headers = {'Content-Type': 'application/json'}
         const method = 'GET'
         const response = await send({url}, {method}, {headers}, {});
-        console.log("Response: ", response);
         return (response);
     };
 
@@ -74,27 +74,26 @@ const ProcessedTransactions = () => {
         const headers = {'Content-Type': 'application/json'}
         const method = 'GET'
         const response = await send({url}, {method}, {headers}, {});
-        console.log("batch details: ", response);
 
         var utc = new Date(response.run_date);
         var offset = utc.getTimezoneOffset();
         response.run_date = new Date(utc.getTime() + offset * 60000).toDateString();
 
-        console.log("Run Date: ", response.run_date);
         return (response);
     }
 
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
     useEffect(() => {
-        if (transactionsMap.length === 0) {
+        if (transactionsMap.length === 0 || transactionContentUpdated) {
             console.log("UE-06")
 
             console.log("Start - getting transactions");
             getTransactions().then((res) => setTransactionsMap(res));
             getBatchDetails().then((res) => setBatchDetails(res));
             setTransactionResourcesLoaded(true);
+            setTransactionContentUpdated(false);
         }
-    }, [transactionsMap.length]);
+    }, [transactionsMap.length, transactionContentUpdated]);
 
     useEffect(() => {
         console.log("UE-05")
@@ -202,6 +201,7 @@ const ProcessedTransactions = () => {
 
         // End Date
         if (processTransaction && endDateFilter) {
+            console.log("End Date: ", endDateFilter);
             const filterDate = moment(endDateFilter);
             const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
             processTransaction = transactionDate <= filterDate;
@@ -300,7 +300,6 @@ const ProcessedTransactions = () => {
          */
         for (const [bank, transactions] of Object.entries(institutionGroups)) {
             const transaction = transactions.find((t) => t.transaction.id === transaction_id)
-            console.log("Transaction: ", transaction);
             if (transaction) {
                 return (transaction);
             }
@@ -310,7 +309,6 @@ const ProcessedTransactions = () => {
 
     const headerEventHandler = (event) => {
         console.log("PT - handlerEvent: ", event);
-        // console.log("---: ", typeof event);
         if (typeof event === "string") {
             switch (event) {
                 case 'templateview':
@@ -328,6 +326,13 @@ const ProcessedTransactions = () => {
                     break;
                 case 'matchAllCategories':
                     setMatchAllCategories(!matchAllCategories);
+                    break;
+                case 'printContent':
+                    console.log("Got print command");
+                    categoriesMap.map((cat) => {
+                        return (cat[1].length > 0 && console.log(cat[1]));
+                    });
+
                     break;
                 default:
                     console.log("Unknown string event: ", event);
@@ -348,10 +353,18 @@ const ProcessedTransactions = () => {
                 setInstitutionFilter(event['banks']);
             } else if (event.hasOwnProperty('startDate')) {
                 console.log("--Setting Start Date Filter")
-                setStartDateFilter(new Date(event['startDate']));
+                if(event['startDate']) {
+                    setStartDateFilter(new Date(event['startDate']));
+                } else {
+                    setStartDateFilter();
+                }
             } else if (event.hasOwnProperty('endDate')) {
                 console.log("--Setting End Date Filter")
-                setEndDateFilter(new Date(event['endDate']));
+                if(event['endDate']) {
+                    setEndDateFilter(new Date(event['endDate']));
+                } else {
+                    setEndDateFilter();
+                }
             } else {
                 console.error("Unknown event: ", event);
             }
@@ -377,12 +390,12 @@ const ProcessedTransactions = () => {
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
 
         const transaction = findTransactionRecord(transaction_id)
         if(transaction) {
             transaction.transaction.tags = queryTags(tag_list);
         }
+        setTransactionContentUpdated(true);
 
         setContentUpdated(true);
     }
@@ -400,11 +413,10 @@ const ProcessedTransactions = () => {
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
         const method = 'POST'
         const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
 
         // Need to refresh data and re-render
         const transaction = findTransactionRecord(transaction_id)
-        console.log("Transaction: ", transaction);
+
         if(transaction) {
             if (note) {
                 note.forEach((item) => {
@@ -419,7 +431,6 @@ const ProcessedTransactions = () => {
     }
 
     const updateCategory = async (transaction_id, category_id) => {
-        console.log("Update category: " + transaction_id + ", " + category_id);
         const body = {
             'category_id': category_id
         }
@@ -427,7 +438,6 @@ const ProcessedTransactions = () => {
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/category';
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
 
         // Need to refresh data and re-render
         const transaction = findTransactionRecord(transaction_id)

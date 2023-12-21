@@ -25,6 +25,7 @@ const BanksComponent = () => {
         columns.push({dataField: 'id', text: 'Id', sort: true})
         columns.push({dataField: 'key', text: 'Key', sort: true})
         columns.push({dataField: 'name', text: 'Name', sort: true})
+        columns.push({dataField: 'notes', text: 'Notes', sort: true})
 
         return (
             <div>

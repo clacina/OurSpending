@@ -85,14 +85,13 @@ const CategoryComponent = ({category, eventHandler}) => {
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 4) {  // tags column - it's a drop down
+        if (columnIndex === 4 || columnIndex === 3) {  // Notes column, tags column - it's a drop down
             e.stopPropagation();
         }
         // console.log({e, column, columnIndex, row, rowIndex})
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        // console.log("Row: ", row);
         const note_list = row.transaction.notes.map((note) => {
             return(note.note + " ");
         })

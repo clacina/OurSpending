@@ -124,6 +124,13 @@ const HeaderComponent = ({eventHandler}) => {
         categorySelectionRef.current.clearValue();
         institutionSelectionRef.current.clearValue();
         setMatchAllTags(false);
+
+        eventHandler({'startDate': null});
+        eventHandler({'endDate': null});
+    }
+
+    const printContent = () => {
+        eventHandler('printContent');
     }
 
     return(
@@ -191,6 +198,7 @@ const HeaderComponent = ({eventHandler}) => {
                             isClearable
                             onChange={(date)=>onChangeEndDate(date)} />
                         <Button onClick={clearFilters} id='clearFilterButton' className="mb-md-1">Clear Filters</Button>
+                        <Button onClick={printContent} id='printContentButton' className="mb-md-1">Print Result</Button>
                     </div>
                 </div>
             </Collapsible>
