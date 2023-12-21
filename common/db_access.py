@@ -321,18 +321,18 @@ class DBAccess:
 
     """ Institutions """
 
-    def create_institution(self, key, name):
+    def create_institution(self, key, name, notes):
         conn = self.connect_to_db()
         assert conn
 
         sql = """
             INSERT INTO
-                institutions (key, name) VALUES (
-                    %(key)s, %(name)s
+                institutions (key, name, notes) VALUES (
+                    %(key)s, %(name)s, %(notes)s
                 )
             RETURNING id
         """
-        query_params = {"key": key, "name": name}
+        query_params = {"key": key, "name": name, "notes": notes}
 
         with conn.cursor() as cursor:
             try:
@@ -348,7 +348,7 @@ class DBAccess:
     def fetch_institution(self, institution_id: int):
         conn = self.connect_to_db()
         assert conn
-        sql = "SELECT id, key, name FROM institutions WHERE id=%(institution_id)s"
+        sql = "SELECT id, key, name, notes FROM institutions WHERE id=%(institution_id)s"
         query_params = {"institution_id": institution_id}
         cur = conn.cursor()
         try:
@@ -371,6 +371,25 @@ class DBAccess:
         except Exception as e:
             logging.exception(f"Error listing institutions: {str(e)}")
             raise e
+
+    def update_institution(self, institution_id, name, key, notes):
+        conn = self.connect_to_db()
+        assert conn
+        logging.info(f"Params: {name}, {key}, {notes}")
+        sql = """
+            UPDATE institutions
+            SET name=%(name)s, key=%(key)s, notes=%(notes)s
+            WHERE id=%(institution_id)s
+        """
+        query_params = {"institution_id": institution_id, "key": key, "name": name, "notes": notes}
+
+        with conn.cursor() as cursor:
+            try:
+                cursor.execute(sql, query_params)
+                conn.commit()
+            except Exception as e:
+                logging.exception(f"Error: {str(e)}")
+                raise e
 
     """ Categories """
 

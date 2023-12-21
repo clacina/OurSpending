@@ -307,7 +307,7 @@ async def get_institutions():
     query_result = db_access.load_institutions()
     response = []
     for q in query_result:
-        inst = models.InstitutionsModel(id=q[0], key=q[1], name=q[2])
+        inst = models.InstitutionsModel(id=q[0], key=q[1], name=q[2], notes=q[3])
         response.append(inst)
 
     return response
@@ -322,7 +322,7 @@ async def get_institutions():
 async def create_institution(info: Request = None):
     data = await info.json()
 
-    new_id = db_access.create_institution(data["key"], data["name"])
+    new_id = db_access.create_institution(data["key"], data["name"], data.get('notes', None))
     inst = models.InstitutionsModel(id=new_id, key=data["key"], name=data["name"])
     return inst
 
@@ -338,6 +338,27 @@ async def get_institution(institution_id: int):
         id=query_result[0], key=query_result[1], name=query_result[2]
     )
     return response
+
+
+@router.put(
+    "/institution/{institution_id}",
+    summary="Update the details for an institution",
+    response_model=models.InstitutionsModel,
+)
+async def update_institution(
+    institution_id: int,
+    name: str = Body(...),
+    key: str = Body(...),
+    notes: str = Body(...),
+):
+    try:
+        db_access.update_institution(institution_id=institution_id, name=name, key=key, notes=notes)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Specified Category already exists.",
+        )
+    return models.InstitutionsModel(id=institution_id, name=name, key=key, notes=notes)
 
 
 """ ---------- Qualifiers  ------------------------------------------------------------------------"""
