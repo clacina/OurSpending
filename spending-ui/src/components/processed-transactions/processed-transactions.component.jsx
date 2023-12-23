@@ -1,11 +1,13 @@
 import moment from "moment/moment.js";
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useEffect, useRef, useState} from "react";
 import {useParams} from "react-router-dom";
 
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
 import {FerrisWheelSpinner} from 'react-spinner-overlay';
+import jsPDF from 'jspdf';
+
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import {TagsContext} from "../../contexts/tags.context";
 import {StaticDataContext} from "../../contexts/static_data.context";
@@ -60,6 +62,7 @@ const ProcessedTransactions = () => {
     const [transactionContentUpdated, setTransactionContentUpdated] = useState(false);
 
     const routeParams = useParams();
+    const reportTemplateRef = useRef(null);
 
     const getTransactions = async () => {
         const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
@@ -293,6 +296,120 @@ const ProcessedTransactions = () => {
 
     /********************************** Event Handlers ***************************************************/
 
+    const GenerateReportStyle = () => {
+        var css_string = "<style>\n";
+        css_string += "* {\n"
+        css_string += "margin: 20px\n";
+        css_string += "}\n"
+        css_string += "table: {margin: 10px}\n"
+
+        css_string += "</style>\n";
+        return css_string;
+    }
+
+    const GenerateReportHTML = () => {
+        var html_string = "<html>";
+        const style_string = GenerateReportStyle();
+        html_string += style_string;
+        html_string += "<body>"
+        categoriesMap.forEach((cat) => {
+            // only categories with templates
+            if(cat[1].length > 0 && cat[1][0].template) {
+                console.log(cat);
+                // cat[0] == category id - 2000 +
+                // cat[1] is an array of processed transactions
+                // - id, institution_id, processed_batch_id, template_id
+                // - template
+                // - - credit, hint, notes
+                // - - category
+                // - - - value, notes, is_tax_deductible
+                // - - institution
+                // - - - Name, notes, key
+                // - transaction
+                // - - amount
+                // - - category (override)
+                // - - description
+                // - - notes
+                // - - transaction_date
+                // - - tags
+                // - - transaction_data - raw input from file
+
+                var category_value = "";
+                console.log(cat[1])
+                if(cat[1][0].template && cat[1][0].template.category) {
+                    category_value = cat[1][0].template.category.value;
+                }
+                if(cat[1][0].transaction.category) {
+                    category_value = cat[1][0].transaction.category.value;
+                }
+                // iterate through cat[1]
+                html_string += `<h1>${category_value}</h1>`;
+                html_string += "\n<table border='1' style='width:100%'>";
+                html_string += "\n<thead><tr><th>Amount</th><th>Date</th><th>Description</th></tr></thead>";
+                html_string += "\n<tbody>\n";
+                cat[1].forEach((transaction) => {
+                    const transaction_amount = transaction.transaction.amount;
+                    const transaction_date = transaction.transaction.transaction_date;
+                    const description = transaction.transaction.description;
+                    html_string += `<tr><td>${transaction_amount}</td><td>${transaction_date}</td><td>${description}</td></tr>`
+                    html_string += `<tr><td colspan="3">${transaction.transaction.transaction_data}</td></tr>`
+                })
+
+                html_string += "\n</tbody>";
+                html_string += "\n</table>";
+            }
+        })
+
+        html_string += "</body></html>";
+        return html_string;
+    }
+
+    const printContent = async () => {
+        categoriesMap.map((cat) => {
+            return (cat[1].length > 0 && cat[1][0].template && <CategoryComponent
+                category={cat[1]}
+                eventHandler={viewEventHandler}/>)
+        })
+
+        if( window.showSaveFilePicker ) {
+            try {
+                const handle = await window.showSaveFilePicker();
+                console.log("Handle: ", handle);
+
+                const doc = new jsPDF({
+                    format: 'letter',
+                    unit: 'pt',
+                    orientation: "landscape"
+                });
+
+                // Adding the fonts.
+                // doc.setFont('Inter-Regular', 'normal');
+
+                // Generate our Report HTML
+                const report_data = GenerateReportHTML();
+
+                // doc.html(reportTemplateRef.current, {
+                // doc.html(report_data, {
+                //     async callback(doc) {
+                //         await doc.save(handle.name);
+                //     },
+                // });
+
+                const writable = await handle.createWritable();
+                await writable.write(report_data);
+                writable.close();
+            } catch (err) {
+                // Fail silently if the user has simply canceled the dialog.
+                if (err.name !== 'AbortError') {
+                    console.error(err.name, err.message);
+                }
+            }
+        }
+        else {
+            alert("Not available");
+        }
+    }
+
     const findTransactionRecord = (transaction_id) => {
         /*
             Search our institutionGroups data set for the matching transaction
@@ -329,10 +446,7 @@ const ProcessedTransactions = () => {
                     break;
                 case 'printContent':
                     console.log("Got print command");
-                    categoriesMap.map((cat) => {
-                        return (cat[1].length > 0 && console.log(cat[1]));
-                    });
-
+                    printContent();
                     break;
                 default:
                     console.log("Unknown string event: ", event);
@@ -489,12 +603,14 @@ const ProcessedTransactions = () => {
                         })}
                     </TabPanel>
                     <TabPanel>
+                        <div ref={reportTemplateRef} >
                         {
                             categoriesMap.map((cat) => {
                             return (cat[1].length > 0 && cat[1][0].template && <CategoryComponent
                                 category={cat[1]}
                                 eventHandler={viewEventHandler}/>)
-                        })}
+                            })}
+                        </div>
                     </TabPanel>
                     <TabPanel>
                         {
