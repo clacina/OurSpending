@@ -159,11 +159,14 @@ DROP TABLE IF EXISTS saved_filters CASCADE;
 CREATE TABLE saved_filters
 (
     id             SERIAL PRIMARY KEY,
-    name           TEXT NOT NULL,
+    name           TEXT NOT NULL UNIQUE,
+    created        TIMESTAMP NOT NULL DEFAULT NOW(),
+
     institutions   TEXT DEFAULT NULL,
     categories     TEXT DEFAULT NULL,
     credit         BOOLEAN DEFAULT FALSE,
     tags           TEXT DEFAULT NULL,
+    match_all_tags BOOLEAN DEFAULT FALSE,
     start_date     DATE DEFAULT NULL,
     end_date       DATE DEFAULT NULL,
     search_string  TEXT DEFAULT NULL
