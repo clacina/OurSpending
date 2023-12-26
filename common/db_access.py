@@ -100,6 +100,10 @@ class DBAccess:
         except Exception as e:
             logging.exception(f"I am unable to connect to the database:{str(e)}")
             raise e
+    def get_db_cursor(self):
+        conn = self.connect_to_db()
+        assert conn
+        return conn.cursor()
 
     """ Transactions """
 
@@ -114,9 +118,7 @@ class DBAccess:
     
         """
         query_params = {"transaction_id": transaction_id}
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
 
         try:
             cur.execute(sql, query_params)
@@ -180,13 +182,11 @@ class DBAccess:
             raise e
 
     def query_transactions_from_batch(self, batch_id, offset=0, limit=10):
-        conn = self.connect_to_db()
-        assert conn
         sql = f"{TransactionSQl} WHERE BID=%(batch_id)s"
         sql += " ORDER BY transaction_date"
         sql += " LIMIT %(limit)s OFFSET %(offset)s"
         query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             result = cur.fetchall()
@@ -197,11 +197,9 @@ class DBAccess:
             raise e
 
     def fetch_transaction(self, transaction_id):
-        conn = self.connect_to_db()
-        assert conn
         sql = f"{TransactionSQl} WHERE TID=%(transaction_id)s"
         query_params = {"transaction_id": transaction_id}
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             result = cur.fetchall()
@@ -214,10 +212,8 @@ class DBAccess:
     """ Transaction Batches """
 
     def list_batches(self):
-        conn = self.connect_to_db()
-        assert conn
         sql = "SELECT id, run_date, notes FROM transaction_batch"
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql)
             result = cur.fetchall()
@@ -240,11 +236,9 @@ class DBAccess:
             raise e
 
     def fetch_batch(self, batch_id: int):
-        conn = self.connect_to_db()
-        assert conn
         sql = "SELECT id, run_date, notes FROM transaction_batch WHERE id=%(batch_id)s"
         query_params = {"batch_id": batch_id}
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             result = cur.fetchone()
@@ -256,13 +250,11 @@ class DBAccess:
     """ Processed Batches """
 
     def list_processed_batches(self):
-        conn = self.connect_to_db()
-        assert conn
         sql = """SELECT id, run_date, notes, transaction_batch_id, COALESCE(tr.cnt, 0) as tr_cnt FROM processed_transaction_batch
                 left join (select batch_id, count(batch_id) as cnt from transaction_records group by batch_id) tr
                 ON transaction_batch_id = tr.batch_id
               """
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql)
             result = cur.fetchall()
@@ -272,9 +264,6 @@ class DBAccess:
             raise e
 
     def fetch_processed_batch(self, batch_id: int):
-        conn = self.connect_to_db()
-        assert conn
-        # sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch WHERE id=%(batch_id)s"
         sql = """SELECT id, run_date, notes, transaction_batch_id, COALESCE(tr.cnt, 0) as tr_cnt FROM processed_transaction_batch
                 left join (select batch_id, count(batch_id) as cnt from transaction_records group by batch_id) tr
                 ON transaction_batch_id = tr.batch_id
@@ -282,7 +271,7 @@ class DBAccess:
               """
 
         query_params = {"batch_id": batch_id}
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             result = cur.fetchone()
@@ -305,12 +294,10 @@ class DBAccess:
             raise e
 
     def get_processed_transaction_records(self, batch_id, offset=0, limit=10):
-        conn = self.connect_to_db()
-        assert conn
         sql = f"{ProcessedTransactionSQL} WHERE BID=%(batch_id)s"
         sql += " LIMIT %(limit)s OFFSET %(offset)s"
         query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             result = cur.fetchall()
@@ -346,11 +333,9 @@ class DBAccess:
                 raise e
 
     def fetch_institution(self, institution_id: int):
-        conn = self.connect_to_db()
-        assert conn
         sql = "SELECT id, key, name, notes FROM institutions WHERE id=%(institution_id)s"
         query_params = {"institution_id": institution_id}
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             result = cur.fetchone()
@@ -360,10 +345,8 @@ class DBAccess:
             raise e
 
     def load_institutions(self):
-        conn = self.connect_to_db()
-        assert conn
         sql = "SELECT id, key, name, notes FROM institutions order by name"
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql)
             rows = cur.fetchall()
@@ -395,8 +378,7 @@ class DBAccess:
 
     def load_categories(self):
         sql = "SELECT id, value, notes FROM categories order by value"
-        conn = self.connect_to_db()
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql)
             rows = cur.fetchall()
@@ -408,8 +390,7 @@ class DBAccess:
     def get_category(self, category_id):
         sql = "SELECT id, value FROM categories WHERE id=%(category_id)s"
         query_params = {"category_id": category_id}
-        conn = self.connect_to_db()
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             row = cur.fetchone()
@@ -476,9 +457,7 @@ class DBAccess:
     def fetch_template(self, template_id: int):
         sql = "SELECT id, institution_id, category_id, credit, hint, notes FROM templates WHERE id=%(template_id)s"
         query_params = {"template_id": template_id}
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             row = cur.fetchone()
@@ -500,14 +479,11 @@ class DBAccess:
         :param template_id:
         :return: Json blob
         """
-        conn = self.connect_to_db()
-        assert conn
-
         sql = f"{TemplateSQl} WHERE TID=%(template_id)s"
         query_params = {"template_id": template_id}
 
         try:
-            cur = conn.cursor()
+            cur = self.get_db_cursor()
             cur.execute(sql, query_params)
             rows = cur.fetchall()
             logging.info(f"Returned {len(rows)} matching records.")
@@ -524,9 +500,6 @@ class DBAccess:
         :param institution_id:
         :return: Json blob
         """
-        conn = self.connect_to_db()
-        assert conn
-
         sql = TemplateSQl
 
         query_params = {}
@@ -538,7 +511,7 @@ class DBAccess:
             sql += " ORDER BY tlist.tid"
 
         try:
-            cur = conn.cursor()
+            cur = self.get_db_cursor()
             cur.execute(sql, query_params)
             rows = cur.fetchall()
             # logging.info(f"Returned {len(rows)} matching records.")
@@ -616,13 +589,11 @@ class DBAccess:
     """ Tags """
 
     def query_tags_for_transaction(self, transaction_id: int):
-        tags = []
         sql = """SELECT tag_id, t.id, t.value, t.notes, t.color FROM transaction_tags
                  full OUTER JOIN tags t on t.id = tag_id
                  WHERE transaction_id=%(transaction_id)s"""
         query_params = {"transaction_id": transaction_id}
-        conn = self.connect_to_db()
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             result = cur.fetchall()
@@ -633,9 +604,7 @@ class DBAccess:
 
     def load_tags(self):
         sql = "SELECT id, value, notes, color FROM tags"
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql)
             rows = cur.fetchall()
@@ -647,9 +616,7 @@ class DBAccess:
     def fetch_tag(self, tag_id: int):
         sql = "SELECT id, value, notes, color FROM tags WHERE id=%(tag_id)s"
         query_params = {"tag_id": tag_id}
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             row = cur.fetchone()
@@ -661,9 +628,7 @@ class DBAccess:
     def fetch_tag_by_value(self, value: str):
         sql = "SELECT id, value, notes, color FROM tags WHERE value=%(value)s"
         query_params = {"value": value}
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             row = cur.fetchone()
@@ -773,9 +738,7 @@ class DBAccess:
         """retrieve a single qualifier record by id"""
         sql = "SELECT id, value, institution_id FROM qualifiers WHERE id=%(qualifier_id)s"
         query_params = {"qualifier_id": qualifier_id}
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
             row = cur.fetchone()
@@ -787,9 +750,7 @@ class DBAccess:
     def load_qualifiers(self):
         """load all qualifier records"""
         sql = "SELECT id, value, institution_id FROM qualifiers"
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql)
             rows = cur.fetchall()
@@ -810,7 +771,7 @@ class DBAccess:
          transaction_date | date   
          transaction_data | jsonb  
          notes            | text       
-        (44, 1, 4, datetime.date(2023, 1, 25),
+         (44, 1, 4, datetime.date(2023, 1, 25),
          ['01/25/2023', '01/25/2023', 'ALEXA SKILLS*DY07F7BL3 AM', 'Shopping', 'Sale', '-0.88', ''], 'Manual Entry')
         """
         desc = transaction[4][2]
@@ -824,13 +785,26 @@ class DBAccess:
 
     def load_transaction_data_descriptions(self):
         sql = "SELECT id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id from transaction_data_description"
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
+        cur = self.get_db_cursor()
         try:
             cur.execute(sql)
             rows = cur.fetchall()
             return rows
         except Exception as e:
             logging.exception(f"Error listing transaction_data_description records: {str(e)}")
+            raise e
+
+    def load_saved_filters(self):
+        sql = """SELECT 
+                    id, name, created, institutions, categories, credit, tags, match_all_tags, start_date, end_date, search_string
+                 FROM saved_filters
+              """
+
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return rows
+        except Exception as e:
+            logging.exception(f"Error saved filters: {str(e)}")
             raise e

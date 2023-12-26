@@ -1121,3 +1121,43 @@ def category_report(batch_id: int):
         all_processors,
         "report_output/categories.html",
     )
+
+
+@router.get(
+    "/saved_filters",
+    summary="Get details for a specific processed transaction",
+    response_model=List[models.SavedFilterModel],
+)
+async def get_saved_filters():
+    filter_data = db_access.load_saved_filters()
+    logging.info(f"Saved filters: {filter_data}")
+
+    filter_list = []
+    for f in filter_data:
+        #  0   1       2           3           4         5
+        # id, name, created, institutions, categories, credit,
+        #  6          7              8         9           10
+        # tags, match_all_tags, start_date, end_date, search_string
+        tag_list = None
+
+        # Tags
+        if f[6] and len(f[6]):
+            tag_list = []
+            tags = f[6].split(',')
+            logging.info(f"Tags: {tags}")
+            for tag in tags:
+                tag = tag.strip()
+                logging.info(f"--Updated tag: {tag}")
+                q = db_access.fetch_tag(tag)
+                logging.info(f"--got query result: {q}")
+                if q is not None:
+                    tag_list.append(TagModel(
+                        id=q[0],
+                        value=q[1],
+                        notes=q[2],
+                        color=q[3]
+                    ))
+
+        sf = models.SavedFilterModel(name=f[1], id=f[0], created=f[2], tags=tag_list)
+        filter_list.append(sf)
+    return filter_list

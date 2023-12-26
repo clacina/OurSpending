@@ -9,6 +9,7 @@ import {CategoriesProvider} from "./contexts/categories.context";
 import {TagsProvider} from "./contexts/tags.context";
 import {BrowserRouter} from "react-router-dom";
 import {TemplatesProvider} from "./contexts/templates.context.jsx";
+import {SavedFiltersProvider} from "./contexts/saved_filters_context";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -18,7 +19,9 @@ root.render(
               <CategoriesProvider>
                   <TagsProvider>
                       <TemplatesProvider>
-                        <App />
+                          <SavedFiltersProvider>
+                              <App />
+                          </SavedFiltersProvider>
                       </TemplatesProvider>
                   </TagsProvider>
               </CategoriesProvider>

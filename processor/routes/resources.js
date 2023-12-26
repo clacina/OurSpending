@@ -412,5 +412,18 @@ resourcesRouter.put('/transaction/:id/category', async function(req, res, next) 
   }
 });
 
+resourcesRouter.get('/saved_filters', function(req, res, next) {
+  const url = 'http://localhost:8080/saved_filters';
+
+  request(url, (error, response, body) => {
+    console.debug("Sending back: ", body);
+    console.log("Request errors: ", error);
+
+    // Loop through each template and fill in details??
+
+    res.send(body);
+  });
+});
+
 
 export default resourcesRouter;

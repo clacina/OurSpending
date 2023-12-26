@@ -448,6 +448,10 @@ const ProcessedTransactions = () => {
                     console.log("Got print command");
                     printContent();
                     break;
+                case 'saveFilter':
+                    break;
+                case 'loadFilter':
+                    break;
                 default:
                     console.log("Unknown string event: ", event);
             }
