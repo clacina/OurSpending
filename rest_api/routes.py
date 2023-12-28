@@ -345,20 +345,16 @@ async def get_institution(institution_id: int):
     summary="Update the details for an institution",
     response_model=models.InstitutionsModel,
 )
-async def update_institution(
-    institution_id: int,
-    name: str = Body(...),
-    key: str = Body(...),
-    notes: str = Body(...),
-):
+async def update_institution(institution_id: int, info: Request=None):
+    data = await info.json()
     try:
-        db_access.update_institution(institution_id=institution_id, name=name, key=key, notes=notes)
+        db_access.update_institution(institution_id=institution_id, name=data["name"], key=data["key"], notes=data["notes"])
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Specified Category already exists.",
+            detail="Unable to update specified institution.",
         )
-    return models.InstitutionsModel(id=institution_id, name=name, key=key, notes=notes)
+    return models.InstitutionsModel(id=institution_id, name=data["name"], key=data["key"], notes=data["notes"])
 
 
 """ ---------- Qualifiers  ------------------------------------------------------------------------"""

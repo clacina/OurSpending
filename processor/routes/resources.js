@@ -17,7 +17,7 @@ resourcesRouter.get('/banks', function(req, res, next) {
   });
 });
 
-resourcesRouter.put('/banks/:id', async function(req, res, next) {
+resourcesRouter.put('/bank/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
   const url = 'http://localhost:8080/institution/' + req.params['id'];

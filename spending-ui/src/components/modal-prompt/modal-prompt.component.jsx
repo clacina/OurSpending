@@ -18,7 +18,6 @@ const ModalPromptComponent = ({entity_id, content, closeHandler, title, prompt_t
     }
 
     function updateContent(event) {
-        console.log(event);
         setNewContent(event.target.value);
     }
 
