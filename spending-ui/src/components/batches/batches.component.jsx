@@ -5,6 +5,7 @@ import {useNavigate} from "react-router-dom";
 import "react-contexify/dist/ReactContexify.css";
 import TableBaseComponent from '../table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
+import './batches.component.styles.css';
 
 const BatchesComponent = () => {
     const {batches, setSectionTitle} = useContext(StaticDataContext);
@@ -33,11 +34,13 @@ const BatchesComponent = () => {
 
     if(isLoaded) {
         return (
-            <TableBaseComponent columns={columns}
-                                data={batches}
-                                keyField='id'
-                                double_click_handler={double_click_handler}
-                                />
+            <div id='batches_container'>
+                <TableBaseComponent columns={columns}
+                                    data={batches}
+                                    keyField='id'
+                                    double_click_handler={double_click_handler}
+                                    />
+            </div>
         )
     }
 }

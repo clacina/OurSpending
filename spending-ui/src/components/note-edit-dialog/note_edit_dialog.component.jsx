@@ -7,7 +7,7 @@ import {footer} from "./note_edit_dialog.component.styles.jsx";
 const NoteEditDialog = ({closeHandler, entity}) => {
     const notesRef = useRef(entity.notes);
     const [isOpen, setIsOpen] = useState(true);
-    console.log("Transaction: ", entity);
+    console.log("Entity: ", entity);
 
     const customStyles = {
         content: {

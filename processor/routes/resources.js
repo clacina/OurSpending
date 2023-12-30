@@ -17,6 +17,28 @@ resourcesRouter.get('/banks', function(req, res, next) {
   });
 });
 
+resourcesRouter.put('/bank/:id', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/institution/' + req.params['id'];
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.put(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
 resourcesRouter.get('/data_definitions', function(req, res, next) {
   const url = 'http://localhost:8080/transactions_descriptions';
 
@@ -66,6 +88,49 @@ resourcesRouter.get('/processed_batches', function(req, res, next) {
     res.send(body);
   });
 });
+
+resourcesRouter.post('/processed_batch/:id', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/processed_batch/' + req.params['id'];
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.post(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
+resourcesRouter.get('/processed_batch/:id', async function(req, res, next) {
+  req.accepts('application/json');
+  const url = 'http://localhost:8080/processed_batch/' + req.params['id'];
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.get(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
 
 resourcesRouter.get('/qualifiers', function(req, res, next) {
   const url = 'http://localhost:8080/qualifiers';
@@ -177,6 +242,20 @@ resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
     res.send(body);
   });
 });
+
+
+resourcesRouter.get('/transactions/:batch_id/:institution_id', function(req, res, next) {
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&institution_id=" + institution_id + "&limit=1000";
+  console.log("URL: ", url);
+
+  request(url, (error, response, body) => {
+    console.debug("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
+
 
 resourcesRouter.get('/processed_transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
@@ -324,6 +403,28 @@ resourcesRouter.post('/transaction/:id/notes', async function(req, res, next) {
   }
 });
 
+resourcesRouter.put('/transaction/:id/notes', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.body);
+  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/notes';
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.put(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    // console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
 // --------------------------------- Transaction Category ------------------------------
 
 resourcesRouter.put('/transaction/:id/category', async function(req, res, next) {
@@ -345,6 +446,19 @@ resourcesRouter.put('/transaction/:id/category', async function(req, res, next) 
     console.log("Got Error: ", e);
     res.status(422).send("Invalid Parameters");
   }
+});
+
+resourcesRouter.get('/saved_filters', function(req, res, next) {
+  const url = 'http://localhost:8080/saved_filters';
+
+  request(url, (error, response, body) => {
+    console.debug("Sending back: ", body);
+    console.log("Request errors: ", error);
+
+    // Loop through each template and fill in details??
+
+    res.send(body);
+  });
 });
 
 

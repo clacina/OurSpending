@@ -118,3 +118,19 @@ class TransactionDescriptionModel(BaseModel):
     data_id: Optional[str]
     is_description: bool
     is_amount: bool
+    is_transaction_date: bool
+
+
+class SavedFilterModel(BaseModel):
+    id: int
+    name: str
+    created: datetime.datetime
+
+    institutions: Optional[List[InstitutionsModel]]
+    categories: Optional[List[CategoryModel]]
+    credit: Optional[bool]
+    tags: Optional[List[TagModel]]
+    match_all_tags: Optional[bool]
+    start_date: Optional[datetime.datetime]
+    end_date: Optional[datetime.datetime]
+    search_string: Optional[str]

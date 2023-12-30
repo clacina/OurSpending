@@ -1,11 +1,13 @@
 import moment from "moment/moment.js";
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useEffect, useRef, useState} from "react";
 import {useParams} from "react-router-dom";
 
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
 import {FerrisWheelSpinner} from 'react-spinner-overlay';
+import jsPDF from 'jspdf';
+
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
 import {TagsContext} from "../../contexts/tags.context";
 import {StaticDataContext} from "../../contexts/static_data.context";
@@ -15,6 +17,7 @@ import '../collapsible.scss';
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
+import {PT_TitleBlock} from "./processed-transactions.component.styles";
 
 
 const ProcessedTransactions = () => {
@@ -26,6 +29,7 @@ const ProcessedTransactions = () => {
 
     const [transactionsMap, setTransactionsMap] = useState([]);
     const [institutionGroups, setInstitutionGroups] = useState({});
+    const [batchDetails, setBatchDetails] = useState({});
 
     // Content for display
     const [entityMap, setEntityMap] = useState([]);
@@ -55,28 +59,44 @@ const ProcessedTransactions = () => {
 
     // Updated Content Flags
     const [contentUpdated, setContentUpdated] = useState(false);
+    const [transactionContentUpdated, setTransactionContentUpdated] = useState(false);
 
     const routeParams = useParams();
+    const reportTemplateRef = useRef(null);
 
     const getTransactions = async () => {
         const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
         const headers = {'Content-Type': 'application/json'}
         const method = 'GET'
         const response = await send({url}, {method}, {headers}, {});
-        console.log("Response: ", response);
         return (response);
     };
 
+    const getBatchDetails = async () => {
+        const url = 'http://localhost:8000/resources/processed_batch/' + routeParams.batch_id;
+        const headers = {'Content-Type': 'application/json'}
+        const method = 'GET'
+        const response = await send({url}, {method}, {headers}, {});
+
+        var utc = new Date(response.run_date);
+        var offset = utc.getTimezoneOffset();
+        response.run_date = new Date(utc.getTime() + offset * 60000).toDateString();
+
+        return (response);
+    }
+
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
     useEffect(() => {
-        if (transactionsMap.length === 0) {
+        if (transactionsMap.length === 0 || transactionContentUpdated) {
             console.log("UE-06")
 
             console.log("Start - getting transactions");
             getTransactions().then((res) => setTransactionsMap(res));
+            getBatchDetails().then((res) => setBatchDetails(res));
             setTransactionResourcesLoaded(true);
+            setTransactionContentUpdated(false);
         }
-    }, [transactionsMap.length]);
+    }, [transactionsMap.length, transactionContentUpdated]);
 
     useEffect(() => {
         console.log("UE-05")
@@ -184,6 +204,7 @@ const ProcessedTransactions = () => {
 
         // End Date
         if (processTransaction && endDateFilter) {
+            console.log("End Date: ", endDateFilter);
             const filterDate = moment(endDateFilter);
             const transactionDate = moment(item.transaction.transaction_date, "YYYY-MM-DD")
             processTransaction = transactionDate <= filterDate;
@@ -275,6 +296,120 @@ const ProcessedTransactions = () => {
 
     /********************************** Event Handlers ***************************************************/
 
+    const GenerateReportStyle = () => {
+        var css_string = "<style>\n";
+        css_string += "* {\n"
+        css_string += "margin: 20px\n";
+        css_string += "}\n"
+        css_string += "table: {margin: 10px}\n"
+
+        css_string += "</style>\n";
+        return css_string;
+    }
+
+    const GenerateReportHTML = () => {
+        var html_string = "<html>";
+        const style_string = GenerateReportStyle();
+        html_string += style_string;
+        html_string += "<body>"
+        categoriesMap.forEach((cat) => {
+            // only categories with templates
+            if(cat[1].length > 0 && cat[1][0].template) {
+                console.log(cat);
+                // cat[0] == category id - 2000 +
+                // cat[1] is an array of processed transactions
+                // - id, institution_id, processed_batch_id, template_id
+                // - template
+                // - - credit, hint, notes
+                // - - category
+                // - - - value, notes, is_tax_deductible
+                // - - institution
+                // - - - Name, notes, key
+                // - transaction
+                // - - amount
+                // - - category (override)
+                // - - description
+                // - - notes
+                // - - transaction_date
+                // - - tags
+                // - - transaction_data - raw input from file
+
+                var category_value = "";
+                console.log(cat[1])
+                if(cat[1][0].template && cat[1][0].template.category) {
+                    category_value = cat[1][0].template.category.value;
+                }
+                if(cat[1][0].transaction.category) {
+                    category_value = cat[1][0].transaction.category.value;
+                }
+                // iterate through cat[1]
+                html_string += `<h1>${category_value}</h1>`;
+                html_string += "\n<table border='1' style='width:100%'>";
+                html_string += "\n<thead><tr><th>Amount</th><th>Date</th><th>Description</th></tr></thead>";
+                html_string += "\n<tbody>\n";
+                cat[1].forEach((transaction) => {
+                    const transaction_amount = transaction.transaction.amount;
+                    const transaction_date = transaction.transaction.transaction_date;
+                    const description = transaction.transaction.description;
+                    html_string += `<tr><td>${transaction_amount}</td><td>${transaction_date}</td><td>${description}</td></tr>`
+                    html_string += `<tr><td colspan="3">${transaction.transaction.transaction_data}</td></tr>`
+                })
+
+                html_string += "\n</tbody>";
+                html_string += "\n</table>";
+            }
+        })
+
+        html_string += "</body></html>";
+        return html_string;
+    }
+
+    const printContent = async () => {
+        categoriesMap.map((cat) => {
+            return (cat[1].length > 0 && cat[1][0].template && <CategoryComponent
+                category={cat[1]}
+                eventHandler={viewEventHandler}/>)
+        })
+
+        if( window.showSaveFilePicker ) {
+            try {
+                const handle = await window.showSaveFilePicker();
+                console.log("Handle: ", handle);
+
+                const doc = new jsPDF({
+                    format: 'letter',
+                    unit: 'pt',
+                    orientation: "landscape"
+                });
+
+                // Adding the fonts.
+                // doc.setFont('Inter-Regular', 'normal');
+
+                // Generate our Report HTML
+                const report_data = GenerateReportHTML();
+
+                // doc.html(reportTemplateRef.current, {
+                // doc.html(report_data, {
+                //     async callback(doc) {
+                //         await doc.save(handle.name);
+                //     },
+                // });
+
+                const writable = await handle.createWritable();
+                await writable.write(report_data);
+                writable.close();
+            } catch (err) {
+                // Fail silently if the user has simply canceled the dialog.
+                if (err.name !== 'AbortError') {
+                    console.error(err.name, err.message);
+                }
+            }
+        }
+        else {
+            alert("Not available");
+        }
+    }
+
     const findTransactionRecord = (transaction_id) => {
         /*
             Search our institutionGroups data set for the matching transaction
@@ -282,7 +417,6 @@ const ProcessedTransactions = () => {
          */
         for (const [bank, transactions] of Object.entries(institutionGroups)) {
             const transaction = transactions.find((t) => t.transaction.id === transaction_id)
-            console.log("Transaction: ", transaction);
             if (transaction) {
                 return (transaction);
             }
@@ -292,7 +426,6 @@ const ProcessedTransactions = () => {
 
     const headerEventHandler = (event) => {
         console.log("PT - handlerEvent: ", event);
-        // console.log("---: ", typeof event);
         if (typeof event === "string") {
             switch (event) {
                 case 'templateview':
@@ -310,6 +443,14 @@ const ProcessedTransactions = () => {
                     break;
                 case 'matchAllCategories':
                     setMatchAllCategories(!matchAllCategories);
+                    break;
+                case 'printContent':
+                    console.log("Got print command");
+                    printContent();
+                    break;
+                case 'saveFilter':
+                    break;
+                case 'loadFilter':
                     break;
                 default:
                     console.log("Unknown string event: ", event);
@@ -330,10 +471,18 @@ const ProcessedTransactions = () => {
                 setInstitutionFilter(event['banks']);
             } else if (event.hasOwnProperty('startDate')) {
                 console.log("--Setting Start Date Filter")
-                setStartDateFilter(new Date(event['startDate']));
+                if(event['startDate']) {
+                    setStartDateFilter(new Date(event['startDate']));
+                } else {
+                    setStartDateFilter();
+                }
             } else if (event.hasOwnProperty('endDate')) {
                 console.log("--Setting End Date Filter")
-                setEndDateFilter(new Date(event['endDate']));
+                if(event['endDate']) {
+                    setEndDateFilter(new Date(event['endDate']));
+                } else {
+                    setEndDateFilter();
+                }
             } else {
                 console.error("Unknown event: ", event);
             }
@@ -359,12 +508,12 @@ const ProcessedTransactions = () => {
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
 
         const transaction = findTransactionRecord(transaction_id)
         if(transaction) {
             transaction.transaction.tags = queryTags(tag_list);
         }
+        setTransactionContentUpdated(true);
 
         setContentUpdated(true);
     }
@@ -382,11 +531,10 @@ const ProcessedTransactions = () => {
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
         const method = 'POST'
         const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
 
         // Need to refresh data and re-render
         const transaction = findTransactionRecord(transaction_id)
-        console.log("Transaction: ", transaction);
+
         if(transaction) {
             if (note) {
                 note.forEach((item) => {
@@ -401,7 +549,6 @@ const ProcessedTransactions = () => {
     }
 
     const updateCategory = async (transaction_id, category_id) => {
-        console.log("Update category: " + transaction_id + ", " + category_id);
         const body = {
             'category_id': category_id
         }
@@ -409,7 +556,6 @@ const ProcessedTransactions = () => {
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/category';
         const method = 'PUT'
         const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
 
         // Need to refresh data and re-render
         const transaction = findTransactionRecord(transaction_id)
@@ -436,7 +582,14 @@ const ProcessedTransactions = () => {
 
     return (<>
             {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div style={{ display: 'block', width: '100%', padding: 30 }}>
-
+                <PT_TitleBlock>
+                    <ul>
+                        <li>Processed Batch: {routeParams.batch_id}</li>
+                        <li>{transactionsMap.length} Transactions</li>
+                        <li>Run Date: {batchDetails.run_date}</li>
+                        <li>Notes: {batchDetails.notes}</li>
+                    </ul>
+                </PT_TitleBlock>
                 <HeaderComponent eventHandler={headerEventHandler}/>
                 <Tabs>
                     <TabList>
@@ -454,12 +607,14 @@ const ProcessedTransactions = () => {
                         })}
                     </TabPanel>
                     <TabPanel>
+                        <div ref={reportTemplateRef} >
                         {
                             categoriesMap.map((cat) => {
                             return (cat[1].length > 0 && cat[1][0].template && <CategoryComponent
                                 category={cat[1]}
                                 eventHandler={viewEventHandler}/>)
-                        })}
+                            })}
+                        </div>
                     </TabPanel>
                     <TabPanel>
                         {

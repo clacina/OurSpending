@@ -85,14 +85,13 @@ const CategoryComponent = ({category, eventHandler}) => {
     }
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 4) {  // tags column - it's a drop down
+        if (columnIndex === 4 || columnIndex === 3) {  // Notes column, tags column - it's a drop down
             e.stopPropagation();
         }
         // console.log({e, column, columnIndex, row, rowIndex})
     }
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        // console.log("Row: ", row);
         const note_list = row.transaction.notes.map((note) => {
             return(note.note + " ");
         })
@@ -111,7 +110,7 @@ const CategoryComponent = ({category, eventHandler}) => {
     }
 
     const colNoteEvent = (e, column, columnIndex, row, rowIndex) => {
-        if (columnIndex === 5) {  // Notes column
+        if (columnIndex === 4) {  // Notes column
             setActiveRow(row);
             e.preventDefault();
             e.stopPropagation();
@@ -131,13 +130,18 @@ const CategoryComponent = ({category, eventHandler}) => {
                 style: {cursor: 'pointer'}
             })
 
-            columns.push({dataField: 'template.credit', text: 'Credit', editable: false, style: {cursor: 'pointer'}
+            columns.push({dataField: 'template.credit', text: 'Credit', editable: false,
+                sort: true,
+                style: {cursor: 'pointer'}
             , formatter: columnTwoFormater})
-            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
+                sort: true,
+                style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
                 style: {cursor: 'pointer'},
                 text: 'Date',
+                sort: true,
                 editable: false
             })
             columns.push({
@@ -157,12 +161,17 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({dataField: 'transaction.id', text: '', hidden: true})
         } else {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
-            columns.push({dataField: 'transaction.institution.name', text: 'Bank', ediatable: false, style: {cursor: 'pointer'}})
-            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false, style: {cursor: 'pointer'}})
+            columns.push({dataField: 'transaction.institution.name', text: 'Bank', ediatable: false,
+                sort: true,
+                style: {cursor: 'pointer'}})
+            columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
+                sort: true,
+                style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
                 style: {cursor: 'pointer'},
                 text: 'Date',
+                sort: true,
                 editable: false
             })
             columns.push({
