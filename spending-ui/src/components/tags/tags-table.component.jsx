@@ -5,7 +5,7 @@ import "react-contexify/dist/ReactContexify.css";
 import { Row } from "react-bootstrap";
 import cellEditFactory from "react-bootstrap-table2-editor";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-import TableBaseComponent from '../table-base/table-base.component.jsx';
+import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 
 import reactCSS from 'reactcss'
 import {SwatchesPicker} from 'react-color';

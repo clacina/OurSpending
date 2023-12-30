@@ -1,10 +1,10 @@
 import {useContext, useEffect, useState} from "react";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import Dropdown from "react-dropdown";
-import Button from "../button/button-component.jsx";
+import Button from "../widgets/button/button-component.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import 'react-dropdown/style.css';
-import FormInput from "../form-input/form-input.component.jsx";
+import FormInput from "../widgets/form-input/form-input.component.jsx";
 
 /*
   {

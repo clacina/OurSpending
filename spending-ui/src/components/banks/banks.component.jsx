@@ -3,9 +3,9 @@ import {useContext, useEffect, useState} from "react";
 
 import "react-contexify/dist/ReactContexify.css";
 import { Row } from "react-bootstrap";
-import TableBaseComponent from '../table-base/table-base.component.jsx';
+import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
-import ModalPromptComponent from "../modal-prompt/modal-prompt.component";
+import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 import send from "../../utils/http_client";
 import {InstitutionsContext} from "../../contexts/banks.context";
 import './banks.component.styles.css';

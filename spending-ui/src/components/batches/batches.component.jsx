@@ -3,7 +3,7 @@ import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 import "react-contexify/dist/ReactContexify.css";
-import TableBaseComponent from '../table-base/table-base.component.jsx';
+import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
 import './batches.component.styles.css';
 

@@ -3,11 +3,11 @@ import {useContext, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
 import "react-contexify/dist/ReactContexify.css";
-import TableBaseComponent from '../table-base/table-base.component.jsx';
+import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component";
 import send from "../../utils/http_client";
-import ModalPromptComponent from "../modal-prompt/modal-prompt.component";
+import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 
 const ProcessedBatches = () => {
     const {setSectionTitle} = useContext(StaticDataContext);

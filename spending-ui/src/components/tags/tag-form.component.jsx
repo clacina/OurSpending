@@ -4,8 +4,8 @@ import {useState} from "react";
 import "react-contexify/dist/ReactContexify.css";
 import {Row, Col} from "react-bootstrap";
 
-import FormInput from "../form-input/form-input.component";
-import Button from "../button/button-component";
+import FormInput from "../widgets/form-input/form-input.component";
+import Button from "../widgets/button/button-component";
 import reactCSS from 'reactcss'
 
 import {SwatchesPicker} from 'react-color';

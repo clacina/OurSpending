@@ -4,9 +4,6 @@
  TransactionsList       grouping of transactions by institution                     transactions-list.component.jsx
     TransactionList     list of transactions for a given institution                transaction-list.component.jsx
 
-       Transaction     container for TransactionRow below - possibly redundant?     transaction.component.jsx
-          TransactionRow - row in TransactionList                                   transaction-row.component.jsx
-
  TransactionEntry - single entity edit form - NO LONGER USED                  transaction-entry.component.jsx
  *************************************************************************************/
 import TransactionList from "./transaction-list.component.jsx";
@@ -16,7 +13,7 @@ import './transactions-list.component.styles.css';
 import {TagsContext} from "../../contexts/tags.context";
 import send from "../../utils/http_client";
 import {contextMenu} from "react-contexify";
-import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component";
+import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component";
 import {StaticDataContext} from "../../contexts/static_data.context";
 
 const TransactionsList = () => {

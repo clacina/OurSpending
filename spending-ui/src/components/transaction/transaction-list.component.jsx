@@ -11,10 +11,10 @@ import paginationFactory, {
 } from 'react-bootstrap-table2-paginator';
 import send from "../../utils/http_client";
 import {contextMenu} from "react-contexify";
-import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component";
+import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component";
 import {TagsContext} from "../../contexts/tags.context";
 import assert from "assert";
-import ModalPromptComponent from "../modal-prompt/modal-prompt.component";
+import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 
 // https://flatuicolors.com/palette/fr
 

@@ -5,7 +5,7 @@ import Select from "react-select";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 
 import {TemplateContainer, TemplateCategoryDiv} from "./template.component.styles";
-import EntityList from "../entity-list/entity-list.component";
+import EntityList from "../widgets/entity-list/entity-list.component";
 
 /*
     {

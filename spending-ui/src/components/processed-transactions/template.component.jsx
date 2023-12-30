@@ -16,7 +16,7 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
-import TagSelector from "../tag-selector/tag-selector.component.jsx";
+import TagSelector from "../widgets/tag-selector/tag-selector.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {

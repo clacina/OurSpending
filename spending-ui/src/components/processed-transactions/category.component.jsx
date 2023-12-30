@@ -12,7 +12,7 @@ import "react-contexify/dist/ReactContexify.css";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
-import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
+import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component.jsx";
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 

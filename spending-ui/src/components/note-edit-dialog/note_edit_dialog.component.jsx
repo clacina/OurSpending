@@ -1,7 +1,7 @@
 import React, {useRef, useState} from "react";
 import {Col, Row} from "react-bootstrap";
 import ReactModal from "react-modal";
-import EditableList from "../editable-list/editable-list.component.jsx";
+import EditableList from "../widgets/editable-list/editable-list.component.jsx";
 import {footer} from "./note_edit_dialog.component.styles.jsx";
 
 const NoteEditDialog = ({closeHandler, entity}) => {

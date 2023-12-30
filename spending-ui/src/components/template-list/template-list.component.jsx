@@ -14,8 +14,8 @@ import React from "react";
 import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 import send from "../../utils/http_client.js";
-import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
-import ModalPromptComponent from "../modal-prompt/modal-prompt.component.jsx";
+import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component.jsx";
+import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component.jsx";
 import TemplateDetailComponent from "../template/template.component.jsx";
 
 
