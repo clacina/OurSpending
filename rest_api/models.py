@@ -118,6 +118,7 @@ class TransactionDescriptionModel(BaseModel):
     data_id: Optional[str]
     is_description: bool
     is_amount: bool
+    is_transaction_date: bool
 
 
 class SavedFilterModel(BaseModel):

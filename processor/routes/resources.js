@@ -243,6 +243,20 @@ resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
   });
 });
 
+
+resourcesRouter.get('/transactions/:batch_id/:institution_id', function(req, res, next) {
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&institution_id=" + institution_id + "&limit=1000";
+  console.log("URL: ", url);
+
+  request(url, (error, response, body) => {
+    console.debug("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
+
+
 resourcesRouter.get('/processed_transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
   const url = 'http://localhost:8080/processed_transactions?limit=1000&batch_id=' + req.params['batch_id'];
@@ -382,6 +396,28 @@ resourcesRouter.post('/transaction/:id/notes', async function(req, res, next) {
   console.log("Data: ", options);
   try {
     const data = await got.post(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    // console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
+resourcesRouter.put('/transaction/:id/notes', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.body);
+  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/notes';
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.put(url, options).json();
     res.status(200).send(data);
   } catch (e) {
     // console.log("Got Error: ", e);

@@ -181,11 +181,18 @@ class DBAccess:
             logging.exception({"message": f"Error in transaction query: {str(e)}"})
             raise e
 
-    def query_transactions_from_batch(self, batch_id, offset=0, limit=10):
+    def query_transactions_from_batch(self, batch_id, institution_id=None, offset=0, limit=10):
         sql = f"{TransactionSQl} WHERE BID=%(batch_id)s"
+
+        if institution_id:
+            sql += f"AND BANK_ID=%(institution_id)s"
+            
         sql += " ORDER BY transaction_date"
         sql += " LIMIT %(limit)s OFFSET %(offset)s"
         query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
+        if institution_id:
+            query_params["institution_id"] = institution_id
+
         cur = self.get_db_cursor()
         try:
             cur.execute(sql, query_params)
@@ -784,7 +791,7 @@ class DBAccess:
         return qid
 
     def load_transaction_data_descriptions(self):
-        sql = "SELECT id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id from transaction_data_description"
+        sql = "SELECT id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id, is_transaction_date from transaction_data_description"
         cur = self.get_db_cursor()
         try:
             cur.execute(sql)

@@ -481,9 +481,9 @@ async def update_tag(
 @router.get("/transactions",
             summary="Get list of Transactions from a given transaction Batch",
             response_model=List[models.TransactionRecordModel])
-async def get_transactions(batch_id: int, limit: int = 100, offset: int = 0):
+async def get_transactions(batch_id: int, institution_id: int = None, limit: int = 100, offset: int = 0):
     transactions = db_access.query_transactions_from_batch(
-        batch_id=batch_id, offset=offset, limit=limit
+        batch_id=batch_id, offset=offset, limit=limit, institution_id=institution_id
     )
 
     transaction_set = {}
@@ -705,7 +705,7 @@ async def reset_transaction_notes(transaction_id: int, info: Request):
     }
     """
     json_data = await info.json()
-
+    logging.info(f"Resetting note: {json_data}")
     db_access.clear_transaction_notes(transaction_id=transaction_id)
     for note in json_data:
         db_access.add_note_to_transaction(transaction_id, note['text'])
@@ -811,6 +811,7 @@ async def get_transaction_descriptions():
             is_description=row[5],
             is_amount=row[6],
             data_id=row[7],
+            is_transaction_date=row[8],
         )
         transaction_list.append(tr)
     return transaction_list
