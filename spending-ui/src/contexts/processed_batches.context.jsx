@@ -1,4 +1,5 @@
 import {createContext, useEffect, useState} from "react";
+import send from "../utils/http_client";
 
 export const ProcessedBatchesContext = createContext({
     processedBatches: [],
@@ -16,6 +17,15 @@ export const ProcessedBatchesProvider = ({children}) => {
         return(str);
     };
 
+    const updateBatchNotes = async (batch_id, note) => {
+        const body = {"notes": note}
+        const headers = {'Content-Type': 'application/json'}
+        const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
+        const method = 'POST'
+        const request = await send({url}, {method}, {headers}, {body});
+        setUpdate(true);
+    }
+
     useEffect(() => {
         try {
             getBatches().then((res) => setProcessedBatches(res));
@@ -27,7 +37,8 @@ export const ProcessedBatchesProvider = ({children}) => {
 
     const value = {
         processedBatches,
-        setUpdate
+        setUpdate,
+        updateBatchNotes
     };
     return <ProcessedBatchesContext.Provider value={value}>{children}</ProcessedBatchesContext.Provider>
 };

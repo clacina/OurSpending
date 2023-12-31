@@ -2,17 +2,15 @@ import React from "react";
 import {useContext, useEffect, useState} from "react";
 
 import "react-contexify/dist/ReactContexify.css";
-import { Row } from "react-bootstrap";
 import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
-import send from "../../utils/http_client";
 import {InstitutionsContext} from "../../contexts/banks.context";
 import './banks.component.styles.css';
 
 const BanksComponent = () => {
     const {setSectionTitle} = useContext(StaticDataContext);
-    const {institutionsMap, setUpdate} = useContext(InstitutionsContext);
+    const {institutionsMap, updateInstitution, setUpdate} = useContext(InstitutionsContext);
     const [isLoaded, setIsLoaded] = useState(false);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
@@ -32,13 +30,7 @@ const BanksComponent = () => {
     }, [institutionsMap]);
 
     const callUpdate = async (bank_id, body) => {
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/bank/' + bank_id;
-        const method = 'PUT'
-        console.log("Sending update: ", body);
-        const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
-        setUpdate(true);
+        updateInstitution(bank_id, body);
     }
 
     const updateKey = async (bank_id, value) => {
@@ -136,21 +128,52 @@ const BanksComponent = () => {
         }
     }
 
-    if(isLoaded) {
-        const columns = [];
-        columns.push({dataField: 'id', text: 'Id', sort: true})
-        columns.push({dataField: 'key', text: 'Key', sort: true, events: {
-                onClick: colEvent
-            }, style: {cursor: 'pointer'}})
-        columns.push({dataField: 'name', text: 'Name', sort: true, events: {
-                onClick: colEvent
-            }, style: {cursor: 'pointer'}})
-        columns.push({dataField: 'notes', text: 'Notes', sort: true, events: {
-                onClick: colEvent
-            }, style: {cursor: 'pointer'}})
+    const headerBackgroundColor = '#008080'
+    const columns = [];
+    columns.push({dataField: 'id', text: 'Id', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'100px',
+        },
+    })
+    columns.push({dataField: 'key', text: 'Key', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'200px',
+        },
+        events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'}})
+    columns.push({dataField: 'name', text: 'Name', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'300px',
+        },
+        events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'}})
+    columns.push({dataField: 'notes', text: 'Notes', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        events: {
+            onClick: colEvent
+        }, style: {cursor: 'pointer'}})
 
+    if(isLoaded) {
         return (
             <div id='banks_container'>
+                <p>Click any cell to edit that value.</p>
                 <TableBaseComponent columns={columns} data={institutionsMap} keyField='id'/>
                 {
                     openNotes && activeRow && <ModalPromptComponent

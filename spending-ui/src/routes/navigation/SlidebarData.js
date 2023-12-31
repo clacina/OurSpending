@@ -47,18 +47,18 @@ export const SidebarData = [
         icon: <FaIcons.FaTags />,
         cName: "nav-text"
     },
-    {
-        title: "Template Report",
-        path: "/reports/template",
-        icon: <FaIcons.FaBook />,
-        cName: "nav-text",
-    },
-    {
-        title: "Category Report",
-        path: "/reports/category",
-        icon: <FaIcons.FaBook />,
-        cName: "nav-text",
-    },
+    // {
+    //     title: "Template Report",
+    //     path: "/reports/template",
+    //     icon: <FaIcons.FaBook />,
+    //     cName: "nav-text",
+    // },
+    // {
+    //     title: "Category Report",
+    //     path: "/reports/category",
+    //     icon: <FaIcons.FaBook />,
+    //     cName: "nav-text",
+    // },
     {
         title: "Spending Chart",
         path: "/reports",

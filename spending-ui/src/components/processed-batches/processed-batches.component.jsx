@@ -5,7 +5,6 @@ import {useNavigate} from "react-router-dom";
 import "react-contexify/dist/ReactContexify.css";
 import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
-import send from "../../utils/http_client";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 import './processed-batches.component.styles.css';
 import {ProcessedBatchesContext} from "../../contexts/processed_batches.context";
@@ -19,7 +18,7 @@ const ProcessedBatches = () => {
     const [editPrompt, setEditPrompt] = useState("text")
     const [editContent, setEditContent] = useState("");
     const navigate = useNavigate();
-    const {processedBatches, setUpdate} = useContext(ProcessedBatchesContext);
+    const {processedBatches, updateBatchNotes} = useContext(ProcessedBatchesContext);
 
     useEffect(() => {
         console.log("Start");
@@ -115,17 +114,7 @@ const ProcessedBatches = () => {
     }
 
     const updateNotes = async (processedBatch_id, note) => {
-        var body = {"notes": note}
-        console.log("Updating batch: " + processedBatch_id + " with note: " + body)
-
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/processed_batch/' + processedBatch_id;
-        const method = 'POST'
-        const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
-
-        // Need to refresh data and re-render
-        setUpdate(true);
+        updateBatchNotes(processedBatch_id, note);
     }
 
     if(isLoaded) {

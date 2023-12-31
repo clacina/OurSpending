@@ -99,6 +99,7 @@ const CategoriesComponent = () => {
     if (isLoaded) {
         return (
             <div id='categoryContainer'>
+                <p>Use the fields below to create a new Category.</p>
                     <form>
                         <div id='category_form_container'>
                             <label className='category_form_label'>New Category</label>
@@ -123,6 +124,7 @@ const CategoriesComponent = () => {
                         </div>
                     </form>
                 <hr/>
+                <p>Click on any cell to edit that value.</p>
                 <TableBaseComponent
                     columns={columns}
                     data={categoriesMap}

@@ -78,7 +78,7 @@ const BatchesComponent = () => {
     if(isLoaded) {
         return (
             <div id='batches_container'>
-                <h2>Double click a batch below to see the related transactions.</h2>
+                <p>Double click a batch below to see the related transactions.</p>
                 <TableBaseComponent columns={columns}
                                     data={batches}
                                     keyField='id'

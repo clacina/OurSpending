@@ -13,9 +13,10 @@ const TagsComponent = () => {
 
     return (
         <div id='tagsPageContainer'>
+            <p>Use the fields below to create a new Tag.</p>
             <TagFormComponent/>
             <hr/>
-            <p>Click any column to edit that value.</p>
+            <p>Click any cell to edit that value.</p>
             <TagsTableComponent />
         </div>
     )
