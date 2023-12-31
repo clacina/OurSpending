@@ -5,9 +5,9 @@ import {useNavigate} from "react-router-dom";
 import "react-contexify/dist/ReactContexify.css";
 import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 import {StaticDataContext} from "../../contexts/static_data.context";
-import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component";
 import send from "../../utils/http_client";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
+import './processed-batches.component.styles.css';
 
 const ProcessedBatches = () => {
     const {setSectionTitle} = useContext(StaticDataContext);
@@ -58,6 +58,12 @@ const ProcessedBatches = () => {
         }
     }
 
+    const dateColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        var utc = new Date(row.run_date);
+        var offset = utc.getTimezoneOffset();
+        return(new Date(utc.getTime() + offset * 60000).toDateString());
+    }
+
     const closeModal = async (id, value, save_result) => {
         if (openNotes) {
             setOpenNotes(false);
@@ -68,18 +74,51 @@ const ProcessedBatches = () => {
         }
     }
 
+    const headerBackgroundColor = '#008080'
     const columns = [];
-    columns.push({dataField: 'id', text: 'Id', sort: true})
-    columns.push({dataField: 'run_date', text: 'Run Date', sort: true})
+    columns.push({dataField: 'id', text: 'Id',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'100px',
+        },
+        sort: true})
+    columns.push({dataField: 'run_date', text: 'Run Date',
+        formatter: dateColumnFormatter,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'300px',
+        },
+        sort: true})
 
     columns.push({
-        dataField: 'notes', text: 'Notes', formatter: noteColumnFormatter, events: {
+        dataField: 'notes', text: 'Notes', formatter: noteColumnFormatter,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        events: {
             onClick: colNoteEvent
         }, style: {cursor: 'pointer'}
     })
 
-    columns.push({dataField: 'transaction_batch_id', text: 'Transaction Batch Id', sort: true})
-    columns.push({dataField: 'transaction_count', text: 'Transaction Count', sort: true})
+    columns.push({dataField: 'transaction_batch_id', text: 'Transaction Batch Id',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        sort: true})
+    columns.push({dataField: 'transaction_count', text: 'Transaction Count',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        sort: true})
 
     const double_click_handler = (e, row, index) => {
         navigate('/processed_transactions/' + row.id);
@@ -101,8 +140,9 @@ const ProcessedBatches = () => {
 
     if(isLoaded) {
         return(
-            <>
-                <h2>Double click a batch below to see the related transactions.</h2>
+            <div id='processedBatchsContainer'>
+                <p>Double Click any row to access the transactions for that batch.</p>
+                <p>Click the 'Notes' column to edit that value.</p>
                 <div id='processedBatchList'>
                     <TableBaseComponent
                         columns={columns}
@@ -120,7 +160,7 @@ const ProcessedBatches = () => {
                         entity_id={activeRow.id}/>
 
                 }
-            </>
+            </div>
         )
     }
 }
