@@ -1,0 +1,33 @@
+#tagsPageContainer {
+    margin: 20px;
+}
+
+#newTagForm {
+    display: flex;
+}
+
+#newTagForm label {
+    margin-left: 10px;
+    margin-right: 20px;
+    margin-top: 10px;
+}
+
+#newTagForm input {
+    width: 300px;
+}
+
+#newTagForm Button {
+    margin-left: 20px;
+    height: 40px;
+}
+
+#currentColor {
+    height: 25px;
+    margin-top: 11px;
+    margin-right: 20px;
+}
+
+#tagPopover {
+    margin-left: 800px;
+    margin-top: 5px;
+}
