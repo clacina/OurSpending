@@ -12,6 +12,8 @@ import {TemplatesProvider} from "./contexts/templates.context.jsx";
 import {SavedFiltersProvider} from "./contexts/saved_filters_context";
 import {InstitutionsProvider} from "./contexts/banks.context";
 import {BatchesProvider} from "./contexts/batches.context";
+import {TransactionsProvider} from "./contexts/transactions.context";
+import {ProcessedBatchesProvider} from "./contexts/processed_batches.context";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -19,17 +21,21 @@ root.render(
       <BrowserRouter>
           <StaticDataProvider>
               <BatchesProvider>
-                  <CategoriesProvider>
+                  <ProcessedBatchesProvider>
                       <TagsProvider>
-                          <TemplatesProvider>
-                              <SavedFiltersProvider>
-                                  <InstitutionsProvider>
-                                    <App />
-                                  </InstitutionsProvider>
-                              </SavedFiltersProvider>
-                          </TemplatesProvider>
+                          <TransactionsProvider>
+                              <CategoriesProvider>
+                                  <TemplatesProvider>
+                                      <SavedFiltersProvider>
+                                          <InstitutionsProvider>
+                                            <App />
+                                          </InstitutionsProvider>
+                                      </SavedFiltersProvider>
+                                  </TemplatesProvider>
+                              </CategoriesProvider>
+                          </TransactionsProvider>
                       </TagsProvider>
-                  </CategoriesProvider>
+                  </ProcessedBatchesProvider>
               </BatchesProvider>
           </StaticDataProvider>
       </BrowserRouter>

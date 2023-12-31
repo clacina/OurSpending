@@ -8,38 +8,29 @@ import {StaticDataContext} from "../../contexts/static_data.context";
 import send from "../../utils/http_client";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 import './processed-batches.component.styles.css';
+import {ProcessedBatchesContext} from "../../contexts/processed_batches.context";
 
 const ProcessedBatches = () => {
     const {setSectionTitle} = useContext(StaticDataContext);
     const [isLoaded, setIsLoaded] = useState(false);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
-    const [contentUpdated, setContentUpdated] = useState(false);
-    const [processedBatches, setProcessedBatches] = useState([]);
     const [editTitle, setEditTitle] = useState("");
     const [editPrompt, setEditPrompt] = useState("text")
     const [editContent, setEditContent] = useState("");
     const navigate = useNavigate();
-
-    const getProcessedBatches = async () => {
-        const url = 'http://localhost:8000/resources/processed_batches'
-        const data = await fetch(url, { method: 'GET' })
-        var str = await data.json();
-        return(str);
-    };
+    const {processedBatches, setUpdate} = useContext(ProcessedBatchesContext);
 
     useEffect(() => {
         console.log("Start");
-        if (processedBatches.length === 0 || contentUpdated) {
+        if (processedBatches.length > 0) {
             setSectionTitle('Processed Batches');
-            getProcessedBatches().then((res) => setProcessedBatches(res));
-            setContentUpdated(false);
             setIsLoaded(true);
             console.log(processedBatches);
         } else {
             console.info("No definitions yet");
         }
-    }, [processedBatches, contentUpdated]);
+    }, [processedBatches]);
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
         return (<div>{row.notes}</div>);
@@ -50,7 +41,6 @@ const ProcessedBatches = () => {
             setActiveRow(row);
             e.preventDefault();
             e.stopPropagation();
-            // setEditColumn(1);
             setEditTitle("Notes");
             setEditPrompt("text");
             setEditContent(row.notes);
@@ -135,7 +125,7 @@ const ProcessedBatches = () => {
         console.log("Response: ", request);
 
         // Need to refresh data and re-render
-        setContentUpdated(true);
+        setUpdate(true);
     }
 
     if(isLoaded) {

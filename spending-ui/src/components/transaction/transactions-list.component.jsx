@@ -10,11 +10,9 @@ import TransactionList from "./transaction-list.component.jsx";
 import React, {useContext, useEffect, useState} from "react";
 import { useParams } from "react-router-dom";
 import './transactions-list.component.styles.css';
-import {TagsContext} from "../../contexts/tags.context";
-import send from "../../utils/http_client";
-import {contextMenu} from "react-contexify";
-import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component";
 import {StaticDataContext} from "../../contexts/static_data.context";
+import {TransactionsContext} from "../../contexts/transactions.context";
+
 
 const TransactionsList = () => {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -22,19 +20,12 @@ const TransactionsList = () => {
     const [transactionsMap, setTransactionsMap] = useState([]);
     const routeParams = useParams();
     const {setSectionTitle} = useContext(StaticDataContext);
-
-    const getTransactions = async () => {
-        const url = 'http://localhost:8000/resources/transactions/' + routeParams.batch_id;
-        const data = await fetch(url, { method: 'GET' })
-        var str = await data.json();
-        console.log("Loaded: " + str.length + " transactions");
-        return(str);
-    };
+    const {getTransactions} = useContext(TransactionsContext);
 
     useEffect(() => {
         console.log("Starting API Call...")
         console.time("Load Time");
-        getTransactions().then((res) => setTransactionsMap(res));
+        getTransactions(routeParams.batch_id).then((res) => setTransactionsMap(res));
         setSectionTitle("Transactions");
         if (transactionsMap.length !== 0) {
             // Group transactions by institution id
@@ -54,13 +45,15 @@ const TransactionsList = () => {
         }
     }, [transactionsMap.length]);
 
-
     if (isLoaded) {
         return (
             <div id='transactions_list_container'>
                 {groupingArray.map((item) => {
-                    return (<TransactionList key={item[0].institution.id} transactions={item}
-                                             institution_id={item[0].institution.id}/>);
+                    return (<TransactionList
+                                transactions={item}
+                                institution_id={item[0].institution.id}
+                                batch_id={routeParams.batch_id}
+                    />);
                 })}
             </div>
         )
