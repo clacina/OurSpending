@@ -11,23 +11,26 @@ import {BrowserRouter} from "react-router-dom";
 import {TemplatesProvider} from "./contexts/templates.context.jsx";
 import {SavedFiltersProvider} from "./contexts/saved_filters_context";
 import {InstitutionsProvider} from "./contexts/banks.context";
+import {BatchesProvider} from "./contexts/batches.context";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
       <BrowserRouter>
           <StaticDataProvider>
-              <CategoriesProvider>
-                  <TagsProvider>
-                      <TemplatesProvider>
-                          <SavedFiltersProvider>
-                              <InstitutionsProvider>
-                                <App />
-                              </InstitutionsProvider>
-                          </SavedFiltersProvider>
-                      </TemplatesProvider>
-                  </TagsProvider>
-              </CategoriesProvider>
+              <BatchesProvider>
+                  <CategoriesProvider>
+                      <TagsProvider>
+                          <TemplatesProvider>
+                              <SavedFiltersProvider>
+                                  <InstitutionsProvider>
+                                    <App />
+                                  </InstitutionsProvider>
+                              </SavedFiltersProvider>
+                          </TemplatesProvider>
+                      </TagsProvider>
+                  </CategoriesProvider>
+              </BatchesProvider>
           </StaticDataProvider>
       </BrowserRouter>
   </React.StrictMode>

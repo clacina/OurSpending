@@ -2,11 +2,9 @@ import React from "react";
 import {useContext, useEffect, useState} from "react";
 
 import "react-contexify/dist/ReactContexify.css";
-import { Row } from "react-bootstrap";
 import cellEditFactory from "react-bootstrap-table2-editor";
 import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 
-import FormInput from "../widgets/form-input/form-input.component";
 import Button from "react-bootstrap/Button";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context";
@@ -101,7 +99,6 @@ const CategoriesComponent = () => {
     if (isLoaded) {
         return (
             <div id='categoryContainer'>
-                <Row>
                     <form>
                         <div id='category_form_container'>
                             <label className='category_form_label'>New Category</label>
@@ -125,7 +122,6 @@ const CategoriesComponent = () => {
                             <Button id="addCategoryButton" onClick={handleSubmit} className="mb-md-1">Add Category</Button>
                         </div>
                     </form>
-                </Row>
                 <hr/>
                 <TableBaseComponent
                     columns={columns}
