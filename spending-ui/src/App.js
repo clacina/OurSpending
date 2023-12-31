@@ -11,7 +11,7 @@ import ProcessedBatches from "./components/processed-batches/processed-batches.c
 import ProcessedTransactions from "./components/processed-transactions/processed-transactions.component";
 import Reports from "./components/reports/reports.component.jsx";
 import TagsComponent from "./components/tags/tags.component";
-import TemplateList from "./components/template-list/template-list.component";
+import TemplateList from "./components/templates/template-list.component";
 import TransactionsList from "./components/transaction/transactions-list.component.jsx";
 
 // Setup Logger

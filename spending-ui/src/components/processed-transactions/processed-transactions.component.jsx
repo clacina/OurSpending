@@ -137,7 +137,7 @@ const ProcessedTransactions = () => {
     }
 
     useEffect(() => {
-        //  Populate our two data sets - one organized by template, the other organized by category
+        //  Populate our two data sets - one organized by templates, the other organized by category
         //  - Apply any / all filters inside the two grouping routines.
 
         // This is triggered when setInstitutionGroups() is called
@@ -230,7 +230,7 @@ const ProcessedTransactions = () => {
         // Categories
         if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
             processTransaction = false;
-            // check entity level category first.  If it exists use it over the template category
+            // check entity level category first.  If it exists use it over the templates category
             // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
                 categoriesFilter.forEach((cat_id) => {
@@ -319,7 +319,7 @@ const ProcessedTransactions = () => {
                 // cat[0] == category id - 2000 +
                 // cat[1] is an array of processed transactions
                 // - id, institution_id, processed_batch_id, template_id
-                // - template
+                // - templates
                 // - - credit, hint, notes
                 // - - category
                 // - - - value, notes, is_tax_deductible

@@ -16,8 +16,8 @@ import "react-contexify/dist/ReactContexify.css";
 import send from "../../utils/http_client.js";
 import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component.jsx";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component.jsx";
-import TemplateDetailComponent from "../template/template.component.jsx";
-
+import TemplateDetailComponent from "./template.component.jsx";
+import './template-list.component.styles.css';
 
 const TemplateList = () => {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -206,13 +206,35 @@ const TemplateList = () => {
     }
 
     // Setup Columns
+    const headerBackgroundColor = '#008080'
     const columns = [];
-    columns.push({dataField: 'id', text: 'Id', sort: true});
-    columns.push({dataField: 'hint', text: 'Hint', sort: true, events: {
+    columns.push({dataField: 'id', text: 'Id', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'100px',
+        }
+    });
+    columns.push({dataField: 'hint', text: 'Hint', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        events: {
             onClick: colEvent
         }, style: {cursor: 'pointer'}
     });
-    columns.push({dataField: 'credit', text: 'Credit', sort: true, events: {
+    columns.push({dataField: 'credit', text: 'Credit', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'100px',
+        },
+        events: {
         onClick: colEvent
         }, style: {cursor: 'pointer'}
     });
@@ -220,24 +242,51 @@ const TemplateList = () => {
         dataField: 'entity.tags',
         text: 'Tags',
         formatter: tagColumnFormatter,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
         events: {
             onClick: colEvent
         },
         style: {cursor: 'pointer'}
     });
-    columns.push({dataField: 'notes', text: 'Notes', events: {
+    columns.push({dataField: 'notes', text: 'Notes',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        events: {
             onClick: colEvent
         }, style: {cursor: 'pointer'}
     });
-    columns.push({dataField: 'category.value', text: 'Category', sort: true, events: {
+    columns.push({dataField: 'category.value', text: 'Category', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        events: {
             onClick: colEvent
         }, style: {cursor: 'pointer'},
     });
-    columns.push({dataField: 'institution.name', text: 'Bank', sort: true, events: {
+    columns.push({dataField: 'institution.name', text: 'Bank', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        events: {
             onClick: colEvent
         }, style: {cursor: 'pointer'},
     });
-    columns.push({dataField: 'category.is_tax_deductible', text: 'Tax Deductible', sort: true, events: {
+    columns.push({dataField: 'category.is_tax_deductible', text: 'Tax Deductible', sort: true,
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'100px',
+        },
+        events: {
             onClick: colEvent
         }, style: {cursor: 'pointer'},
     });
@@ -253,7 +302,9 @@ const TemplateList = () => {
 
     if (isLoaded) {
         return (
-            <div>
+            <div id='templateListContainer'>
+                <p>Click the 'Id' column to see the qualifiers for a given template.</p>
+                <p>Click any other column to edit that value.</p>
                 <BootstrapTable
                     keyField='id'
                     data={templateList}
