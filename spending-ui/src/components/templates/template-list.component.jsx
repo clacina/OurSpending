@@ -13,7 +13,6 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import React from "react";
 import { contextMenu, Item, Menu, Separator, Submenu } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
-import send from "../../utils/http_client.js";
 import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component.jsx";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component.jsx";
 import TemplateDetailComponent from "./template.component.jsx";
@@ -29,7 +28,7 @@ const TemplateList = () => {
     const [editContent, setEditContent] = useState("");
 
     const {setSectionTitle} = useContext(StaticDataContext);
-    const {templatesMap, setUpdate} = useContext(TemplatesContext);
+    const {templatesMap, setUpdate, updateTemplate} = useContext(TemplatesContext);
     const {tagsMap} = useContext(TagsContext);
 
     useEffect(() => {
@@ -50,13 +49,7 @@ const TemplateList = () => {
 
     //------------------------------ Server Callback ------------------------
     const callUpdate = async (template_id, body) => {
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/template/' + template_id;
-        const method = 'PATCH'
-        console.log("Sending update: ", body);
-        const request = await send({url}, {method}, {headers}, {body});
-        console.log("Response: ", request);
-        setUpdate(true);
+        updateTemplate(template_id, body);
     }
 
     const updateTags = async (template_id, tag_list) => {

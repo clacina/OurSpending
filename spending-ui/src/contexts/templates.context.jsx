@@ -1,4 +1,5 @@
 import {createContext, useEffect, useState} from "react";
+import send from "../utils/http_client";
 
 export const TemplatesContext = createContext({
     templates: [],
@@ -17,6 +18,17 @@ export const TemplatesProvider = ({children}) => {
         return(str);
     };
 
+    const updateTemplate = async (template_id, body) => {
+        const headers = {'Content-Type': 'application/json'}
+        const url = 'http://localhost:8000/resources/template/' + template_id;
+        const method = 'PATCH'
+        console.log("Sending update: ", body);
+        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Response: ", request);
+        setUpdate(true);
+    }
+
+
     useEffect(() => {
         try {
             getTemplates().then((res) => setTemplatesMap(res));
@@ -25,6 +37,6 @@ export const TemplatesProvider = ({children}) => {
         }
     }, [update===true]);
 
-    const value = {templatesMap, setTemplatesMap, setUpdate};
+    const value = {templatesMap, setTemplatesMap, setUpdate, updateTemplate};
     return <TemplatesContext.Provider value={value}>{children}</TemplatesContext.Provider>
 };
