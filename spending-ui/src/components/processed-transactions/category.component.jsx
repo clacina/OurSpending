@@ -118,27 +118,62 @@ const CategoryComponent = ({category, eventHandler}) => {
         }
     }
 
+    const amountColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        return((Math.round(cell * 100) / 100).toFixed(2));
+    }
+
     const generateColumns = () => {
         // console.log("Generating columns: ", isCategorized);
+        const headerBackgroundColor = '#008080'
         if(!isCategorized) {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
             columns.push({
                 dataField: 'template.hint',
-                text: 'Template',
+                text: 'Bank',
                 editable: false,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                headerAttrs: {
+                    width:'250px',
+                },
                 formatter: columnOneFormater,
                 style: {cursor: 'pointer'}
             })
 
-            columns.push({dataField: 'template.credit', text: 'Credit', editable: false,
+            columns.push({dataField: 'template.credit',
+                text: 'Description',
+                editable: false,
                 sort: true,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
                 style: {cursor: 'pointer'}
             , formatter: columnTwoFormater})
             columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
                 sort: true,
+                align: 'right',
+                headerAttrs: {
+                    width:'100px',
+                },
+                formatter: amountColumnFormatter,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
                 style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'150px',
+                },
                 style: {cursor: 'pointer'},
                 text: 'Date',
                 sort: true,
@@ -147,6 +182,14 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({
                 dataField: 'transaction.tags',
                 text: 'Tags',
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'350px',
+                },
                 formatter: tagColumnFormatter,
                 events: {
                     onClick: colEvent
@@ -156,27 +199,63 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({
                 dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
                     onClick: colNoteEvent
-                }, style: {cursor: 'pointer'}
+                },
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                style: {cursor: 'pointer'}
             })
             columns.push({dataField: 'transaction.id', text: '', hidden: true})
         } else {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
             columns.push({dataField: 'transaction.institution.name', text: 'Bank', ediatable: false,
                 sort: true,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                headerAttrs: {
+                    width:'250px',
+                },
                 style: {cursor: 'pointer'}})
             columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
                 sort: true,
+                formatter: amountColumnFormatter,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'150px',
+                },
                 style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
                 style: {cursor: 'pointer'},
                 text: 'Date',
                 sort: true,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'150px',
+                },
                 editable: false
             })
             columns.push({
                 dataField: 'transaction.tags',
                 text: 'Tags',
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                headerAttrs: {
+                    width:'450px',
+                },
                 formatter: tagColumnFormatter,
                 events: {
                     onClick: colEvent
@@ -186,7 +265,12 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({
                 dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
                     onClick: colNoteEvent
-                }, style: {cursor: 'pointer'}
+                },
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                style: {cursor: 'pointer'}
             })
             columns.push({dataField: 'transaction.id', text: '', hidden: true})
         }

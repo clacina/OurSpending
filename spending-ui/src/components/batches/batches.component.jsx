@@ -86,6 +86,12 @@ const BatchesComponent = () => {
                                     />
             </div>
         )
+    } else {
+        return(
+            <div className='messagePanel'>
+                <h1>No Batches Found</h1>
+            </div>
+        )
     }
 }
 

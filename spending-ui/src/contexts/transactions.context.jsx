@@ -56,15 +56,32 @@ export const TransactionsProvider = ({children}) => {
     }
 
     const updateTransactionNotes = async (transaction_id, note) => {
-        var body = {'note': note}
+        // var body = {'note': note}
+        var body = []
+
+        if (note) {
+            note.forEach((item) => {
+                body.push({"id": item.id, "text": item.text})
+            })
+        }
 
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
-        const method = 'PUT'
+        const method = 'POST'
         const request = await send({url}, {method}, {headers}, {body});
         setUpdate(true);
     }
 
+    const updateTransactionCategory = async (transaction_id, category_id) => {
+        const body = {
+            'category_id': category_id
+        }
+        const headers = {'Content-Type': 'application/json'}
+        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/category';
+        const method = 'PUT'
+        const request = await send({url}, {method}, {headers}, {body});
+        setUpdate(true);
+    }
 
     useEffect(() => {
         try {
@@ -76,6 +93,6 @@ export const TransactionsProvider = ({children}) => {
         }
     }, [update===true]);
 
-    const value = {getTransactions, updateTransactionNotes, updateTransactionTags};
+    const value = {getTransactions, updateTransactionNotes, updateTransactionTags, updateTransactionCategory};
     return <TransactionsContext.Provider value={value}>{children}</TransactionsContext.Provider>
 };

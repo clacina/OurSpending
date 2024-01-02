@@ -22,8 +22,8 @@ const ProcessedBatches = () => {
 
     useEffect(() => {
         console.log("Start");
+        setSectionTitle('Processed Batches');
         if (processedBatches.length > 0) {
-            setSectionTitle('Processed Batches');
             setIsLoaded(true);
             console.log(processedBatches);
         } else {
@@ -139,6 +139,13 @@ const ProcessedBatches = () => {
                         entity_id={activeRow.id}/>
 
                 }
+            </div>
+        )
+    } else {
+        return(
+            <div className='messagePanel'>
+                <h1>No Processed Batches Found</h1>
+
             </div>
         )
     }

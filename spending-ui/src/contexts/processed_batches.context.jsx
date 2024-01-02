@@ -26,6 +26,19 @@ export const ProcessedBatchesProvider = ({children}) => {
         setUpdate(true);
     }
 
+    const getBatchDetails = async (batch_id) => {
+        const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
+        const headers = {'Content-Type': 'application/json'}
+        const method = 'GET'
+        const response = await send({url}, {method}, {headers}, {});
+
+        var utc = new Date(response.run_date);
+        var offset = utc.getTimezoneOffset();
+        response.run_date = new Date(utc.getTime() + offset * 60000).toDateString();
+
+        return (response);
+    }
+
     useEffect(() => {
         try {
             getBatches().then((res) => setProcessedBatches(res));
@@ -38,7 +51,8 @@ export const ProcessedBatchesProvider = ({children}) => {
     const value = {
         processedBatches,
         setUpdate,
-        updateBatchNotes
+        updateBatchNotes,
+        getBatchDetails
     };
     return <ProcessedBatchesContext.Provider value={value}>{children}</ProcessedBatchesContext.Provider>
 };
