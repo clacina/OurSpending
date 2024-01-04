@@ -10,9 +10,11 @@ export const TransactionsContext = createContext({
 export const TransactionsProvider = ({children}) => {
     const [transactionsMap, setTransactionsMap] = useState([]);
     const [update, setUpdate] = useState(true);
+    const [currentBatchId, setCurrentBatchId] = useState();
     const {addTag} = useContext(TagsContext);
 
     const getTransactions = async (batch_id) => {
+        setCurrentBatchId(batch_id);
         const url = 'http://localhost:8000/resources/transactions/' + batch_id
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
@@ -58,10 +60,16 @@ export const TransactionsProvider = ({children}) => {
     const updateTransactionNotes = async (transaction_id, note) => {
         // var body = {'note': note}
         var body = []
-
+        console.log("updateTransactionNotes: ", note);
         if (note) {
             note.forEach((item) => {
-                body.push({"id": item.id, "text": item.text})
+                console.log(item);
+                if(typeof item === "string") {
+                    console.log("--Note is string, not object")
+                    body.push({"text": item})
+                } else {
+                    body.push({"id": item.id, "text": item.text})
+                }
             })
         }
 
@@ -86,7 +94,7 @@ export const TransactionsProvider = ({children}) => {
     useEffect(() => {
         try {
             console.log("TransactionsContext - loading Transactions");
-            getTransactions().then((res) => setTransactionsMap(res));
+            getTransactions(currentBatchId).then((res) => setTransactionsMap(res));
             setUpdate(false);
         } catch (e) {
             console.log("Error fetching database content: ", e);

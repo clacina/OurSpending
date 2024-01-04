@@ -9,7 +9,6 @@ import {FerrisWheelSpinner} from 'react-spinner-overlay';
 import jsPDF from 'jspdf';
 
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
-import {TagsContext} from "../../contexts/tags.context";
 import {StaticDataContext} from "../../contexts/static_data.context";
 import {TransactionsContext} from "../../contexts/transactions.context";
 
@@ -25,7 +24,6 @@ import {ProcessedBatchesContext} from "../../contexts/processed_batches.context"
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
-    const {addTag, queryTags} = useContext(TagsContext);
     const {setSectionTitle} = useContext(StaticDataContext);
     const {getTransactions} = useContext(ProcessedTransactionsContext);
     const {getBatchDetails} = useContext(ProcessedBatchesContext);

@@ -11,7 +11,7 @@ const Home = () => {
 
     return(
         <div className='HomePageContainer'>
-            <img src='IMG_2089.jpg' alt='Flowers'/>
+            <img src='dragon_2024.jpg' alt='Flowers'/>
         </div>
     )
 }

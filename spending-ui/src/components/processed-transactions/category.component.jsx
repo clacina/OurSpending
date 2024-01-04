@@ -11,10 +11,10 @@ import "react-contexify/dist/ReactContexify.css";
 
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
 import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component.jsx";
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
+import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component";
 
 
 const CategoryComponent = ({category, eventHandler}) => {
@@ -24,8 +24,10 @@ const CategoryComponent = ({category, eventHandler}) => {
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
     const [isCategorized, setIsCategorized] = useState(true);
-    console.log("cat: ", category);
-    console.log("temp: ", category[0].template_id)
+    const [editContent, setEditContent] = useState([]);
+
+    // console.log("cat: ", category);
+    // console.log("temp: ", category[0].template_id)
     // console.log("trans: ", category[0])
 
     // Define table columns
@@ -62,7 +64,6 @@ const CategoryComponent = ({category, eventHandler}) => {
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Taglist: ", typeof tag_list);
         eventHandler({
             'updateTags': {
                 'transaction_id': transaction_id,
@@ -286,7 +287,6 @@ const CategoryComponent = ({category, eventHandler}) => {
     };
 
     const assignCategoryToTransaction = (event) => {
-        console.log("assignCategoryToTransaction: ", event);
         eventHandler({
             "updateCategory": {
                 "transaction_id": activeRow.transaction.id,

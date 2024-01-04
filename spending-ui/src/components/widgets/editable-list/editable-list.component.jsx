@@ -44,25 +44,29 @@ const Item = ({
 
 const EditableList = ({entity}) => {
     const [todos, setTodos] = useState([]);
+    const [currentEdit, setCurrentEdit] = useState("");
     const inputRef = useRef();
 
     useEffect(() => {
         const ourNotes = entity.current.map((note) => {
             return ({"id": note.id, "text": note.note})
         })
-        setTodos(ourNotes)
+        setTodos(ourNotes);
+        inputRef.current.focus();
     }, [entity])
 
     const handleKeyPress = (e) => {
         if (e.key === "Enter") {
             if(e.target.value.length) {
-                console.log("Enter Key:, ", e.target.value);
                 const newList = [...todos, {text: e.target.value, id: Date.now()}];
                 setTodos(newList);
                 entity.current = newList
-                console.log('New list: ', entity.current);
                 inputRef.current.value = "";
+                setCurrentEdit("");
+                inputRef.current.focus();
             }
+        } else {
+            setCurrentEdit(e.target.value);
         }
     };
 
@@ -79,7 +83,6 @@ const EditableList = ({entity}) => {
             if (e.id === id) {
                 e.text = text;
             }
-
             return e;
         });
 
@@ -89,7 +92,9 @@ const EditableList = ({entity}) => {
 
     return (
         <div className="EdiableList">
-            <input type="text" onKeyPress={handleKeyPress} ref={inputRef} />
+            <input type="text"
+                   onChange={handleKeyPress}
+                   ref={inputRef} />
             {todos.map((e) => (
                 <Item
                     {...e}

@@ -1,22 +1,11 @@
 import React, {useRef, useState} from "react";
-import {Col, Row} from "react-bootstrap";
-import ReactModal from "react-modal";
 import EditableList from "../widgets/editable-list/editable-list.component.jsx";
-import {footer} from "./note_edit_dialog.component.styles.jsx";
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
 
 const NoteEditDialog = ({closeHandler, entity}) => {
     const notesRef = useRef(entity.notes);
     const [isOpen, setIsOpen] = useState(true);
-    console.log("Entity: ", entity);
-
-    const customStyles = {
-        content: {
-            top: '100px',
-            left: '200px',
-            width: '400px',
-            height: '300px'
-        },
-    };
 
     const assignNote = () => {
         closeHandler(notesRef.current);
@@ -29,28 +18,22 @@ const NoteEditDialog = ({closeHandler, entity}) => {
 
     return (
         <div>
-            <ReactModal
-                isOpen={isOpen}
-                onRequestClose={cancelNote}
-                shouldCloseOnOverlayClick={true}
-                style={customStyles}
-            >
-                <Row>
-                    <h2>Manage Notes</h2>
-                </Row>
-                <Row>
+            <Modal show={isOpen} onHide={cancelNote}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Transaction Notes</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
                     <EditableList entity={notesRef}/>
-                </Row>
-                <Row className={footer}>
-                    <Col>
-                        <button onClick={assignNote}>Done</button>
-                    </Col>
-                    <Col>
-                        <button onClick={cancelNote}>Cancel</button>
-                    </Col>
-                </Row>
-            </ReactModal>
-
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={cancelNote}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={assignNote}>
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     )
 }
