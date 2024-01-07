@@ -90,13 +90,21 @@ CREATE TABLE template_tags
     unique (template_id, tag_id)
 );
 
-
 DROP TABLE IF EXISTS transaction_batch CASCADE;
 CREATE TABLE transaction_batch
 (
     id       SERIAL PRIMARY KEY,
     run_date TIMESTAMP NOT NULL DEFAULT NOW(),
     notes    TEXT
+);
+
+DROP TABLE IF EXISTS transaction_batch_contents CASCADE;
+CREATE TABLE transaction_batch_contents
+(
+    id              SERIAL PRIMARY KEY,
+    filename        TEXT,
+    institution_id  INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
+    batch_id        INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL
 );
 
 DROP TABLE IF EXISTS transaction_records CASCADE;

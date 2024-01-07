@@ -8,7 +8,6 @@ import data_processing.db_utils as db_utils
 """ -------------------------- Entry Point ----------------------------- """
 
 
-
 class ConfigurationData:
     def __init__(self):
         self.institution_id = None
@@ -23,17 +22,17 @@ class DataManager:
         self.conn = conn
 
         # Lookup Tables
-        self.categories = db_utils.db_access.load_categories()
-        self.tags = db_utils.db_access.load_tags()
-        self.qualifiers = db_utils.db_access.load_qualifiers()
+        # self.categories = db_utils.db_access.load_categories()
+        # self.tags = db_utils.db_access.load_tags()
+        # self.qualifiers = db_utils.db_access.load_qualifiers()
 
         # Data
-        self.entity_tags = db_utils.load_template_tags()
-        self.entity_qualifiers = db_utils.load_template_qualifiers()
-        self.institutions = db_utils.db_access.load_institutions()
-        self.templates = db_utils.load_templates()
-
-        self.populate_entities()
+        # self.entity_tags = db_utils.load_template_tags()
+        # self.entity_qualifiers = db_utils.load_template_qualifiers()
+        # self.institutions = db_utils.db_access.load_institutions()
+        # self.templates = db_utils.load_templates()
+        #
+        # self.populate_entities()
 
     def populate_entities(self):
         for entry in self.templates:
