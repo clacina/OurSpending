@@ -394,20 +394,6 @@ const ProcessedTransactions = () => {
         }
     }
 
-    const findTransactionRecord = (transaction_id) => {
-        /*
-            Search our institutionGroups data set for the matching transaction
-            NOTE: Not efficient without knowing the bank id
-         */
-        for (const [bank, transactions] of Object.entries(institutionGroups)) {
-            const transaction = transactions.find((t) => t.transaction.id === transaction_id)
-            if (transaction) {
-                return (transaction);
-            }
-        }
-        return null;
-    }
-
     const headerEventHandler = (event) => {
         console.log("PT - handlerEvent: ", event);
         if (typeof event === "string") {

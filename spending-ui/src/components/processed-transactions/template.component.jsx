@@ -75,7 +75,10 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
             const workingTemplate = templatesMap.find((i) => Number(i.id) === Number(templateId));
             var title = "Template Transactions"
             if (workingTemplate) {
-                title = `${workingTemplate.hint} - Template Id: ${templateId}, ${transactions.length} Transactions (${workingTemplate.category.value} )`;
+                title = `${workingTemplate.hint} - Template Id: ${templateId}, ${trans.length} Transactions (${workingTemplate.category.value} )`;
+                if(workingTemplate.credit) {
+                    console.log("Found credit template: ", workingTemplate.hint);
+                }
             }
             setTitle(title);
 
