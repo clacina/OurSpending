@@ -16,7 +16,7 @@ import {TemplatesContext} from "../../contexts/templates.context.jsx";
 
 
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
-import TagSelector from "../tag-selector/tag-selector.component.jsx";
+import TagSelector from "../widgets/tag-selector/tag-selector.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
 
 const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
@@ -75,7 +75,10 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
             const workingTemplate = templatesMap.find((i) => Number(i.id) === Number(templateId));
             var title = "Template Transactions"
             if (workingTemplate) {
-                title = `${workingTemplate.hint} - Template Id: ${templateId}, ${transactions.length} Transactions (${workingTemplate.category.value} )`;
+                title = `${workingTemplate.hint} - Template Id: ${templateId}, ${trans.length} Transactions (${workingTemplate.category.value} )`;
+                if(workingTemplate.credit) {
+                    console.log("Found credit template: ", workingTemplate.hint);
+                }
             }
             setTitle(title);
 

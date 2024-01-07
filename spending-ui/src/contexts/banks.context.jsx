@@ -1,4 +1,5 @@
 import {createContext, useEffect, useState} from "react";
+import send from "../utils/http_client";
 
 export const InstitutionsContext = createContext({
     institutions: [],
@@ -16,11 +17,21 @@ export const InstitutionsProvider = ({children}) => {
         return(str);
     };
 
+    const updateInstitution = async (bank_id, body) => {
+        const headers = {'Content-Type': 'application/json'}
+        const url = 'http://localhost:8000/resources/bank/' + bank_id;
+        const method = 'PUT'
+        console.log("Sending update: ", body);
+        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Response: ", request);
+        setUpdate(true);
+    }
+
     useEffect(() => {
         getInstitutions().then((res) => setInstitutionsMap(res));
         setUpdate(false);
     }, [update===true]);
 
-    const value = {institutionsMap, setInstitutionsMap, setUpdate};
+    const value = {institutionsMap, setInstitutionsMap, setUpdate, updateInstitution};
     return <InstitutionsContext.Provider value={value}>{children}</InstitutionsContext.Provider>
 };

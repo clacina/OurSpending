@@ -70,11 +70,14 @@ export const TagsProvider = ({children}) => {
         return tagColors[randomIndex];
     }
 
-    const addTag = async (value) => {
+    const addTag = async (value, notes=null, color=null) => {
+        if(color === null) {
+            color = getRandomColor();
+        }
         const body = {
             'value': value,
-            'notes': '',
-            'color': getRandomColor(),
+            'notes': notes,
+            'color': color,
         }
         const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/tags';
@@ -83,6 +86,22 @@ export const TagsProvider = ({children}) => {
         console.log("New tag: ", request);
         setUpdate(true);
         return(request.id);
+    }
+
+    const updateTag = async(id, value, notes, color) => {
+        const requestOptions = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                "value": value,
+                "notes": notes ? notes : '',
+                "color": color
+            })
+        };
+        const url = 'http://localhost:8000/resources/tags/' + id;
+        const response = await fetch(url, requestOptions);
+        const str = await response.json();
+        console.log("Response: ", str);
     }
 
     const queryTags = (tag_list) => {
@@ -107,6 +126,6 @@ export const TagsProvider = ({children}) => {
         }
     }, [update===true]);
 
-    const value = {tagsMap, setTagsMap, addTag, queryTags};
+    const value = {tagsMap, setTagsMap, addTag, queryTags, updateTag};
     return <TagsContext.Provider value={value}>{children}</TagsContext.Provider>
 };

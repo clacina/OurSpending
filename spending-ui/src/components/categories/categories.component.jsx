@@ -2,17 +2,17 @@ import React from "react";
 import {useContext, useEffect, useState} from "react";
 
 import "react-contexify/dist/ReactContexify.css";
-import { Row } from "react-bootstrap";
 import cellEditFactory from "react-bootstrap-table2-editor";
-import TableBaseComponent from '../table-base/table-base.component.jsx';
+import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 
-import FormInput from "../form-input/form-input.component";
-import Button from "../button/button-component";
+import Button from "react-bootstrap/Button";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context";
 
+import './categories.component.styles.css';
+
 const CategoriesComponent = () => {
-    const {categoriesMap} = useContext(CategoriesContext);
+    const {categoriesMap, addCategory, updateCategory} = useContext(CategoriesContext);
     const {setSectionTitle} = useContext(StaticDataContext);
     const [isLoaded, setIsLoaded] = useState(false);
     const [newEntry, setNewEntry] = useState("");
@@ -23,10 +23,46 @@ const CategoriesComponent = () => {
         setNewNotes("");
     }
 
+    const headerBackgroundColor = '#008080'
     const columns = [];
-    columns.push({dataField: 'id', text: 'Id', sort: true})
-    columns.push({dataField: 'value', text: 'Value', sort: true})
-    columns.push({dataField: 'notes', text: 'Note', sort: false})
+    columns.push(
+        {
+            dataField: 'id',
+            text: 'Id',
+            sort: true,
+            headerStyle: {
+                backgroundColor: headerBackgroundColor,
+                color: 'white'
+            },
+            headerAttrs: {
+                width:'100px',
+            }
+        })
+    columns.push(
+        {
+            dataField: 'value',
+            text: 'Category Name',
+            sort: true,
+            headerStyle: {
+                backgroundColor: headerBackgroundColor,
+                color: 'white'
+            },
+            headerAttrs: {
+                width:'600px',
+            },
+            style: {cursor: 'pointer'}
+        })
+    columns.push(
+        {
+            dataField: 'notes',
+            text: 'Notes',
+            sort: false,
+            headerStyle: {
+                backgroundColor: headerBackgroundColor,
+                color: 'white'
+            },
+            style: {cursor: 'pointer'}
+        })
 
     useEffect(() => {
         console.log("Start");
@@ -41,23 +77,7 @@ const CategoriesComponent = () => {
     const cellEdit = cellEditFactory({
         mode: 'click',
         afterSaveCell: async (oldValue, newValue, row, column) => {
-            console.log("Category Cell ", [oldValue, newValue, row, column]);
-            // newValue is entire string to set
-            // row is our data row.id == category id
-            // colum == row.dataField == column data field
-
-            const requestOptions = {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    "value": row.value,
-                    "notes": row.notes
-                })
-            };
-            const url = 'http://localhost:8000/resources/categories/' + row.id;
-            const response = await fetch(url, requestOptions);
-            const str = await response.json();
-            console.log("Response: ", str);
+            updateCategory(row.id, row.value, row.notes);
         }
     })
 
@@ -72,59 +92,45 @@ const CategoriesComponent = () => {
 
     async function handleSubmit(event) {
         event.preventDefault();  // don't have form clear screen
-        console.log("handleSubmit: ", event);
-        console.log("Adding new entry: ", newEntry);
-        const requestOptions = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "value": newEntry,
-                "notes": newNotes
-            })
-        };
-
-        const url = 'http://localhost:8000/resources/categories';
-        const response = await fetch(url, requestOptions);
-        const str = await response.json();
-        console.log("Response: ", str);
+        addCategory(newEntry, newNotes);
         resetFormFields();
     }
 
     if (isLoaded) {
         return (
-            <div>
-                <Row>
-                    <h1>Categories</h1>
-                </Row>
-                <Row>
-                    <form onSubmit={handleSubmit}>
-                        <FormInput
-                            label='New Value'
-                            type='text'
-                            required
-                            onChange={handleChange}
-                            name="newEntry"
-                            value={newEntry}
-                        />
-                        <FormInput
-                            label='Notes'
-                            type='text'
-                            required
-                            onChange={handleChange}
-                            name="newNotes"
-                            value={newNotes}
-                        />
-                        <Button type='submit' id='signup submit'>Add</Button>
+            <div id='categoryContainer'>
+                <p>Use the fields below to create a new Category.</p>
+                    <form>
+                        <div id='category_form_container'>
+                            <label className='category_form_label'>New Category</label>
+                            <input
+                                type='text'
+                                id='newEntry'
+                                required
+                                onChange={handleChange}
+                                name="newEntry"
+                                value={newEntry}
+                            />
+                            <label className='category_form_label'>Notes</label>
+                            <input
+                                type='text'
+                                required
+                                id='newNotes'
+                                onChange={handleChange}
+                                name="newNotes"
+                                value={newNotes}
+                            />
+                            <Button id="addCategoryButton" onClick={handleSubmit} className="mb-md-1">Add Category</Button>
+                        </div>
                     </form>
-                </Row>
-                <Row>
-                    <TableBaseComponent
-                        columns={columns}
-                        data={categoriesMap}
-                        keyField='id'
-                        cellEdit={cellEdit}
-                    />
-                </Row>
+                <hr/>
+                <p>Click on any cell to edit that value.</p>
+                <TableBaseComponent
+                    columns={columns}
+                    data={categoriesMap}
+                    keyField='id'
+                    cellEdit={cellEdit}
+                />
             </div>
         )
     }

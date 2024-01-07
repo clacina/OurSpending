@@ -1,0 +1,27 @@
+#categoryContainer {
+    margin: 20px;
+}
+
+#newEntry {
+    width: 300px;
+    margin-left: 10px;
+}
+
+#newNotes {
+    width: 500px;
+    margin-left: 10px;
+}
+
+#category_form_container {
+    display: flex;
+}
+
+#addCategoryButton {
+    height: 45px;
+    margin-left: 20px;
+}
+
+.category_form_label {
+    margin-top: 10px;
+    margin-left: 10px;
+}

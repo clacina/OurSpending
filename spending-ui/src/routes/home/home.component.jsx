@@ -1,5 +1,6 @@
 import {useContext, useEffect} from "react";
 import {StaticDataContext} from "../../contexts/static_data.context";
+import './home.component.styles.css';
 
 const Home = () => {
     const {setSectionTitle} = useContext(StaticDataContext);
@@ -9,7 +10,8 @@ const Home = () => {
     }, []);
 
     return(
-        <div>
+        <div className='HomePageContainer'>
+            <img src='dragon_2024.jpg' alt='Flowers'/>
         </div>
     )
 }

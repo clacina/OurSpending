@@ -11,23 +11,35 @@ import {BrowserRouter} from "react-router-dom";
 import {TemplatesProvider} from "./contexts/templates.context.jsx";
 import {SavedFiltersProvider} from "./contexts/saved_filters_context";
 import {InstitutionsProvider} from "./contexts/banks.context";
+import {BatchesProvider} from "./contexts/batches.context";
+import {TransactionsProvider} from "./contexts/transactions.context";
+import {ProcessedBatchesProvider} from "./contexts/processed_batches.context";
+import {ProcessedTransactionsProvider} from "./contexts/processed_transactions.context";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
       <BrowserRouter>
           <StaticDataProvider>
-              <CategoriesProvider>
-                  <TagsProvider>
-                      <TemplatesProvider>
-                          <SavedFiltersProvider>
-                              <InstitutionsProvider>
-                                <App />
-                              </InstitutionsProvider>
-                          </SavedFiltersProvider>
-                      </TemplatesProvider>
-                  </TagsProvider>
-              </CategoriesProvider>
+              <BatchesProvider>
+                  <ProcessedBatchesProvider>
+                      <ProcessedTransactionsProvider>
+                          <TagsProvider>
+                              <TransactionsProvider>
+                                  <CategoriesProvider>
+                                      <TemplatesProvider>
+                                          <SavedFiltersProvider>
+                                              <InstitutionsProvider>
+                                                <App />
+                                              </InstitutionsProvider>
+                                          </SavedFiltersProvider>
+                                      </TemplatesProvider>
+                                  </CategoriesProvider>
+                              </TransactionsProvider>
+                          </TagsProvider>
+                      </ProcessedTransactionsProvider>
+                  </ProcessedBatchesProvider>
+              </BatchesProvider>
           </StaticDataProvider>
       </BrowserRouter>
   </React.StrictMode>

@@ -2,16 +2,15 @@ import React from "react";
 import {useContext, useState} from "react";
 
 import "react-contexify/dist/ReactContexify.css";
-import { Row } from "react-bootstrap";
 import cellEditFactory from "react-bootstrap-table2-editor";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-import TableBaseComponent from '../table-base/table-base.component.jsx';
+import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 
 import reactCSS from 'reactcss'
 import {SwatchesPicker} from 'react-color';
 
 const TagsTableComponent = () => {
-    const {tagsMap, setTagsMap} = useContext(TagsContext);
+    const {tagsMap, setTagsMap, updateTag} = useContext(TagsContext);
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [selectedTag, setSelectedTag] = useState();
 
@@ -19,19 +18,7 @@ const TagsTableComponent = () => {
     const cellEdit = cellEditFactory({
         mode: 'click',
         afterSaveCell: async (oldValue, newValue, row, column) => {
-            const requestOptions = {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    "value": row.value,
-                    "notes": row.notes ? row.notes : '',
-                    "color": row.color
-                })
-            };
-            const url = 'http://localhost:8000/resources/tags/' + row.id;
-            const response = await fetch(url, requestOptions);
-            const str = await response.json();
-            console.log("Response: ", str);
+            updateTag(row.id, row.value, row.notes, row.color);
         }
     })
 
@@ -45,35 +32,20 @@ const TagsTableComponent = () => {
             return (item.id === selectedTag);
         });
 
-        const requestOptions = {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "value": updatedTag.value,
-                "notes": updatedTag.notes ? updatedTag.notes : "",
-                "color": color.hex
-            })
-        };
-        const url = 'http://localhost:8000/resources/tags/' + selectedTag;
-        const response = await fetch(url, requestOptions);
-        const str = await response.json();
-        console.log("Response: ", str);
+        updateTag(selectedTag, updatedTag.value, updatedTag.notes, color.hex);
         setTagsMap(newMap);
     };
 
     const handleColorClick = () => {
-        console.log("ColorClick")
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
-        console.log("ColorClose")
         setShowColorPicker(false);
         setSelectedTag(null);
     }
 
     const handleColorChangeComplete = (color, event) => {
-        console.log("ColorComplete")
         setShowColorPicker(false);
     }
 
@@ -82,7 +54,7 @@ const TagsTableComponent = () => {
         const styles = reactCSS({
             'default': {
                 color: {
-                    width: '36px',
+                    width: '150px',
                     height: '14px',
                     borderRadius: '2px',
                     background: `${ row.color }`,
@@ -131,7 +103,6 @@ const TagsTableComponent = () => {
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         if (columnIndex === 3) {  // tags column - it's a drop down
             e.stopPropagation();
-            console.log('tags-table', "Setting selected tag: ", row.id);
             setSelectedTag(row.id);
         }
 
@@ -141,15 +112,41 @@ const TagsTableComponent = () => {
     }
 
     // Create column definitions for display table
+    const headerBackgroundColor = '#008080'
     const columns = [];
-    columns.push({dataField: 'id', text: 'Id', sort: true})
-    columns.push({dataField: 'value', text: 'Value', sort: true})
-    columns.push({dataField: 'notes', text: 'Note', sort: false})
+    columns.push({dataField: 'id', text: 'Id',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'100px',
+        },
+        sort: true})
+    columns.push({dataField: 'value', text: 'Value',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        sort: true})
+    columns.push({dataField: 'notes', text: 'Notes',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        sort: false})
     columns.push({
         dataField: 'color',
         editable: false,
         // isDummyField: true,
         text: 'Display Color',
+        headerStyle: {
+            backgroundColor: headerBackgroundColor,
+            color: 'white'
+        },
+        headerAttrs: {
+            width:'200px',
+        },
         formatter: tagColumnFormatter,
         events: {
             onClick: colEvent
@@ -157,16 +154,13 @@ const TagsTableComponent = () => {
     })
 
     // --------------------------- Render ----------------------------------------
-    console.log("Render");
     return (
-        <Row>
-            <TableBaseComponent
-                columns={columns}
-                data={tagsMap}
-                keyField='id'
-                cellEdit={cellEdit}
-            />
-        </Row>
+        <TableBaseComponent
+            columns={columns}
+            data={tagsMap}
+            keyField='id'
+            cellEdit={cellEdit}
+        />
     )
 }
 

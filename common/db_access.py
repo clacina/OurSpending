@@ -197,7 +197,7 @@ class DBAccess:
         try:
             cur.execute(sql, query_params)
             result = cur.fetchall()
-            logging.info(f"Fetched transactions: {result}")
+            # logging.info(f"Fetched transactions: {result}")
             return result
         except Exception as e:
             logging.exception({"message": f"Error in transaction query: {str(e)}"})
@@ -494,7 +494,7 @@ class DBAccess:
             cur.execute(sql, query_params)
             rows = cur.fetchall()
             logging.info(f"Returned {len(rows)} matching records.")
-            logging.info(f"Rows: {rows}")
+            # logging.info(f"Rows: {rows}")
             return rows
         except Exception as e:
             logging.exception(f"Error loading Template {template_id}: {str(e)}")
@@ -557,8 +557,6 @@ class DBAccess:
         assert conn
         try:
             cur = conn.cursor()
-            mog = cur.mogrify(sql, query_params)
-            logging.info(f"MOG: {mog}")
             cur.execute(sql, query_params)
             conn.commit()
         except Exception as e:

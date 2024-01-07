@@ -28,6 +28,8 @@ const TagSelectorForCategories = ({tagsMap, entity, onChange, canCreate=false}) 
                 onChange={changeTag}
                 closeMenuOnSelect={true}
                 defaultValue={assigned}
+                key={assigned}
+                hasValue={assigned !== null}
                 isMulti
                 options={tagColourOptions}
                 onCreateOption={handleCreate}
@@ -44,7 +46,6 @@ const TagSelectorForCategories = ({tagsMap, entity, onChange, canCreate=false}) 
                 defaultValue={assigned}
                 isMulti
                 options={tagColourOptions}
-                // onCreateOption={handleCreate}
                 styles={colourStyles}
                 menuPortalTarget={document.body}
                 menuPosition={'fixed'}

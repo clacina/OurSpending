@@ -67,12 +67,15 @@ export const BuildOptions = (tagsMap, entity) => {
         tagColourOptions.push(tagOption);
     });
 
-    const assigned = []
+    var assigned = []
     entity.tags.forEach((tag) => {
         assigned.push(tagColourOptions.find((item) => {
             return (item['value'] === tag.id)
         }))
     })
+    if(assigned.length === 0) {
+        assigned = null;
+    }
 
     return {tagColourOptions, assigned};
 }

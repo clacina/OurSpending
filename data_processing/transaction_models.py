@@ -43,15 +43,15 @@ class CapitalOneTransaction(BaseTransaction):
         self.date = data[0]
         self.date_posted = data[1]
         self.card_no = data[2]
-        self.debit = float(data[5]) if data[5] != '' else None
-        self.credit = float(data[6]) if data[6] != '' else None
+        self.debit = abs(float(data[5])) if data[5] != '' else None
+        self.credit = abs(float(data[6])) if data[6] != '' else None
         self.category = data[4]
         self.description = data[3]
 
     def normalize_data(self):
         self.amount = self.credit
-        if self.debit:
-            self.amount = 0.0 - self.debit
+        # if self.debit:
+        #     self.amount = 0.0 - self.debit
 
 
 class ChaseTransaction(BaseTransaction):
@@ -72,7 +72,7 @@ class ChaseTransaction(BaseTransaction):
         self.description = data[2]
         self.category = data[3]
         self.type = data[4]
-        self.amount = float(data[5].strip())
+        self.amount = abs(float(data[5].strip()))
         self.memo = data[6]
 
     def normalize_data(self):
@@ -89,7 +89,7 @@ class HomeDepotTransaction(BaseTransaction):
         assert len(data) == 4
         self.raw = data
         self.date = data[0].strip()
-        self.amount = float(data[1].strip()[1:])
+        self.amount = abs(float(data[1].strip()[1:]))
         self.info = data[2].strip()
         self.type = data[3].strip()
 
@@ -199,7 +199,7 @@ class SoundAccountsBaseTransaction(BaseTransaction):
         self.date = data[0]
         self.description = data[1]
         self.original_description = data[2]
-        self.amount = float(data[3])
+        self.amount = abs(float(data[3]))
         self.transaction_type = data[4]
         self.category = data[5]
         self.account_name = data[6]
@@ -252,7 +252,7 @@ class WellsCheckingTransaction(BaseTransaction):
     def parse_json(self, data):
         self.raw = data
         self.date = data[0]
-        self.amount = float(data[1])
+        self.amount = abs(float(data[1]))
         self.action = data[2]
         self.check_number = data[3]
         self.description = data[4]
@@ -307,7 +307,7 @@ class AmazonTransaction(BaseTransaction):
         self.Unit_Price_Tax = data[6]
         self.Shipping_Charge = data[7]
         self.Total_Discounts = data[8]
-        self.Total_Owed = data[9]
+        self.Total_Owed = abs(data[9])
         self.Shipment_Item_Subtotal = data[10]
         self.Shipment_plus_Item_Subtotal_Tax = data[11]
         self.ASIN = data[12]

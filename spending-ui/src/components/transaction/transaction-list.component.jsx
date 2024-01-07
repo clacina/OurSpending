@@ -9,18 +9,19 @@ import paginationFactory, {
     PaginationTotalStandalone,
     SizePerPageDropdownStandalone
 } from 'react-bootstrap-table2-paginator';
-import send from "../../utils/http_client";
-import {contextMenu} from "react-contexify";
-import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component";
+import {contextMenu, Item, Menu, Separator, Submenu} from "react-contexify";
+import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component";
 import {TagsContext} from "../../contexts/tags.context";
 import assert from "assert";
-import ModalPromptComponent from "../modal-prompt/modal-prompt.component";
+import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
+import {TransactionsContext} from "../../contexts/transactions.context";
 
 // https://flatuicolors.com/palette/fr
 
-const TransactionList = ({institution_id, transactions}) => {
+const TransactionList = ({institution_id, transactions, batch_id}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions, institutions} = useContext(StaticDataContext);
+    const {updateTransactionNotes, updateTransactionTags} = useContext(TransactionsContext);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
     const [editColumn, setEditColumn] = useState(-1);
@@ -32,7 +33,7 @@ const TransactionList = ({institution_id, transactions}) => {
     const [contentUpdated, setContentUpdated] = useState(false);
     const [transactionContentUpdated, setTransactionContentUpdated] = useState(false);
 
-    const {tagsMap, addTag} = useContext(TagsContext);
+    const {tagsMap} = useContext(TagsContext);
 
     useEffect(() => {
         if(transactionDataDefinitions.length !== 0 && institutions.length !== 0) {
@@ -46,7 +47,7 @@ const TransactionList = ({institution_id, transactions}) => {
         } else {
             console.info("No definitions yet");
         }
-    }, [transactionDataDefinitions.length, institutions.length]);
+    }, [transactionDataDefinitions.length, institutions.length, institutions]);
 
     const generateColumns = () => {
         //-------------- Configure our table -----------------------------
@@ -134,7 +135,7 @@ const TransactionList = ({institution_id, transactions}) => {
         // Add Tags and Notes columns
 
         cols.push({
-            dataField: 'entity.tags', text: 'Tags',
+            dataField: 'transaction.tags', text: 'Tags',
             sort: true,
             editable: false,
             resize: true,
@@ -171,36 +172,13 @@ const TransactionList = ({institution_id, transactions}) => {
     }
 
     const updateTags = async (transaction_id, tag_list) => {
-        // event contains an array of active entries in the select
-        var body = []
-
-        if(typeof tag_list === "string") {  // creating a new tag
-            // Have TagContext handle adding the new tag to the system
-            const newTagId = await addTag(tag_list);
-            body.push(newTagId);
-        } else {  // assign an existing tag
-            tag_list.forEach((item) => {
-                body.push(item.value);
-            })
-        }
-
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-
+        updateTransactionTags(transaction_id, tag_list);
         setTransactionContentUpdated(true);
         setContentUpdated(true);
     }
 
     const updateNotes = async (transaction_id, note) => {
-        var body = {'note': note}
-
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-
+        updateTransactionNotes(transaction_id, note);
         setTransactionContentUpdated(true);
         setContentUpdated(true);
     }
@@ -213,16 +191,6 @@ const TransactionList = ({institution_id, transactions}) => {
             if(save_result) {
                 console.log("---Saving: ", editColumn);
                 switch(editColumn) {
-                    case 1: // hint
-                        if(value.length === 0) {
-                            alert("Cannot set the hint to an empty string.");
-                            return;
-                        }
-                        // await updateHint(id, value);
-                        break;
-                    case 2: // credit
-                        // await updateCredit(id, value);
-                        break;
                     case 4: // notes
                         await updateNotes(id, value);
                         break;
@@ -231,22 +199,6 @@ const TransactionList = ({institution_id, transactions}) => {
             }
         }
     }
-
-    const rowEvents = {
-        onContextMenu: (e, row, index) => {
-            showContext(e, row);
-        }
-    };
-
-    const showContext = (event, row) => {
-        console.log("showContext: ", event);
-        setActiveRow(row);
-        event.preventDefault();
-        contextMenu.show({
-            id: "context-menu",
-            event: event
-        });
-    };
 
     const noteColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
         const note_list = row.notes.map((note) => {
@@ -261,12 +213,13 @@ const TransactionList = ({institution_id, transactions}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        console.log("Tags: ", row);
         const entity_info = {
             id: row.id,
             tags: row.tags
         }
         return (<TagSelectorCategoryComponent
-            tagsMap={tagsMap}
+            tagsMap={tagsMap.sort(compareTags)}
             entity={entity_info}
             onChange={updateTags}
             canCreate={true}/>);
@@ -300,16 +253,48 @@ const TransactionList = ({institution_id, transactions}) => {
         }
     }
 
+    const rowEvents = {
+        onContextMenu: (e, row, index) => {
+            showContext(e, row);
+        }
+    };
+
+    const showContext = (event, row) => {
+        console.log("showContext: ", event);
+        setActiveRow(row);
+        event.preventDefault();
+        contextMenu.show({
+            id: "context-menu",
+            event: event
+        });
+    };
+
     if(isLoaded) {
         return (
             <div>
                 <h1>{ourInstitution.name}</h1>
-                    <BootstrapTable
-                        keyField='keyid'
-                        data={transactions}
-                        columns={columns}
-                        pagination={paginationFactory()}
-                    />
+                <BootstrapTable
+                    keyField='keyid'
+                    data={transactions}
+                    columns={columns}
+                    rowEvents={rowEvents}
+                    pagination={paginationFactory()}
+                />
+                <Menu id="context-menu" theme='dark'>
+                    {activeRow && (
+                        <>
+                            <Item className="text-center">Header row {activeRow.id}</Item>
+                            <Separator />
+                            {["Google", "Apple"].includes("Google") && (
+                                <Submenu label="Contact" arrow=">">
+                                    <Item>Phone</Item>
+                                    <Item>Email</Item>
+                                </Submenu>
+                            )}
+                            <Item disabled={true}>Add to Cart</Item>
+                        </>
+                    )}
+                </Menu>
                 {
                     openNotes && activeRow && <ModalPromptComponent
                         closeHandler={closeModal}

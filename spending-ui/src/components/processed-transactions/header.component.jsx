@@ -7,14 +7,14 @@ import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {SavedFiltersContext} from "../../contexts/saved_filters_context";
-import TagSelector from "../tag-selector/tag-selector.component.jsx";
+import TagSelector from "../widgets/tag-selector/tag-selector.component.jsx";
 import './header.component.styles.css';
 import Form from 'react-bootstrap/Form';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Button from "react-bootstrap/Button";
 import Collapsible from "react-collapsible";
-import ModalPromptComponent from "../modal-prompt/modal-prompt.component";
+import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 
 
 const HeaderComponent = ({eventHandler}) => {

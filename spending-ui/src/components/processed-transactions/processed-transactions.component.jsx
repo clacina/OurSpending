@@ -9,21 +9,26 @@ import {FerrisWheelSpinner} from 'react-spinner-overlay';
 import jsPDF from 'jspdf';
 
 import {TemplatesContext} from "../../contexts/templates.context.jsx";
-import {TagsContext} from "../../contexts/tags.context";
 import {StaticDataContext} from "../../contexts/static_data.context";
-import send from "../../utils/http_client.js";
+import {TransactionsContext} from "../../contexts/transactions.context";
+
 import '../collapsible.scss';
 
 import BankComponent from "./bank.component";
 import CategoryComponent from "./category.component.jsx";
 import HeaderComponent from "./header.component.jsx";
 import {PT_TitleBlock} from "./processed-transactions.component.styles";
+import {ProcessedTransactionsContext} from "../../contexts/processed_transactions.context";
+import {ProcessedBatchesContext} from "../../contexts/processed_batches.context";
 
 
 const ProcessedTransactions = () => {
     const {templatesMap} = useContext(TemplatesContext);
-    const {addTag, queryTags} = useContext(TagsContext);
     const {setSectionTitle} = useContext(StaticDataContext);
+    const {getTransactions} = useContext(ProcessedTransactionsContext);
+    const {getBatchDetails} = useContext(ProcessedBatchesContext);
+    const {updateTransactionTags, updateTransactionNotes, updateTransactionCategory} = useContext(TransactionsContext);
+
     let [templateGroups, setTemplateGroups] = useState({})
     let [categoryGroups, setCategoryGroups] = useState({})
 
@@ -64,35 +69,14 @@ const ProcessedTransactions = () => {
     const routeParams = useParams();
     const reportTemplateRef = useRef(null);
 
-    const getTransactions = async () => {
-        const url = 'http://localhost:8000/resources/processed_transactions/' + routeParams.batch_id;
-        const headers = {'Content-Type': 'application/json'}
-        const method = 'GET'
-        const response = await send({url}, {method}, {headers}, {});
-        return (response);
-    };
-
-    const getBatchDetails = async () => {
-        const url = 'http://localhost:8000/resources/processed_batch/' + routeParams.batch_id;
-        const headers = {'Content-Type': 'application/json'}
-        const method = 'GET'
-        const response = await send({url}, {method}, {headers}, {});
-
-        var utc = new Date(response.run_date);
-        var offset = utc.getTimezoneOffset();
-        response.run_date = new Date(utc.getTime() + offset * 60000).toDateString();
-
-        return (response);
-    }
-
     // -------------------- ASYNCHRONOUS LOADING ----------------------------
     useEffect(() => {
         if (transactionsMap.length === 0 || transactionContentUpdated) {
             console.log("UE-06")
 
             console.log("Start - getting transactions");
-            getTransactions().then((res) => setTransactionsMap(res));
-            getBatchDetails().then((res) => setBatchDetails(res));
+            getTransactions(routeParams.batch_id).then((res) => setTransactionsMap(res));
+            getBatchDetails(routeParams.batch_id).then((res) => setBatchDetails(res));
             setTransactionResourcesLoaded(true);
             setTransactionContentUpdated(false);
         }
@@ -137,7 +121,7 @@ const ProcessedTransactions = () => {
     }
 
     useEffect(() => {
-        //  Populate our two data sets - one organized by template, the other organized by category
+        //  Populate our two data sets - one organized by templates, the other organized by category
         //  - Apply any / all filters inside the two grouping routines.
 
         // This is triggered when setInstitutionGroups() is called
@@ -230,7 +214,7 @@ const ProcessedTransactions = () => {
         // Categories
         if (processTransaction && categoriesFilter && categoriesFilter.length > 0) {
             processTransaction = false;
-            // check entity level category first.  If it exists use it over the template category
+            // check entity level category first.  If it exists use it over the templates category
             // -- Could be we just wanted this entity grouped here
             if (item.transaction.category) {
                 categoriesFilter.forEach((cat_id) => {
@@ -319,7 +303,7 @@ const ProcessedTransactions = () => {
                 // cat[0] == category id - 2000 +
                 // cat[1] is an array of processed transactions
                 // - id, institution_id, processed_batch_id, template_id
-                // - template
+                // - templates
                 // - - credit, hint, notes
                 // - - category
                 // - - - value, notes, is_tax_deductible
@@ -410,20 +394,6 @@ const ProcessedTransactions = () => {
         }
     }
 
-    const findTransactionRecord = (transaction_id) => {
-        /*
-            Search our institutionGroups data set for the matching transaction
-            NOTE: Not efficient without knowing the bank id
-         */
-        for (const [bank, transactions] of Object.entries(institutionGroups)) {
-            const transaction = transactions.find((t) => t.transaction.id === transaction_id)
-            if (transaction) {
-                return (transaction);
-            }
-        }
-        return null;
-    }
-
     const headerEventHandler = (event) => {
         console.log("PT - handlerEvent: ", event);
         if (typeof event === "string") {
@@ -491,79 +461,15 @@ const ProcessedTransactions = () => {
 
     //------------------------------ Server Callback ------------------------
     const updateTags = async (transaction_id, tag_list) => {
-        // event contains an array of active entries in the select
-        var body = []
-
-        if(typeof tag_list === "string") {  // creating a new tag
-            // Have TagContext handle adding the new tag to the system
-            const newTagId = await addTag(tag_list);
-            body.push(newTagId);
-        } else {  // assign an existing tag
-            tag_list.forEach((item) => {
-                body.push(item.value);
-            })
-        }
-
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/tags';
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-
-        const transaction = findTransactionRecord(transaction_id)
-        if(transaction) {
-            transaction.transaction.tags = queryTags(tag_list);
-        }
-        setTransactionContentUpdated(true);
-
-        setContentUpdated(true);
+        updateTransactionTags(transaction_id, tag_list);
     }
 
     const updateNotes = async (transaction_id, note) => {
-        var body = []
-
-        if (note) {
-            note.forEach((item) => {
-                body.push({"id": item.id, "text": item.text})
-            })
-        }
-
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/notes';
-        const method = 'POST'
-        const request = await send({url}, {method}, {headers}, {body});
-
-        // Need to refresh data and re-render
-        const transaction = findTransactionRecord(transaction_id)
-
-        if(transaction) {
-            if (note) {
-                note.forEach((item) => {
-                    transaction.transaction.notes.push(item.text);
-                })
-            } else {
-                transaction.transaction.notes = [];
-            }
-        }
-
-        setContentUpdated(true);
+        updateTransactionNotes(transaction_id, note);
     }
 
     const updateCategory = async (transaction_id, category_id) => {
-        const body = {
-            'category_id': category_id
-        }
-        const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/transaction/' + transaction_id + '/category';
-        const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
-
-        // Need to refresh data and re-render
-        const transaction = findTransactionRecord(transaction_id)
-        if(transaction) {
-            transaction.transaction.category = category_id;
-        }
-
-        setContentUpdated(true);
+        updateTransactionCategory(transaction_id, category_id);
     }
 
     const viewEventHandler = (event) => {
@@ -591,6 +497,7 @@ const ProcessedTransactions = () => {
                     </ul>
                 </PT_TitleBlock>
                 <HeaderComponent eventHandler={headerEventHandler}/>
+                <p>Click on a cell to expand the transaction.  Click on the 'Notes' cell to edit that content.</p>
                 <Tabs>
                     <TabList>
                         <Tab>Template View</Tab>

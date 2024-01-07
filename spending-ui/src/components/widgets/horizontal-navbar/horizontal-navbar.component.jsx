@@ -3,8 +3,8 @@ import React, {useContext, useState} from "react";
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import {CategoriesContext} from "../../contexts/categories.context.jsx";
-import {TagsContext} from "../../contexts/tags.context.jsx";
+import {CategoriesContext} from "../../../contexts/categories.context.jsx";
+import {TagsContext} from "../../../contexts/tags.context.jsx";
 
 function HorizontalNavBar() {
     const [templateView, setTemplateView] = useState(true);

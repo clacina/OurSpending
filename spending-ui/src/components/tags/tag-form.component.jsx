@@ -1,16 +1,14 @@
-import React from "react";
+import React, {useContext} from "react";
 import {useState} from "react";
 
 import "react-contexify/dist/ReactContexify.css";
-import {Row, Col} from "react-bootstrap";
-
-import FormInput from "../form-input/form-input.component";
-import Button from "../button/button-component";
+import Button from "react-bootstrap/Button";
 import reactCSS from 'reactcss'
-
+import {TagsContext} from "../../contexts/tags.context";
 import {SwatchesPicker} from 'react-color';
 
 const TagFormComponent = () => {
+    const {addTag} = useContext(TagsContext);
     const [showColorPicker, setShowColorPicker] = useState(false);
 
     const [newEntry, setNewEntry] = useState("");
@@ -29,12 +27,10 @@ const TagFormComponent = () => {
     };
 
     const handleColorClick = () => {
-        console.log("ColorClick")
         setShowColorPicker(!showColorPicker);
     }
 
     const handleColorClose = (color) => {
-        console.log("ColorClose")
         setShowColorPicker(false);
     }
 
@@ -47,7 +43,7 @@ const TagFormComponent = () => {
     const styles = reactCSS({
         'default': {
             color: {
-                width: '36px',
+                width: '100px',
                 height: '14px',
                 borderRadius: '2px',
                 background: `${newColor}`,
@@ -89,74 +85,49 @@ const TagFormComponent = () => {
         event.preventDefault();  // don't have form clear screen
         console.log("handleSubmit: ", event);
         console.log("Adding new entry: ", newEntry);
-
-        const requestOptions = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "value": newEntry,
-                "notes": newNotes,
-                "color": newColor
-            })
-        };
-
-        const url = 'http://localhost:8000/resources/tags';
-        const response = await fetch(url, requestOptions);
-        const str = await response.json();
-        console.log("Response: ", str);
+        addTag(newEntry, newNotes, newColor);
         resetFormFields();
     }
 
     // --------------------------- Render ----------------------------------------
     return (
         <div>
-            <Row>
-                <form onSubmit={handleSubmit}>
-                    <Col>
-                        <FormInput
-                            label='New Value'
-                            type='text'
-                            required
-                            onChange={handleChange}
-                            name="newEntry"
-                            value={newEntry}
-                        />
-                    </Col>
-                    <Col>
-                        <FormInput
-                            label='Notes'
-                            type='text'
-                            required
-                            onChange={handleChange}
-                            name="newNotes"
-                            value={newNotes}
-                        />
-                    </Col>
-                    <Col>
-                        <label>Display Color</label>
-                        <div style={styles.swatch} onClick={handleColorClick}>
-                            <div style={styles.color}/>
+            <form id='newTagForm'>
+                <label>New Tag</label>
+                <input
+                    type='text'
+                    required
+                    onChange={handleChange}
+                    name="newEntry"
+                    value={newEntry}
+                />
+                <label>Notes</label>
+                <input
+                    type='text'
+                    required
+                    onChange={handleChange}
+                    name="newNotes"
+                    value={newNotes}
+                />
+                <label>Display Color</label>
+                <div id='currentColor' style={styles.swatch} onClick={handleColorClick}>
+                    <div style={styles.color}/>
+                </div>
+                <div id='tagPopover' style={styles.popover}>
+                    {
+                        showColorPicker &&
+                        <div>
+                            <div style={styles.cover} onClick={handleColorClose}/>
+                            <SwatchesPicker
+                                disableAlpha={true}
+                                color={newColor}
+                                onChangeComplete={handleColorChangeComplete}
+                                onChange={handleColorChange}/>
                         </div>
-                        <div style={styles.popover}>
-                            {
-                                showColorPicker &&
-                                <div>
-                                    <div style={styles.cover} onClick={handleColorClose}/>
-                                    <label>Color</label>
-                                    <SwatchesPicker
-                                        disableAlpha={true}
-                                        color={newColor}
-                                        onChangeComplete={handleColorChangeComplete}
-                                        onChange={handleColorChange}/>
-                                </div>
-                            }
-                        </div>
-                    </Col>
-                    <Row>
-                        <Button type='submit' id='signup submit'>Add</Button>
-                    </Row>
-                </form>
-            </Row>
+                    }
+                </div>
+                <Button onClick={handleSubmit}>Create New Tag</Button>
+            </form>
         </div>
     )
 }

@@ -14,7 +14,7 @@ import {
     FilterSelect
 } from './reports.component.styles';
 
-import TagSelector from "../tag-selector/tag-selector.component";
+import TagSelector from "../widgets/tag-selector/tag-selector.component";
 import './reports.component.styles.css';
 import DatePicker from "react-datepicker";
 import {

@@ -11,10 +11,10 @@ import "react-contexify/dist/ReactContexify.css";
 
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
-import TagSelectorCategoryComponent from "../tag-selector/tag-selector-category.component.jsx";
+import TagSelectorCategoryComponent from "../widgets/tag-selector/tag-selector-category.component.jsx";
 import CategoryTitleComponent from "./category-title.component.jsx";
 import TransactionDetailComponent from "./transaction_detail.component.jsx";
+import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component";
 
 
 const CategoryComponent = ({category, eventHandler}) => {
@@ -24,8 +24,10 @@ const CategoryComponent = ({category, eventHandler}) => {
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
     const [isCategorized, setIsCategorized] = useState(true);
-    console.log("cat: ", category);
-    console.log("temp: ", category[0].template_id)
+    const [editContent, setEditContent] = useState([]);
+
+    // console.log("cat: ", category);
+    // console.log("temp: ", category[0].template_id)
     // console.log("trans: ", category[0])
 
     // Define table columns
@@ -62,7 +64,6 @@ const CategoryComponent = ({category, eventHandler}) => {
 
     const changeTag = async (transaction_id, tag_list) => {
         // event contains an array of active entries in the select
-        console.log("Taglist: ", typeof tag_list);
         eventHandler({
             'updateTags': {
                 'transaction_id': transaction_id,
@@ -118,27 +119,62 @@ const CategoryComponent = ({category, eventHandler}) => {
         }
     }
 
+    const amountColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+        return((Math.round(cell * 100) / 100).toFixed(2));
+    }
+
     const generateColumns = () => {
         // console.log("Generating columns: ", isCategorized);
+        const headerBackgroundColor = '#008080'
         if(!isCategorized) {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
             columns.push({
                 dataField: 'template.hint',
-                text: 'Template',
+                text: 'Bank',
                 editable: false,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                headerAttrs: {
+                    width:'250px',
+                },
                 formatter: columnOneFormater,
                 style: {cursor: 'pointer'}
             })
 
-            columns.push({dataField: 'template.credit', text: 'Credit', editable: false,
+            columns.push({dataField: 'template.credit',
+                text: 'Description',
+                editable: false,
                 sort: true,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
                 style: {cursor: 'pointer'}
             , formatter: columnTwoFormater})
             columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
                 sort: true,
+                align: 'right',
+                headerAttrs: {
+                    width:'100px',
+                },
+                formatter: amountColumnFormatter,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
                 style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'150px',
+                },
                 style: {cursor: 'pointer'},
                 text: 'Date',
                 sort: true,
@@ -147,6 +183,14 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({
                 dataField: 'transaction.tags',
                 text: 'Tags',
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'350px',
+                },
                 formatter: tagColumnFormatter,
                 events: {
                     onClick: colEvent
@@ -156,27 +200,63 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({
                 dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
                     onClick: colNoteEvent
-                }, style: {cursor: 'pointer'}
+                },
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                style: {cursor: 'pointer'}
             })
             columns.push({dataField: 'transaction.id', text: '', hidden: true})
         } else {
             columns.push({dataField: 'keyid', text: '', isDummyField: true, hidden: true})
             columns.push({dataField: 'transaction.institution.name', text: 'Bank', ediatable: false,
                 sort: true,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                headerAttrs: {
+                    width:'250px',
+                },
                 style: {cursor: 'pointer'}})
             columns.push({dataField: 'transaction.amount', text: 'Amount', editable: false,
                 sort: true,
+                formatter: amountColumnFormatter,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'150px',
+                },
                 style: {cursor: 'pointer'}})
             columns.push({
                 dataField: 'transaction.transaction_date',
                 style: {cursor: 'pointer'},
                 text: 'Date',
                 sort: true,
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                align: 'right',
+                headerAttrs: {
+                    width:'150px',
+                },
                 editable: false
             })
             columns.push({
                 dataField: 'transaction.tags',
                 text: 'Tags',
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                headerAttrs: {
+                    width:'450px',
+                },
                 formatter: tagColumnFormatter,
                 events: {
                     onClick: colEvent
@@ -186,7 +266,12 @@ const CategoryComponent = ({category, eventHandler}) => {
             columns.push({
                 dataField: 'transaction.notes', text: 'Notes', formatter: noteColumnFormatter, events: {
                     onClick: colNoteEvent
-                }, style: {cursor: 'pointer'}
+                },
+                headerStyle: {
+                    backgroundColor: headerBackgroundColor,
+                    color: 'white'
+                },
+                style: {cursor: 'pointer'}
             })
             columns.push({dataField: 'transaction.id', text: '', hidden: true})
         }
@@ -202,7 +287,6 @@ const CategoryComponent = ({category, eventHandler}) => {
     };
 
     const assignCategoryToTransaction = (event) => {
-        console.log("assignCategoryToTransaction: ", event);
         eventHandler({
             "updateCategory": {
                 "transaction_id": activeRow.transaction.id,

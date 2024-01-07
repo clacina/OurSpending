@@ -708,6 +708,7 @@ async def reset_transaction_notes(transaction_id: int, info: Request):
     logging.info(f"Resetting note: {json_data}")
     db_access.clear_transaction_notes(transaction_id=transaction_id)
     for note in json_data:
+        logging.info(f"Adding note to transaction: {note}")
         db_access.add_note_to_transaction(transaction_id, note['text'])
 
     transaction = db_access.fetch_transaction(

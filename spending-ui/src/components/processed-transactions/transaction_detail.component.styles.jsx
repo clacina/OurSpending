@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {BaseButton} from '../button/button.styles.jsx'
+import {BaseButton} from '../widgets/button/button.styles.jsx'
 
 export const ItemTable = styled.table`
   border-collapse: collapse;
