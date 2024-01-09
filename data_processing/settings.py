@@ -22,17 +22,17 @@ class DataManager:
         self.conn = conn
 
         # Lookup Tables
-        # self.categories = db_utils.db_access.load_categories()
-        # self.tags = db_utils.db_access.load_tags()
-        # self.qualifiers = db_utils.db_access.load_qualifiers()
+        self.categories = db_utils.db_access.load_categories()
+        self.tags = db_utils.db_access.load_tags()
+        self.qualifiers = db_utils.db_access.load_qualifiers()
 
         # Data
-        # self.entity_tags = db_utils.load_template_tags()
-        # self.entity_qualifiers = db_utils.load_template_qualifiers()
-        # self.institutions = db_utils.db_access.load_institutions()
-        # self.templates = db_utils.load_templates()
-        #
-        # self.populate_entities()
+        self.entity_tags = db_utils.load_template_tags()
+        self.entity_qualifiers = db_utils.load_template_qualifiers()
+        self.institutions = db_utils.db_access.load_institutions()
+        self.templates = db_utils.load_templates()
+
+        self.populate_entities()
 
     def populate_entities(self):
         for entry in self.templates:
@@ -69,7 +69,7 @@ lacinaslair=# select * from institutions;
 ----+---------------+--------------------------
   1 | WLS_CHK       | Wellsfargo Checking
   2 | WLS_VISA      | Wellsfargo Visa
-  3 | CONE_VISA     | Capital One Visa
+  3 | CAP_VISA      | Capital One Visa
   4 | CH_VISA       | Chase Visa
   5 | HD            | Home Depot
   6 | PP            | PayPal

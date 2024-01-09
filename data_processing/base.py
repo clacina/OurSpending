@@ -11,8 +11,6 @@ import abc
 # import csv
 import data_processing.db_utils
 
-# import transaction_models as models
-
 
 class ProcessorBase(metaclass=abc.ABCMeta):
     def __init__(self, datafile: str, config):

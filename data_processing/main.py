@@ -1,16 +1,20 @@
+import os
+
 import db_utils
 import sys
 from typing import Optional
 from radicli import Radicli, Arg
 import settings
+from processors import select_processor_from_file
+from settings import data_mgr
 
 """ -------------------------- Entry Point ----------------------------- """
 
 debug_processors = False
-cli = Radicli()
+cli = Radicli(prog="python main.py",help="Data Load and Processing Code")
 
 
-def process_transaction_files(source: Optional[str] = "./datafiles", debug_processors: Optional[bool] = False):
+def load_transaction_files(source: Optional[str] = "./datafiles", debug_processors: Optional[bool] = False):
     """
     Create a processing batch
     :return:
@@ -43,9 +47,9 @@ def present_batch_menu_select():
     if batch_id == "q":
         sys.exit(1)
     elif batch_id == "r":  # run new batch
-        batch_id = process_transaction_files()
+        batch_id = load_transaction_files()
     elif batch_id == "d":  # run new batch
-        batch_id = process_transaction_files(debug_processors=True)
+        batch_id = load_transaction_files(debug_processors=True)
     elif batch_id == "l":  # just use last run
         batch_id = batches[-1][0]
     else:
@@ -64,7 +68,8 @@ def present_processed_batch_menu_select():
         sys.exit(1)
 
     for b in batches:
-        print(f"Batch ID: {b[0]}, Ran: {b[1].strftime('%m-%d-%Y %H:%H')}, {b[2]}, Transacion Id: {b[3]}")
+        print(f"Batch ID: {b[0]}, Ran: {b[1].strftime('%m-%d-%Y %H:%H')}, {b[2]}, Transaction Id: {b[3]}")
+
     batch_id = input(
         "Enter the batch to use (enter 'q' to exit):"
     )
@@ -83,16 +88,119 @@ def present_processed_batch_menu_select():
 # ---------------------------------- Command Line Interface Handling (CLI) ------------------------------------
 
 
-@cli.command("load", source=Arg("--source", "-s", help="Source Folder"))
-def load_datafiles(source: Optional[str]):
+def create_batch(data, notes):
+    batch_id = 0
+
+    return batch_id
+
+
+def update_batch(data, batch_id, notes):
+    pass
+
+
+from settings import ConfigurationData
+
+
+def build_config_for_institution(config, institution_id):
+    """
+    Look through main template list and filter by the specified id
+    :param config:
+    :param institution_id:
+    :return: new ConfigurationData object matching the specified id
+    """
+    new_config = ConfigurationData()
+    new_config.institution_id = institution_id
+    for e in config.templates:
+        if e.institution_id == institution_id:
+            new_config.templates.append(e)
+
+    return new_config
+
+
+def configure_processor(institution_name, datafile, processor):
+    """
+    Find the institution_id for the specified institution name, then
+    build the template config for that institution, finally create
+    the Processor object that will load the data file specified
+    :param institution_name: Name of institution - must match db entries
+    :param datafile: Datafile that will be processed - can be None
+    :param processor: Type of processor to create
+    :return: a derived object from ProcessorBase and the processor type passed
+    """
+    try:
+        inst_id = [x[0] for x in data_mgr.institutions if x[2] == institution_name][0]
+    except Exception as e:
+        print(f"Failed to find institution: {institution_name}")
+        raise e
+    inst_config = build_config_for_institution(data_mgr, inst_id)
+    inst_proc = processor(datafile, inst_config)
+    return inst_proc
+
+
+def load_source_file(datafile):
+    # Figure out which processor / institution this file represents
+    processor, institution_name = select_processor_from_file(datafile, data_mgr.institutions)
+    if processor:
+        cp = configure_processor(
+            institution_name=institution_name,
+            datafile=datafile,
+            processor=processor
+        )
+
+        return cp
+
+
+def load_sources(source, file):
+    data = []
+
+    if source:  # load folder
+        for subdir, dirs, files in os.walk(source):
+            for f in files:
+                filepath = os.path.join(subdir, f)
+                data.extend(load_source_file(filepath))
+    elif file:  # single file
+        data = load_source_file(file)
+    else:
+        print(f"Error loading sources, not source specified: {source}, {file}")
+        return None
+
+    return data
+
+
+@cli.command("load",
+             source=Arg("--source", "-s", help="Source Folder"),
+             fileentry=Arg("--file", "-f", help="Specific File"),
+             override=Arg("--override", "-o", help="Override the contents of an existing batch"),
+             notes=Arg("--notes", "-n", help="Add a note to the batch record")
+             )
+def import_datafiles(source: Optional[str] = None,
+                     fileentry: Optional[str] = None,
+                     override: Optional[int] = None,
+                     notes: Optional[str] = None):
+    """Load activity reports for processing."""
+    print(f"Got source: {source}, file: {fileentry}, override: {override}, notes: {notes}")
+    data = load_sources(source, fileentry)
+    if not override:
+        batch_id = create_batch(data, notes)
+        print(f"Batch Created: {batch_id}")
+    else:
+        update_batch(data, override, notes)
+        print(f"Updated Batch: {override}")
+
+
+# Old / Original version
+@cli.command("oldload",
+             source=Arg("--source", "-s", help="Source Folder")
+             )
+def load_datafiles(source: Optional[str] = None):
     """Load activity reports for processing."""
     print(f"Got source: {source}")
-    batch_id = process_transaction_files(source=source)
+    batch_id = load_transaction_files(source=source)
     print(f"Batch Created: {batch_id}")
 
 
 @cli.command("process", batch_id=Arg("--batch", help="Transaction Batch Id"))
-def process_a_tranaction_batch(batch_id: Optional[int] = None):
+def process_a_transaction_batch(batch_id: Optional[int] = None):
     """Analyze a loaded batch of transactions."""
     if not batch_id:
         batch_id = present_batch_menu_select()
@@ -104,3 +212,7 @@ def process_a_tranaction_batch(batch_id: Optional[int] = None):
 
     for bank in all_processors:
         bank.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
+
+
+if __name__ == "__main__":
+    cli.run()

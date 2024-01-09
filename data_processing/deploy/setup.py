@@ -45,7 +45,7 @@ if args.populate:
     db_utils.create_qualifiers(
         conn,
         entities.capitalone_entities,
-        [x[0] for x in institutions if x[1] == "CONE_VISA"][0],
+        [x[0] for x in institutions if x[1] == "CAP_VISA"][0],
     )
     db_utils.create_qualifiers(
         conn,
@@ -56,7 +56,7 @@ if args.populate:
         conn, entities.lowes_entities, [x[0] for x in institutions if x[1] == "LWS"][0]
     )
     db_utils.create_qualifiers(
-        conn, entities.paypal_entities, [x[0] for x in institutions if x[1] == "PP"][0]
+        conn, entities.paypal_entities, [x[0] for x in institutions if x[1] == "PP-Chris"][0]
     )
     db_utils.create_qualifiers(
         conn,
@@ -94,10 +94,10 @@ if args.entities:
         "CareCredit": {"id": "CC", "entries": entities.carecredit_entities},
         "Wells Checking": {"id": "WLS_CHK", "entries": entities.wells_checking_entities},
         "Wells Visa": {"id": "WLS_VISA", "entries": entities.wells_visa_entities},
-        "Capital One Visa": {"id": "CONE_VISA", "entries": entities.capitalone_entities},
+        "Capital One Visa": {"id": "CAP_VISA", "entries": entities.capitalone_entities},
         "Chase Visa": {"id": "CH_VISA", "entries": entities.chase_entities},
         "Home Depot": {"id": "HD", "entries": entities.homedepot_entities},
-        "PayPal": {"id": "PP", "entries": entities.paypal_entities},
+        "PayPal - Chris": {"id": "PP-Chris", "entries": entities.paypal_entities},
         "Lowes": {"id": "LWS", "entries": entities.lowes_entities},
         "Sound Checking - House": {
             "id": "SND_CHK_HOUSE",

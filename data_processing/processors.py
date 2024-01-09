@@ -3,6 +3,34 @@ Processors for each banking entity
 All are derived from base.ProcessorBase and store
 transactions derived from transaction_models.BaseTransaction
 
+We need a unique processor for each bank / institution so we can
+have the proper Institution name for database lookup.
+
+        self.name = "Base"
+        self.datafile = datafile
+        self.transactions = list()
+        self.config = config
+
+        # analysis output
+        self.unrecognized_transactions = list()
+        self.spending = {}
+        self.category_breakdown = {}
+
+It will also handle the different data formats accordingly using abstract functions.
+
+parse_datafile(datafile)
+    Uses CSV reader to read each line in the file and creates the associated object model
+    which is used to parse the line data.  The result is a transaction that is added to the collection.
+
+def parse_raw_data(self, dataset: list):
+    Used to parse the result of fetch_transactions_from_batch(batch_id, institution_id)
+    which are raw transaction_record rows.  Creates a list of model objects
+
+def parse_processed_data(self, dataset: list):
+    Used to parse the result of fetch_processed_transactions_from_batch(processed_batch_id, institution_id)
+    which is a list of transaction records with the processed batch id appended.
+    This replaces the existing transactions for the processor
+
 
 """
 import csv
@@ -308,92 +336,92 @@ class SoundChecking(base.ProcessorBase):
         return raw_transactions
 
 
-class SoundCheckingChrista(base.ProcessorBase):
+class SoundCheckingChrista(SoundChecking):
     def __init__(self, datafile: str, config):
         super().__init__(datafile, config)
         self.name = "Sound Checking - Christa"
 
-    def parse_datafile(self, datafile):
-        """
-        "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
-        "1/29/2023","Payments Home Banking Transfer From Share 10 TRANSFER","Payments Home Banking Transfer From Share 10 TRANSFER","50.00","credit","Transfer","SELECT VISA","",""
-        """
-        with open(datafile, "rt") as infile:
-            csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
-            for row in csv_reader:
-                data = models.SoundCheckingTransactionChrista()
-                data.parse_entry(row)
-                self.transactions.append(data)
+    # def parse_datafile(self, datafile):
+    #     """
+    #     "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
+    #     "1/29/2023","Payments Home Banking Transfer From Share 10 TRANSFER","Payments Home Banking Transfer From Share 10 TRANSFER","50.00","credit","Transfer","SELECT VISA","",""
+    #     """
+    #     with open(datafile, "rt") as infile:
+    #         csv_reader = csv.reader(infile, delimiter=",")
+    #         next(csv_reader)
+    #         for row in csv_reader:
+    #             data = models.SoundCheckingTransactionChrista()
+    #             data.parse_entry(row)
+    #             self.transactions.append(data)
+    #
+    # def parse_raw_data(self, dataset: list):
+    #     raw_transactions = list()
+    #     for row in dataset:
+    #         data = models.SoundCheckingTransactionChrista()
+    #         data.parse_json(row[3])
+    #         data.transaction_id = row[0]
+    #         data.institution_id = row[1]
+    #         data.normalize_data()
+    #         raw_transactions.append(data)
+    #
+    #     return raw_transactions
+    #
+    # def parse_processed_data(self, dataset: list):
+    #     raw_transactions = list()
+    #     for row in dataset:
+    #         data = models.SoundCheckingTransactionChrista()
+    #         data.parse_json(row[5])
+    #         data.transaction_id = row[0]
+    #         data.template_id = row[1]
+    #         data.institution_id = row[3]
+    #         data.normalize_data()
+    #         raw_transactions.append(data)
+    #
+    #     return raw_transactions
 
-    def parse_raw_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundCheckingTransactionChrista()
-            data.parse_json(row[3])
-            data.transaction_id = row[0]
-            data.institution_id = row[1]
-            data.normalize_data()
-            raw_transactions.append(data)
 
-        return raw_transactions
-
-    def parse_processed_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundCheckingTransactionChrista()
-            data.parse_json(row[5])
-            data.transaction_id = row[0]
-            data.template_id = row[1]
-            data.institution_id = row[3]
-            data.normalize_data()
-            raw_transactions.append(data)
-
-        return raw_transactions
-
-
-class SoundVisa(base.ProcessorBase):
+class SoundVisa(SoundChecking):
     def __init__(self, datafile: str, config):
         super().__init__(datafile, config)
         self.name = "Sound Visa"
 
-    def parse_datafile(self, datafile):
-        """
-        "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
-        "1/29/2023","Payments Home Banking Transfer From Share 10 TRANSFER","Payments Home Banking Transfer From Share 10 TRANSFER","50.00","credit","Transfer","SELECT VISA","",""
-        """
-        with open(datafile, "rt") as infile:
-            csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
-            for row in csv_reader:
-                data = models.SoundVisaTransaction()
-                data.parse_entry(row)
-                self.transactions.append(data)
-
-    def parse_raw_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundVisaTransaction()
-            data.parse_json(row[3])
-            data.transaction_id = row[0]
-            data.institution_id = row[1]
-            data.normalize_data()
-            raw_transactions.append(data)
-
-        return raw_transactions
-
-    def parse_processed_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundVisaTransaction()
-            data.parse_json(row[5])
-            data.transaction_id = row[0]
-            data.template_id = row[1]
-            data.institution_id = row[3]
-            data.normalize_data()
-            raw_transactions.append(data)
-
-        return raw_transactions
+    # def parse_datafile(self, datafile):
+    #     """
+    #     "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
+    #     "1/29/2023","Payments Home Banking Transfer From Share 10 TRANSFER","Payments Home Banking Transfer From Share 10 TRANSFER","50.00","credit","Transfer","SELECT VISA","",""
+    #     """
+    #     with open(datafile, "rt") as infile:
+    #         csv_reader = csv.reader(infile, delimiter=",")
+    #         next(csv_reader)
+    #         for row in csv_reader:
+    #             data = models.SoundVisaTransaction()
+    #             data.parse_entry(row)
+    #             self.transactions.append(data)
+    #
+    # def parse_raw_data(self, dataset: list):
+    #     raw_transactions = list()
+    #     for row in dataset:
+    #         data = models.SoundVisaTransaction()
+    #         data.parse_json(row[3])
+    #         data.transaction_id = row[0]
+    #         data.institution_id = row[1]
+    #         data.normalize_data()
+    #         raw_transactions.append(data)
+    #
+    #     return raw_transactions
+    #
+    # def parse_processed_data(self, dataset: list):
+    #     raw_transactions = list()
+    #     for row in dataset:
+    #         data = models.SoundVisaTransaction()
+    #         data.parse_json(row[5])
+    #         data.transaction_id = row[0]
+    #         data.template_id = row[1]
+    #         data.institution_id = row[3]
+    #         data.normalize_data()
+    #         raw_transactions.append(data)
+    #
+    #     return raw_transactions
 
 
 class WellsfargoChecking(base.ProcessorBase):
@@ -526,3 +554,47 @@ class AmazonRetail(base.ProcessorBase):
             raw_transactions.append(data)
 
         return raw_transactions
+
+
+institution_mapping = {
+    'CAP_VISA': CapitalOne,
+    'AMZN_CHRIS': AmazonRetail,
+    'AMZN_CHRISTA': AmazonRetail,
+    'CC': CareCredit,
+    'CH_VISA': Chase,
+    'HD': HomeDepot,
+    'LWS': Lowes,
+    'PP-Chris': PayPal,
+    'PP-Christa': PayPal,
+    'SND_CHK': SoundCheckingChrista,
+    'SND_CHK_HOUSE': SoundChecking,
+    'SND_VISA': SoundVisa,
+    'WLS_CHK': WellsfargoChecking,
+    'WLS_VISA': WellsfargoVisa,
+}
+
+
+def select_processor_from_file(datafile, institutions):
+    processor = None
+    institution_name = None
+    assert len(institutions), f"No institutions passed in!!"
+
+    with open(datafile, "rt") as infile:
+        line = infile.readline().lower()
+        print(f"Header for {datafile}: {line}")
+
+        if ',' not in line:
+            for i in institutions:
+                # sql = "SELECT id, key, name, notes FROM institutions order by name"
+                # parse line and figure out processor
+                if i[1].lower() in line or i[2].lower() in line:
+                    institution_name = i[2]
+                    processor = institution_mapping[i[1]]
+                    break
+            if processor is None or institution_name is None:
+                print(f"Unable to determine processor from datafile {datafile}.\n- Processor: {processor}, Name: {institution_name}")
+
+        else:  # check file name
+            print(f"File {datafile} does not contain an Institution Header")
+
+    return processor, institution_name

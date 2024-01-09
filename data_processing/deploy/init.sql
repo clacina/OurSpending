@@ -104,7 +104,9 @@ CREATE TABLE transaction_batch_contents
     id              SERIAL PRIMARY KEY,
     filename        TEXT,
     institution_id  INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
-    batch_id        INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL
+    batch_id        INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL,
+    added_date      TIMESTAMP NOT NULL DEFAULT NOW(),
+    notes           TEXT
 );
 
 DROP TABLE IF EXISTS transaction_records CASCADE;
@@ -184,17 +186,19 @@ ALTER SEQUENCE saved_filters_id_seq RESTART WITH 4000;
 -- Data
 
 INSERT INTO institutions(key, name)
-VALUES ('WLS_CHK', 'Wellsfargo Checking');
+VALUES ('WLS_CHK', 'Wells Fargo Checking');
 INSERT INTO institutions(key, name)
-VALUES ('WLS_VISA', 'Wellsfargo Visa');
+VALUES ('WLS_VISA', 'Wells Fargo Visa');
 INSERT INTO institutions(key, name)
-VALUES ('CONE_VISA', 'Capital One Visa');
+VALUES ('CAP_VISA', 'Capital One Visa');
 INSERT INTO institutions(key, name)
 VALUES ('CH_VISA', 'Chase Visa');
 INSERT INTO institutions(key, name)
 VALUES ('HD', 'Home Depot');
 INSERT INTO institutions(key, name)
-VALUES ('PP', 'PayPal');
+VALUES ('PP-Chris', 'PayPal Chris');
+INSERT INTO institutions(key, name)
+VALUES ('PP-Christa', 'PayPal Christa');
 INSERT INTO institutions(key, name)
 VALUES ('LWS', 'Lowes');
 INSERT INTO institutions(key, name)
@@ -207,6 +211,10 @@ INSERT INTO institutions(key, name)
 VALUES ('CC', 'Care Credit');
 INSERT INTO institutions(key, name)
 VALUES ('AMZN_CHRIS', 'Amazon Chris');
+INSERT INTO institutions(key, name)
+VALUES ('AMZN_CHRISTA', 'Amazon Christa');
+
+-- Categories
 
 INSERT INTO categories(value)
 VALUES ('Unknown');
@@ -268,6 +276,8 @@ INSERT INTO categories(value)
 VALUES ('Return');
 INSERT INTO categories(value)
 VALUES ('Rent');
+
+-- Tags
 
 INSERT INTO tags(value, color)
 VALUES ('Cable Addition', '#00B8D9');
