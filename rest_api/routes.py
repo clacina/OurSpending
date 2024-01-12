@@ -1159,3 +1159,36 @@ async def get_saved_filters():
         sf = models.SavedFilterModel(name=f[1], id=f[0], created=f[2], tags=tag_list)
         filter_list.append(sf)
     return filter_list
+
+
+@router.get(
+    "/batch_contents",
+    summary="Get details for all transaction batches",
+    response_model=List[models.BatchContentsModel],
+)
+async def get_batch_contents():
+    """
+    class BatchContents(BaseModel):
+    id: int
+    filename: str
+    institution_id: int
+    batch_id: int
+    added_date: datetime
+    notes: str
+    """
+    contents = db_access.load_batch_contents()
+    logging.info(f"Batch Contents: {contents}")
+
+    content_list = []
+    for f in contents:
+        # id  filename    institution_id  batch_id    added_date  notes
+        sf = models.BatchContentsModel(
+            id=f[0],
+            filename=f[1],
+            institution_id=f[2],
+            batch_id=f[3],
+            added_date=f[4],
+            notes=f[5]
+        )
+        content_list.append(sf)
+    return content_list

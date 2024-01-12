@@ -14,24 +14,25 @@ debug_processors = False
 cli = Radicli(prog="python main.py",help="Data Load and Processing Code")
 
 
-def load_transaction_files(source: Optional[str] = "./datafiles", debug_processors: Optional[bool] = False):
-    """
-    Create a processing batch
-    :return:
-    """
-    batch_id = db_utils.create_transaction_batch()
-    processors = settings.create_configs_with_data(source=source, debug_processors=debug_processors)
-    transactions_processed = 0
-    for account in processors:
-        print(f"Loading data for account: {account.name}")
-        account.process_transactions(batch_id)
-        transactions_processed += len(account.transactions)
-    db_utils.update_batch_info(
-        batch_id, f"{len(processors)} Processors, {transactions_processed} Transactions"
-    )
-    return batch_id
+# def load_transaction_files(source: Optional[str] = "./datafiles", debug_processors: Optional[bool] = False):
+#     """
+#     Create a processing batch
+#     :return:
+#     """
+#     batch_id = db_utils.create_transaction_batch()
+#     processors = settings.create_configs_with_data(source=source, debug_processors=debug_processors)
+#     transactions_processed = 0
+#     for account in processors:
+#         print(f"Loading data for account: {account.name}")
+#         account.process_transactions(batch_id)
+#         transactions_processed += len(account.transactions)
+#     db_utils.update_batch_info(
+#         batch_id, f"{len(processors)} Processors, {transactions_processed} Transactions"
+#     )
+#     return batch_id
 
 
+@cli.command("view_batches")
 def present_batch_menu_select():
     batches = db_utils.db_access.list_batches()
     if not batches:
@@ -46,18 +47,18 @@ def present_batch_menu_select():
 
     if batch_id == "q":
         sys.exit(1)
-    elif batch_id == "r":  # run new batch
-        batch_id = load_transaction_files()
-    elif batch_id == "d":  # run new batch
-        batch_id = load_transaction_files(debug_processors=True)
-    elif batch_id == "l":  # just use last run
-        batch_id = batches[-1][0]
-    else:
-        # make sure the specified batch exists
-        batch_id = int(batch_id)
-        if batch_id not in [b[0] for b in batches if b[0] == batch_id]:
-            print(f"Invalid batch id: {batch_id}")
-            sys.exit(2)
+    # elif batch_id == "r":  # run new batch
+    #     batch_id = load_transaction_files()
+    # elif batch_id == "d":  # run new batch
+    #     batch_id = load_transaction_files(debug_processors=True)
+    # elif batch_id == "l":  # just use last run
+    #     batch_id = batches[-1][0]
+    # else:
+    #     # make sure the specified batch exists
+    #     batch_id = int(batch_id)
+    #     if batch_id not in [b[0] for b in batches if b[0] == batch_id]:
+    #         print(f"Invalid batch id: {batch_id}")
+    #         sys.exit(2)
     return batch_id
 
 
@@ -89,14 +90,20 @@ def present_processed_batch_menu_select():
 
 
 def create_batch(processors, notes=None):
-    batch_id = db_utils.create_transaction_batch()
     transactions_processed = 0
+    batch_id = None
 
     for account in processors:
         print(f"Loading data for account: {account.name}")
+        if not batch_id:
+            batch_id = db_utils.create_transaction_batch()
+
         # Load processor specific transactions and write them to the batch in the database
         account.process_transactions(batch_id)
         transactions_processed += len(account.transactions)
+        db_utils.add_transaction_batch_content(filename=account.datafile,
+                                               institution_id=account.institution_id,
+                                               batch_id=batch_id, notes=notes)
 
     if not notes:
         notes = f"{len(processors)} Processors, {transactions_processed} Transactions"
@@ -140,7 +147,8 @@ def configure_processor(datafile, processor_class, institution_id):
     build the template config for that institution, finally create
     the Processor object that will load the data file specified
     :param datafile: Datafile that will be processed - can be None
-    :param processor: Type of processor to create
+    :param processor_class: String name of processor to create
+    :institution_id: Id from institutions table matching the processor type
     :return: a derived object from ProcessorBase and the processor type passed
     """
     class_ = getattr(sys.modules['data_processing.processors'], processor_class, None)
@@ -154,8 +162,12 @@ def configure_processor(datafile, processor_class, institution_id):
 
 
 def load_source_file(datafile):
+    """
+    returns: a processor with the data from the specified file loaded
+              or None if no matching processor could be found
+    """
     # Figure out which processor / institution this file represents
-    processor_class = select_processor_from_file(datafile, data_mgr.institutions)
+    processor_class = select_processor_from_file(datafile)
     if processor_class:
         # we found the processor, but we need the institution id
         institution_id = db_utils.find_institution_from_class(processor_class)
@@ -212,14 +224,14 @@ def import_datafiles(source: Optional[str] = None,
 
 
 # Old / Original version
-@cli.command("oldload",
-             source=Arg("--source", "-s", help="Source Folder")
-             )
-def load_datafiles(source: Optional[str] = None):
-    """Load activity reports for processing."""
-    print(f"Got source: {source}")
-    batch_id = load_transaction_files(source=source)
-    print(f"Batch Created: {batch_id}")
+# @cli.command("oldload",
+#              source=Arg("--source", "-s", help="Source Folder")
+#              )
+# def load_datafiles(source: Optional[str] = None):
+#     """Load activity reports for processing."""
+#     print(f"Got source: {source}")
+#     batch_id = load_transaction_files(source=source)
+#     print(f"Batch Created: {batch_id}")
 
 
 @cli.command("process", batch_id=Arg("--batch", help="Transaction Batch Id"))

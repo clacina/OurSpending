@@ -811,5 +811,21 @@ class DBAccess:
             rows = cur.fetchall()
             return rows
         except Exception as e:
-            logging.exception(f"Error saved filters: {str(e)}")
+            logging.exception(f"Error load saved filters: {str(e)}")
             raise e
+
+    def load_batch_contents(self):
+        sql = """SELECT 
+                    id, filename, institutions_id, batch_id, added_date, notes
+                 FROM transaction_batch_contents
+              """
+
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return rows
+        except Exception as e:
+            logging.exception(f"Error loading batch contents: {str(e)}")
+            raise e
+

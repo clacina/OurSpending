@@ -103,6 +103,8 @@ class HomeDepotTransaction(BaseTransaction):
 
     def normalize_data(self):
         self.description = self.type
+        # need to swap signs on the amounts
+        self.amount = 0.0 - self.amount
 
 
 class LowesTransaction(BaseTransaction):
@@ -194,28 +196,38 @@ class PayPalCCTransaction(BaseTransaction):
 class SoundAccountsBaseTransaction(BaseTransaction):
     def __init__(self):
         super().__init__()
-        self.original_description = None
-        self.transaction_type = None
-        self.category = None
-        self.account_name = None
-        self.labels = None
-        self.notes = None
+        self.transaction_number = None
+        self.date = None
+        self.description = None
+        self.memo = None
+        self.amount_debit = None
+        self.amount_credit = None
+        self.balance = None
+        self.check_number = None
+        self.fees = None
 
+    """
+    Transaction Number,Date,Description,Memo,Amount Debit,Amount Credit,Balance,Check Number,Fees  
+    "20231228000000[-8:PST]*1800.00*515**Deposit ACH SIP US LLC TYPE: DIRECT DEP ID: 9111111103 CO: SIP US LLC",12/28/2023,"Deposit ACH SIP US LLC TYPE: DIRECT DEP ID: 9111111103 CO: SIP US LLC","",,1800.00,"3793.81",,0.00
+    "20231219000000[-8:PST]*-128.23*0**Withdrawal ACH LIGHTSTREAM TYPE: LOAN PMTS ID: 1253108792 CO: LIGHTSTREAM NAME: LACINA, CHRIS",12/19/2023,"Withdrawal ACH LIGHTSTREAM TYPE: LOAN PMTS ID: 1253108792 CO: LIGHTSTREAM NAME: LACINA, CHRIS","",-128.23,,"1993.81",,0.00
+    """
     def parse_json(self, data):
         assert len(data) == 9
         self.raw = data
-        self.date = data[0]
-        self.description = data[1]
-        self.original_description = data[2]
-        self.amount = float(data[3])
-        self.transaction_type = data[4]
-        self.category = data[5]
-        self.account_name = data[6]
-        self.labels = data[7]
-        self.notes = data[8]
+        self.transaction_number = data[0]
+        self.date = data[1]
+        self.description = data[2]
+        self.memo = data[3]
+        self.amount_debit = data[4]
+        self.amount_credit = data[5]
+        self.balance = data[6]
+        self.check_number = data[7]
+        self.fees = data[8]
 
     def normalize_data(self):
-        pass
+        self.amount = self.amount_credit
+        if self.amount_debit:
+            self.amount = self.amount_debit
 
 
 class CareCreditTransaction(SoundAccountsBaseTransaction):

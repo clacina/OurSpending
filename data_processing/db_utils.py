@@ -37,16 +37,46 @@ def load_templates(institution_id: Optional[int] = -1):
     return entities
 
 
-def create_transaction_batch():
+def create_transaction_batch(notes=None):
     conn = db_access.connect_to_db()
     assert conn
-    sql = "INSERT INTO transaction_batch (notes) VALUES('test run') RETURNING id"
+    sql = "INSERT INTO transaction_batch (notes) VALUES( %(notes)s ) RETURNING id"
+    query_params = {
+        "notes": notes if notes else 'Test Run'
+    }
     cur = conn.cursor()
     try:
-        cur.execute(sql)
+        cur.execute(sql, query_params)
         conn.commit()
         result = cur.fetchone()
-        return result[0]
+        batch_id = result[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+    return batch_id
+
+
+def add_transaction_batch_content(filename, institution_id, batch_id, notes=None):
+    conn = db_access.connect_to_db()
+    assert conn
+
+    # Setup transaction_batch_contents record
+    sql = """INSERT INTO transaction_batch_contents
+            (filename, institution_id, batch_id, notes)
+            VALUES (%(filename)s, %(institution_id)s, %(batch_id)s, %(notes)s)
+    """
+
+    query_params = {
+        "filename": filename,
+        "institution_id": institution_id,
+        "batch_id": batch_id,
+        "notes": notes
+    }
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
     except Exception as e:
         print(f"Error: {str(e)}")
         raise e

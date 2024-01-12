@@ -134,3 +134,12 @@ class SavedFilterModel(BaseModel):
     start_date: Optional[datetime.datetime]
     end_date: Optional[datetime.datetime]
     search_string: Optional[str]
+
+
+class BatchContentsModel(BaseModel):
+    id: int
+    filename: str
+    institution_id: int
+    batch_id: int
+    added_date: datetime
+    notes: str

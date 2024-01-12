@@ -103,7 +103,9 @@ class CareCredit(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.CareCreditTransaction()
                 data.parse_entry(row)
@@ -147,7 +149,9 @@ class Chase(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)  # skip header row
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.ChaseTransaction()
                 data.parse_entry(row)
@@ -191,6 +195,9 @@ class HomeDepot(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.HomeDepotTransaction()
                 data.parse_entry(row)
@@ -270,7 +277,9 @@ class PayPal(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)  # skip header row
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.PayPalCCTransaction()
                 data.parse_entry(row)
@@ -304,7 +313,7 @@ class PayPal(base.ProcessorBase):
 
 
 class SoundChecking(base.ProcessorBase):
-    def __init__(self, datafile: str, config=None):
+    def __init__(self, datafile: str, name: str, config=None):
         self.name = name
         self.skip_data_rows = 4
         super().__init__(datafile, config, self.name, self.skip_data_rows)
@@ -317,7 +326,9 @@ class SoundChecking(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.SoundCheckingTransaction()
                 data.parse_entry(row)
@@ -376,7 +387,7 @@ class SoundSavings(SoundChecking):
 class WellsfargoChecking(base.ProcessorBase):
     def __init__(self, datafile: str, config=None):
         self.name = "Wellsfargo Checking"
-        self.skip_data_rows = 1
+        self.skip_data_rows = 0
         super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
@@ -386,6 +397,9 @@ class WellsfargoChecking(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.WellsCheckingTransaction()
                 data.parse_entry(row)
@@ -420,7 +434,7 @@ class WellsfargoChecking(base.ProcessorBase):
 class WellsfargoVisa(base.ProcessorBase):
     def __init__(self, datafile: str, config=None):
         self.name = "Wellsfargo Visa"
-        self.skip_data_rows = 1
+        self.skip_data_rows = 0
         super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
@@ -430,6 +444,9 @@ class WellsfargoVisa(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.WellsCheckingTransaction()
                 data.parse_entry(row)
@@ -557,15 +574,13 @@ institution_file_mapping = [
 ]
 
 
-def select_processor_from_file(datafile, institutions):
-    # assert len(institutions), f"No institutions passed in!!"
-
+def select_processor_from_file(datafile):
     file_name_check = datafile.lower()
 
     for m in institution_file_mapping:
         found_phrases = 0
         for phrase in m.terms:
-            if phrase in file_name_check:
+            if phrase.lower() in file_name_check:
                 found_phrases += 1
 
         if found_phrases == len(m.terms):

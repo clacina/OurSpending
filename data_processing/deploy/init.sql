@@ -299,6 +299,8 @@ INSERT INTO tags(value, color)
 VALUES ('Loan', '#00875A');
 INSERT INTO tags(value, color)
 VALUES ('Transfer', '#253858');
+INSERT INTO tags(value, color)
+VALUES ('Savings', '#D9C595');
 
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users
