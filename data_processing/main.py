@@ -88,14 +88,31 @@ def present_processed_batch_menu_select():
 # ---------------------------------- Command Line Interface Handling (CLI) ------------------------------------
 
 
-def create_batch(data, notes):
-    batch_id = 0
+def create_batch(processors, notes=None):
+    batch_id = db_utils.create_transaction_batch()
+    transactions_processed = 0
 
+    for account in processors:
+        print(f"Loading data for account: {account.name}")
+        # Load processor specific transactions and write them to the batch in the database
+        account.process_transactions(batch_id)
+        transactions_processed += len(account.transactions)
+
+    if not notes:
+        notes = f"{len(processors)} Processors, {transactions_processed} Transactions"
+
+    db_utils.update_batch_info(batch_id, notes)
     return batch_id
 
 
-def update_batch(data, batch_id, notes):
-    pass
+def update_batch(processors, batch_id, notes):
+    # remove any transactions from the specified batch that are from the processors id
+    for account in processors:
+        db_utils.override_batch_transactions(account.institution_id, account.transactions, batch_id)
+        account.process_transactions(batch_id)
+
+    if notes:
+        db_utils.update_batch_info(batch_id, notes)
 
 
 from settings import ConfigurationData
@@ -117,52 +134,58 @@ def build_config_for_institution(config, institution_id):
     return new_config
 
 
-def configure_processor(institution_name, datafile, processor):
+def configure_processor(datafile, processor_class, institution_id):
     """
     Find the institution_id for the specified institution name, then
     build the template config for that institution, finally create
     the Processor object that will load the data file specified
-    :param institution_name: Name of institution - must match db entries
     :param datafile: Datafile that will be processed - can be None
     :param processor: Type of processor to create
     :return: a derived object from ProcessorBase and the processor type passed
     """
-    try:
-        inst_id = [x[0] for x in data_mgr.institutions if x[2] == institution_name][0]
-    except Exception as e:
-        print(f"Failed to find institution: {institution_name}")
-        raise e
-    inst_config = build_config_for_institution(data_mgr, inst_id)
-    inst_proc = processor(datafile, inst_config)
-    return inst_proc
+    class_ = getattr(sys.modules['data_processing.processors'], processor_class, None)
+    processor = class_(datafile)
+
+    processor.institution_id = institution_id
+    inst_config = build_config_for_institution(data_mgr, processor.institution_id)
+    processor.config = inst_config
+
+    return processor
 
 
 def load_source_file(datafile):
     # Figure out which processor / institution this file represents
-    processor, institution_name = select_processor_from_file(datafile, data_mgr.institutions)
-    if processor:
+    processor_class = select_processor_from_file(datafile, data_mgr.institutions)
+    if processor_class:
+        # we found the processor, but we need the institution id
+        institution_id = db_utils.find_institution_from_class(processor_class)
         cp = configure_processor(
-            institution_name=institution_name,
             datafile=datafile,
-            processor=processor
+            processor_class=processor_class,
+            institution_id=institution_id
         )
-
         return cp
+    return None
 
 
 def load_sources(source, file):
+    """
+    Load either a source folder or a single file
+    :param source: source folder designation
+    :param file: single file path
+    :return: list of configured processors with their normalized transactions
+    """
     data = []
 
     if source:  # load folder
         for subdir, dirs, files in os.walk(source):
             for f in files:
                 filepath = os.path.join(subdir, f)
-                data.extend(load_source_file(filepath))
+                data.append(load_source_file(filepath))
     elif file:  # single file
-        data = load_source_file(file)
+        data.append(load_source_file(file))
     else:
         print(f"Error loading sources, not source specified: {source}, {file}")
-        return None
 
     return data
 
@@ -179,12 +202,12 @@ def import_datafiles(source: Optional[str] = None,
                      notes: Optional[str] = None):
     """Load activity reports for processing."""
     print(f"Got source: {source}, file: {fileentry}, override: {override}, notes: {notes}")
-    data = load_sources(source, fileentry)
+    processors = load_sources(source, fileentry)
     if not override:
-        batch_id = create_batch(data, notes)
+        batch_id = create_batch(processors, notes)
         print(f"Batch Created: {batch_id}")
     else:
-        update_batch(data, override, notes)
+        update_batch(processors, override, notes)
         print(f"Updated Batch: {override}")
 
 

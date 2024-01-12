@@ -13,11 +13,20 @@ import data_processing.db_utils
 
 
 class ProcessorBase(metaclass=abc.ABCMeta):
-    def __init__(self, datafile: str, config):
+    def __init__(self, datafile: str, config=None, name=None, skip_data_rows=None):
+        self.institution_id = None
         self.name = "Base"
+        if name:
+            self.name = name
+
         self.datafile = datafile
-        self.transactions = list()
         self.config = config
+
+        self.skip_data_rows = 1
+        if skip_data_rows:
+            self.skip_data_rows = skip_data_rows
+
+        self.transactions = list()
 
         # analysis output
         self.unrecognized_transactions = list()
@@ -97,6 +106,14 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         :return: None
         """
         transaction.template_id = template.id
+
+    # def normalize_transactions(self):
+    #     for transaction in self.transactions:
+    #         transaction.normalize_data()
+    #         transaction.institution_id = self.config.institution_id
+    #         assert (
+    #             transaction.description and len(transaction.description) > 1
+    #         ), f"Invalid entry {transaction}"
 
     def process_transactions(self, batch_id):
         """

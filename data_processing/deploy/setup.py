@@ -108,6 +108,8 @@ if args.entities:
             "entries": entities.sound_checking_entities_christa,
         },
         "Sound Visa": {"id": "SND_VISA", "entries": entities.sound_visa_entities},
+        "Sound Savings": {"id": "SND_SAVINGS", "entries": {}},
+        "PayPay - Christa": {"id": "PP-Christa", "entries": {}},
     }
 
     # Create banking Entities

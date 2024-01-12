@@ -66,6 +66,21 @@ def update_batch_info(batch_id: int, new_notes: str):
         raise e
 
 
+def find_institution_from_class(processor_class):
+    conn = db_access.connect_to_db()
+    assert conn
+    sql = "SELECT id FROM institutions where class=%(processor_class)s"
+    cur = conn.cursor()
+    query_params = {"processor_class": processor_class}
+    try:
+        cur.execute(sql, query_params)
+        row = cur.fetchone()
+        return row[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+
 def fetch_transactions_from_batch(batch_id: int, institution_id: Optional[int] = None):
     conn = db_access.connect_to_db()
     assert conn
@@ -269,3 +284,29 @@ def fetch_processed_transactions_from_batch(processed_batch_id: int, institution
         return result
     except Exception as e:
         print(f"Error: {str(e)}")
+
+
+def override_batch_transactions(institution_id, transactions, batch_id):
+    sql = """
+    DELETE FROM
+        transaction_records
+    WHERE 
+        institution_id = %(institution_id)s AND batch_id = %(batch_id)s        
+    """
+
+    query_params = {
+        "institution_id": institution_id,
+        "batch_id": batch_id
+    }
+
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+

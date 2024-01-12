@@ -50,8 +50,8 @@ class CapitalOneTransaction(BaseTransaction):
 
     def normalize_data(self):
         self.amount = self.credit
-        # if self.debit:
-        #     self.amount = 0.0 - self.debit
+        if self.debit:
+            self.amount = 0.0 - self.debit
 
 
 class ChaseTransaction(BaseTransaction):
@@ -72,11 +72,19 @@ class ChaseTransaction(BaseTransaction):
         self.description = data[2]
         self.category = data[3]
         self.type = data[4]
-        self.amount = abs(float(data[5].strip()))
+        self.amount = float(data[5].strip())
         self.memo = data[6]
 
     def normalize_data(self):
-        pass
+        """
+        Transaction Date,Post Date,     Description,   Category,                    Type,Amount,Memo
+        12/27/2023,12/28/2023,          Amazon Prime*1W0D25ML3,Bills & Utilities,   Sale,-153.04,
+        12/23/2023,12/24/2023,          AMZN Mktp US*2R4317NT3,Shopping,            Sale,-54.38,
+        12/14/2023,12/14/2023,          Payment Thank You - Web,,                   Payment,350.00,
+        12/11/2023,12/11/2023,PURCHASE INTEREST CHARGE,Fees & Adjustments,          Fee,-178.41,
+        """
+        if self.type == 'debit':
+            self.amount = 0.0 - self.amount
 
 
 class HomeDepotTransaction(BaseTransaction):
@@ -89,7 +97,7 @@ class HomeDepotTransaction(BaseTransaction):
         assert len(data) == 4
         self.raw = data
         self.date = data[0].strip()
-        self.amount = abs(float(data[1].strip()[1:]))
+        self.amount = float(data[1].strip()[1:])
         self.info = data[2].strip()
         self.type = data[3].strip()
 
@@ -199,7 +207,7 @@ class SoundAccountsBaseTransaction(BaseTransaction):
         self.date = data[0]
         self.description = data[1]
         self.original_description = data[2]
-        self.amount = abs(float(data[3]))
+        self.amount = float(data[3])
         self.transaction_type = data[4]
         self.category = data[5]
         self.account_name = data[6]
@@ -216,6 +224,15 @@ class CareCreditTransaction(SoundAccountsBaseTransaction):
 
     def parse_json(self, data):
         super().parse_json(data)
+
+    def normalize_data(self):
+        """
+        "Date",     "Description",                  "Original Description",         "Amount",   "Transaction Type","Category","Account Name","Labels","Notes"
+        "7/25/2023","INTEREST CHARGE ON PURCHASES", "INTEREST CHARGE ON PURCHASES", "57.62",    "debit","Finance Charge","4676","",""
+        "7/17/2023","AUTOMATIC PAYMENT - THANK YOU","AUTOMATIC PAYMENT - THANK YOU","155.00",   "credit","Credit Card Payment","4676","",""
+        """
+        if self.transaction_type == 'debit':
+            self.amount = 0.0 - self.amount
 
 
 class SoundCheckingTransaction(SoundAccountsBaseTransaction):
@@ -252,7 +269,7 @@ class WellsCheckingTransaction(BaseTransaction):
     def parse_json(self, data):
         self.raw = data
         self.date = data[0]
-        self.amount = abs(float(data[1]))
+        self.amount = float(data[1])
         self.action = data[2]
         self.check_number = data[3]
         self.description = data[4]
@@ -307,7 +324,7 @@ class AmazonTransaction(BaseTransaction):
         self.Unit_Price_Tax = data[6]
         self.Shipping_Charge = data[7]
         self.Total_Discounts = data[8]
-        self.Total_Owed = abs(data[9])
+        self.Total_Owed = data[9]
         self.Shipment_Item_Subtotal = data[10]
         self.Shipment_plus_Item_Subtotal_Tax = data[11]
         self.ASIN = data[12]
