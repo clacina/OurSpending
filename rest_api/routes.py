@@ -1192,3 +1192,25 @@ async def get_batch_contents():
         )
         content_list.append(sf)
     return content_list
+
+
+@router.get(
+    "/batch_contents/{batch_id}",
+    summary="Get details for a specific processed transaction batch",
+    response_model=List[models.BatchContentsModel],
+)
+async def get_contents_from_batch(batch_id: int):
+    contents = db_access.load_contents_from_batch(batch_id)
+    content_list = []
+    for f in contents:
+        # id  filename    institution_id  batch_id    added_date  notes
+        sf = models.BatchContentsModel(
+            id=f[0],
+            filename=f[1],
+            institution_id=f[2],
+            batch_id=f[3],
+            added_date=f[4],
+            notes=f[5]
+        )
+        content_list.append(sf)
+    return content_list

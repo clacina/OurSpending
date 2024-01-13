@@ -137,9 +137,9 @@ class SavedFilterModel(BaseModel):
 
 
 class BatchContentsModel(BaseModel):
-    id: int
-    filename: str
-    institution_id: int
-    batch_id: int
-    added_date: datetime
-    notes: str
+    id: Optional[int]
+    filename: Optional[str]
+    institution_id: Optional[int]
+    batch_id: Optional[int]
+    added_date: Optional[datetime.datetime]
+    notes: Optional[str]
