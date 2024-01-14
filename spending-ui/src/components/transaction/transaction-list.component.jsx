@@ -15,6 +15,7 @@ import {TagsContext} from "../../contexts/tags.context";
 import assert from "assert";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 import {TransactionsContext} from "../../contexts/transactions.context";
+import {BatchContentsContext} from "../../contexts/batch_contents.context";
 
 // https://flatuicolors.com/palette/fr
 
@@ -54,6 +55,8 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
         const headerBackgroundColor = '#008080'
 
         // Create column definitions for this institution
+        console.log("TransactionDD: ", transactionDataDefinitions);
+        console.log("ourInstitution: ", ourInstitution);
         const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(institution_id));
         const cols = [];
 
@@ -65,6 +68,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
         const dateColumn = dataDefinition.find((item) => {
             return(item.is_transaction_date);
         });
+        console.log("DD: ", dataDefinition);
         assert(dateColumn);
         cols.push({
             dataField: dateColumn.data_id,
@@ -178,7 +182,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
     }
 
     const updateNotes = async (transaction_id, note) => {
-        updateTransactionNotes(transaction_id, note);
+        updateTransactionNotes(transaction_id, [note]);
         setTransactionContentUpdated(true);
         setContentUpdated(true);
     }
