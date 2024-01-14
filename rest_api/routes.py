@@ -1188,7 +1188,9 @@ async def get_batch_contents():
             institution_id=f[2],
             batch_id=f[3],
             added_date=f[4],
-            notes=f[5]
+            file_date=f[5],
+            transaction_count=f[6],
+            notes=f[7]
         )
         content_list.append(sf)
     return content_list
@@ -1210,7 +1212,9 @@ async def get_contents_from_batch(batch_id: int):
             institution_id=f[2],
             batch_id=f[3],
             added_date=f[4],
-            notes=f[5]
+            file_date=f[5],
+            transaction_count=f[6],
+            notes=f[7]
         )
         content_list.append(sf)
     return content_list

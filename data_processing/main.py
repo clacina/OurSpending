@@ -98,12 +98,7 @@ def create_batch(processors, notes=None):
         if not batch_id:
             batch_id = db_utils.create_transaction_batch()
 
-        # Load processor specific transactions and write them to the batch in the database
-        account.process_transactions(batch_id)
-        transactions_processed += len(account.transactions)
-        db_utils.add_transaction_batch_content(filename=account.datafile,
-                                               institution_id=account.institution_id,
-                                               batch_id=batch_id, notes=notes)
+    update_batch(processors, batch_id, notes)
 
     if not notes:
         notes = f"{len(processors)} Processors, {transactions_processed} Transactions"
@@ -114,12 +109,19 @@ def create_batch(processors, notes=None):
 
 def update_batch(processors, batch_id, notes):
     # remove any transactions from the specified batch that are from the processors id
+    transactions_processed = 0
     for account in processors:
         db_utils.override_batch_transactions(account.institution_id, account.transactions, batch_id)
         account.process_transactions(batch_id)
 
-    if notes:
-        db_utils.update_batch_info(batch_id, notes)
+        transactions_processed += len(account.transactions)
+        db_utils.add_transaction_batch_content(filename=account.datafile,
+                                               institution_id=account.institution_id,
+                                               file_date=account.file_date,
+                                               batch_id=batch_id, notes=notes)
+
+    if not notes:
+        notes = f"{len(processors)} Processors, {transactions_processed} Transactions"
 
 
 from settings import ConfigurationData
@@ -221,17 +223,6 @@ def import_datafiles(source: Optional[str] = None,
     else:
         update_batch(processors, override, notes)
         print(f"Updated Batch: {override}")
-
-
-# Old / Original version
-# @cli.command("oldload",
-#              source=Arg("--source", "-s", help="Source Folder")
-#              )
-# def load_datafiles(source: Optional[str] = None):
-#     """Load activity reports for processing."""
-#     print(f"Got source: {source}")
-#     batch_id = load_transaction_files(source=source)
-#     print(f"Batch Created: {batch_id}")
 
 
 @cli.command("process", batch_id=Arg("--batch", help="Transaction Batch Id"))

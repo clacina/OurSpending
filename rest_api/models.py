@@ -142,4 +142,6 @@ class BatchContentsModel(BaseModel):
     institution_id: Optional[int]
     batch_id: Optional[int]
     added_date: Optional[datetime.datetime]
+    file_date: Optional[datetime.datetime]
+    transaction_count: Optional[int]
     notes: Optional[str]

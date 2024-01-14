@@ -7,6 +7,8 @@
 
 """
 import abc
+import os.path
+import time
 
 # import csv
 import data_processing.db_utils
@@ -33,7 +35,9 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         self.spending = {}
         self.category_breakdown = {}
 
+        self.file_date = None
         if self.datafile:
+            self.file_date = time.ctime(os.path.getctime(self.datafile))
             self.parse_datafile(self.datafile)
 
     """ -------------------- Abstract Methods - Must be implemented by derived classes -----------------"""

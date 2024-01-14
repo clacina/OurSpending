@@ -102,12 +102,14 @@ CREATE TABLE transaction_batch
 DROP TABLE IF EXISTS transaction_batch_contents CASCADE;
 CREATE TABLE transaction_batch_contents
 (
-    id              SERIAL PRIMARY KEY,
-    filename        TEXT,
-    institution_id  INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
-    batch_id        INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL,
-    added_date      TIMESTAMP NOT NULL DEFAULT NOW(),
-    notes           TEXT
+    id                  SERIAL PRIMARY KEY,
+    filename            TEXT,
+    institution_id      INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
+    batch_id            INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL,
+    added_date          TIMESTAMP NOT NULL DEFAULT NOW(),
+    file_date           TIMESTAMP NOT NULL,
+    transaction_count   INTEGER DEFAULT 0,
+    notes               TEXT
 );
 
 DROP TABLE IF EXISTS transaction_records CASCADE;

@@ -816,7 +816,7 @@ class DBAccess:
 
     def load_batch_contents(self):
         sql = """SELECT 
-                    id, filename, institution_id, batch_id, added_date, notes
+                    id, filename, institution_id, batch_id, added_date, file_date, transaction_count, notes
                  FROM transaction_batch_contents
               """
 
@@ -831,7 +831,7 @@ class DBAccess:
 
     def load_contents_from_batch(self, batch_id):
         sql = """SELECT 
-                    id, filename, institution_id, batch_id, added_date, notes
+                    id, filename, institution_id, batch_id, added_date, file_date, transaction_count, notes
                  FROM transaction_batch_contents
                  WHERE batch_id=%(batch_id)s
               """

@@ -57,23 +57,38 @@ def create_transaction_batch(notes=None):
     return batch_id
 
 
-def add_transaction_batch_content(filename, institution_id, batch_id, notes=None):
+def add_transaction_batch_content(filename, institution_id, batch_id, file_date, notes=None):
     conn = db_access.connect_to_db()
     assert conn
 
+    sql = """
+        SELECT count(*) from transaction_records where batch_id=%(batch_id)s
+    """
+    query_params = {
+        "batch_id": batch_id
+    }
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        transaction_count = cur.fetchone()[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
     # Setup transaction_batch_contents record
     sql = """INSERT INTO transaction_batch_contents
-            (filename, institution_id, batch_id, notes)
-            VALUES (%(filename)s, %(institution_id)s, %(batch_id)s, %(notes)s)
+            (filename, institution_id, batch_id, file_date, transaction_count, notes)
+            VALUES (%(filename)s, %(institution_id)s, %(batch_id)s, %(file_date)s, %(transaction_count)s, %(notes)s)
     """
 
     query_params = {
         "filename": filename,
         "institution_id": institution_id,
         "batch_id": batch_id,
+        "file_date": file_date,
+        "transaction_count": transaction_count,
         "notes": notes
     }
-    cur = conn.cursor()
     try:
         cur.execute(sql, query_params)
         conn.commit()
