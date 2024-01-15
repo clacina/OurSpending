@@ -168,6 +168,9 @@ def load_source_file(datafile):
     returns: a processor with the data from the specified file loaded
               or None if no matching processor could be found
     """
+    if not os.path.exists(datafile):
+        print(f"Error: File {datafile} not found.")
+        return None
     # Figure out which processor / institution this file represents
     processor_class = select_processor_from_file(datafile)
     if processor_class:

@@ -587,4 +587,4 @@ def select_processor_from_file(datafile):
             return m.processor
 
     print(f"Unable to determine processor from datafile {datafile}")
-    return None
+    assert 0

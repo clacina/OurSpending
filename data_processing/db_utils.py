@@ -3,6 +3,7 @@ import sys
 # append the path of the
 # parent directory
 sys.path.append("..")
+import logging
 
 from common.db_access import DBAccess
 from data_processing.data_models import *
@@ -149,6 +150,7 @@ def fetch_transactions_from_batch(batch_id: int, institution_id: Optional[int] =
 
 
 def add_transaction(conn, transaction, batch_id):
+    logging.info(f"Transaction: {transaction}")
     sql = """
         INSERT INTO
             transaction_records (
