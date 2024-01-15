@@ -25,19 +25,10 @@ const BatchesComponent = () => {
     }
 
     const notesColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        // get any content info for the specified row
-        const batchContent = Object.entries(batchContentsMap).filter((item) => {
-            console.log("RowBatch: ", row)
-            return(item[1].batch_id === row.id);
-        })
-        if(batchContent.length) {
-            console.log("BC: ", batchContent);
-            return ("--" + row.notes + " - " + batchContent[0][1].filename);
-        }
-        return ("--" + row.notes);
+        return (row.notes);
     }
 
-    const batchInfoColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
+    const batchInfoColumnFormatter2 = (cell, row, rowIndex, formatExtraData) => {
         const batchContent = Object.entries(batchContentsMap).filter((item) => {
             return(item[1].batch_id === row.id);
         })
@@ -56,11 +47,28 @@ const BatchesComponent = () => {
                     transaction_count
                     notes
                  */
-                const binfo = <li>{item[1].filename} - {item[1].added_date} has {item[1].transaction_count} transactions.</li>;
+                var utc = new Date(item[1].added_date);
+                var offset = 0;  // utc.getTimezoneOffset();
+                const added_date = new Date(utc.getTime() + offset * 60000).toLocaleString();
+
+                const binfo = <tr>
+                    <td>{item[1].filename}</td>
+                    <td>{added_date}</td>
+                    <td className='detailTransactions'>{item[1].transaction_count}</td>
+                    <td>{item[1].notes}</td>
+                </tr>;
+
                 details.push(binfo);
             })
             console.log("Details list: ", details);
-            return (<ul>{details}</ul>);
+            return (
+                <div className='batchContentsTable'>
+                    <table>
+                        <thead><tr><th>File</th><th>Added</th><th>Transactions</th><th>Notes</th></tr></thead>
+                        <tbody>{details}</tbody>
+                    </table>
+                </div>
+            );
         }
         return("-- No info available.");
     }
@@ -105,7 +113,7 @@ const BatchesComponent = () => {
                 color: 'white'
             },
             headerAttrs: {
-                width:'500px',
+                width:'300px',
             }
         })
     columns.push(
@@ -113,13 +121,12 @@ const BatchesComponent = () => {
             dataField: 'info',
             text: 'Details',
             sort: true,
-            formatter: batchInfoColumnFormatter,
+            formatter: batchInfoColumnFormatter2,
             headerStyle: {
                 backgroundColor: headerBackgroundColor,
                 color: 'white'
             },
         })
-
 
     useEffect(() => {
         console.log("Start");
