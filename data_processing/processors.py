@@ -38,6 +38,7 @@ import sys
 
 import data_processing.transaction_models as models
 import data_processing.base as base
+from data_processing import db_utils
 
 
 class CapitalOne(base.ProcessorBase):
@@ -588,3 +589,14 @@ def select_processor_from_file(datafile):
 
     print(f"Unable to determine processor from datafile {datafile}")
     assert 0
+
+
+def select_processors_from_batch(batch_id):
+    processor_list = []
+    institutions_list = db_utils.get_institutions_from_batch_contents(batch_id)
+
+    for bank_id in institutions_list:
+        processor_class = db_utils.find_class_from_institution(bank_id[0])
+        processor_list.append((processor_class, bank_id))
+
+    return processor_list

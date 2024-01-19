@@ -63,15 +63,31 @@ def add_transaction_batch_content(filename, institution_id, batch_id, file_date,
     assert conn
 
     sql = """
-        SELECT count(*) from transaction_records where batch_id=%(batch_id)s
+        SELECT count(*) FROM transaction_records WHERE batch_id=%(batch_id)s AND institution_id=%(institution_id)s
     """
     query_params = {
-        "batch_id": batch_id
+        "batch_id": batch_id,
+        "institution_id": institution_id
     }
     cur = conn.cursor()
     try:
         cur.execute(sql, query_params)
         transaction_count = cur.fetchone()[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+    # Remove any existing batch_contents entries for this institution and batch_id
+    sql = """
+        DELETE FROM transaction_batch_contents WHERE institution_id=%(institution_id)s and batch_id=%(batch_id)s
+    """
+    query_params = {
+        "institution_id": institution_id,
+        "batch_id": batch_id
+    }
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
     except Exception as e:
         print(f"Error: {str(e)}")
         raise e
@@ -118,6 +134,21 @@ def find_institution_from_class(processor_class):
     sql = "SELECT id FROM institutions where class=%(processor_class)s"
     cur = conn.cursor()
     query_params = {"processor_class": processor_class}
+    try:
+        cur.execute(sql, query_params)
+        row = cur.fetchone()
+        return row[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+
+def find_class_from_institution(processor_id):
+    conn = db_access.connect_to_db()
+    assert conn
+    sql = "SELECT class FROM institutions WHERE id=%(processor_id)s"
+    cur = conn.cursor()
+    query_params = {"processor_id": processor_id}
     try:
         cur.execute(sql, query_params)
         row = cur.fetchone()
@@ -357,3 +388,19 @@ def override_batch_transactions(institution_id, transactions, batch_id):
         raise e
 
 
+def get_institutions_from_batch_contents(batch_id):
+    sql = "SELECT DISTINCT institution_id FROM transaction_batch_contents WHERE batch_id=%(batch_id)s"
+    query_params = {
+        "batch_id": batch_id
+    }
+
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        rows = cur.fetchall()
+        return rows
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
