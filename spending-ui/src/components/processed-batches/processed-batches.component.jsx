@@ -50,7 +50,7 @@ const ProcessedBatches = () => {
     const dateColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
         var utc = new Date(row.run_date);
         var offset = utc.getTimezoneOffset();
-        return(new Date(utc.getTime() + offset * 60000).toDateString());
+        return(new Date(utc.getTime() - offset * 60000).toDateString());
     }
 
     const closeModal = async (id, value, save_result) => {

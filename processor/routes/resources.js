@@ -455,7 +455,27 @@ resourcesRouter.get('/saved_filters', function(req, res, next) {
     console.debug("Sending back: ", body);
     console.log("Request errors: ", error);
 
-    // Loop through each template and fill in details??
+    res.send(body);
+  });
+});
+
+resourcesRouter.get('/batch_contents', function(req, res, next) {
+  const url = 'http://localhost:8080/batch_contents';
+
+  request(url, (error, response, body) => {
+    console.debug("Sending back: ", body);
+    console.log("Request errors: ", error);
+
+    res.send(body);
+  });
+});
+
+resourcesRouter.get('/batch_contents/:batch_id', function(req, res, next) {
+  const url = 'http://localhost:8080/batch_contents/' + req.params['batch_id'];
+
+  request(url, (error, response, body) => {
+    console.debug("Sending back: ", body);
+    console.log("Request errors: ", error);
 
     res.send(body);
   });

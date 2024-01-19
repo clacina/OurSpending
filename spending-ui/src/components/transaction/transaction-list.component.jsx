@@ -15,6 +15,7 @@ import {TagsContext} from "../../contexts/tags.context";
 import assert from "assert";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 import {TransactionsContext} from "../../contexts/transactions.context";
+import {BatchContentsContext} from "../../contexts/batch_contents.context";
 
 // https://flatuicolors.com/palette/fr
 
@@ -178,7 +179,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
     }
 
     const updateNotes = async (transaction_id, note) => {
-        updateTransactionNotes(transaction_id, note);
+        updateTransactionNotes(transaction_id, [note]);
         setTransactionContentUpdated(true);
         setContentUpdated(true);
     }
@@ -213,7 +214,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        console.log("Tags: ", row);
         const entity_info = {
             id: row.id,
             tags: row.tags
@@ -231,9 +231,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         setActiveRow(row);
-        console.log("Click col: ", columnIndex);
-        console.log("Click row: ", rowIndex);
-        console.log("Row: ", row);
         switch (columnIndex) {
             case 3: // tags
                 e.preventDefault();

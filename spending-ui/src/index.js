@@ -15,6 +15,7 @@ import {BatchesProvider} from "./contexts/batches.context";
 import {TransactionsProvider} from "./contexts/transactions.context";
 import {ProcessedBatchesProvider} from "./contexts/processed_batches.context";
 import {ProcessedTransactionsProvider} from "./contexts/processed_transactions.context";
+import {BatchContentsProvider} from "./contexts/batch_contents.context";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -30,7 +31,9 @@ root.render(
                                       <TemplatesProvider>
                                           <SavedFiltersProvider>
                                               <InstitutionsProvider>
-                                                <App />
+                                                  <BatchContentsProvider>
+                                                      <App />
+                                                  </BatchContentsProvider>
                                               </InstitutionsProvider>
                                           </SavedFiltersProvider>
                                       </TemplatesProvider>
