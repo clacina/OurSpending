@@ -5,7 +5,7 @@ import sys
 from typing import Optional
 from radicli import Radicli, Arg
 import settings
-from processors import select_processor_from_file
+from processors import select_processor_from_file, select_processors_from_batch
 from settings import data_mgr
 
 """ -------------------------- Entry Point ----------------------------- """
@@ -168,6 +168,9 @@ def load_source_file(datafile):
     returns: a processor with the data from the specified file loaded
               or None if no matching processor could be found
     """
+    if not os.path.exists(datafile):
+        print(f"Error: File {datafile} not found.")
+        return None
     # Figure out which processor / institution this file represents
     processor_class = select_processor_from_file(datafile)
     if processor_class:
@@ -230,14 +233,40 @@ def process_a_transaction_batch(batch_id: Optional[int] = None):
     """Analyze a loaded batch of transactions."""
     if not batch_id:
         batch_id = present_batch_menu_select()
+
     processed_batch_id = db_utils.create_process_batch(transaction_batch_id=batch_id)
     print(
         f"Running transaction batch: {batch_id} into processing batch: {processed_batch_id}"
     )
+
+    """ Rework     
     all_processors = settings.create_configs()
+
+        cap = configure_processor(
+            institution_name="Capital One Visa",
+            processor=CapitalOne,
+            config=data_mgr,
+            datafile=None,
+        )
+
+
 
     for bank in all_processors:
         bank.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
+    """
+    # Create a list of processors from the specified batch
+
+    # Now build our list of processors from the above institution list
+    all_processors = select_processors_from_batch(batch_id)
+
+    for processor_info in all_processors:
+        cp = configure_processor(
+            datafile=None,
+            processor_class=processor_info[0],
+            institution_id=processor_info[1][0]
+        )
+
+        cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
 
 
 if __name__ == "__main__":

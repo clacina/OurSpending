@@ -230,12 +230,30 @@ class SoundAccountsBaseTransaction(BaseTransaction):
             self.amount = self.amount_debit
 
 
-class CareCreditTransaction(SoundAccountsBaseTransaction):
+class CareCreditTransaction(BaseTransaction):
     def __init__(self):
         super().__init__()
+        # self.transaction_id = None
+        # self.date = None
+        # self.amount = 0.0
+        # self.description = ""
+        # self.category = ""
+        # self.raw = None
+        # self.institution_id = None
+        # self.note = None
+        # self.template_id = None
+        self.transaction_type = None
 
     def parse_json(self, data):
-        super().parse_json(data)
+        # "Date", "Description", "Original Description", "Amount", "Transaction Type", "Category", "Account Name", "Labels", "Notes"
+        # "12/25/2023", "INTEREST CHARGE ON PURCHASES", "INTEREST CHARGE ON PURCHASES", "55.52", "debit", "Finance Charge", "4676", "", ""
+        # "12/17/2023", "AUTOMATIC PAYMENT - THANK YOU", "AUTOMATIC PAYMENT - THANK YOU", "175.00", "credit", "Credit Card Payment", "4676", "", ""
+        self.raw = data
+        self.date = data[0]
+        self.description = data[1]
+        self.amount = float(data[3])
+        self.category = data[5]
+        self.transaction_type = data[4]
 
     def normalize_data(self):
         """
@@ -243,7 +261,7 @@ class CareCreditTransaction(SoundAccountsBaseTransaction):
         "7/25/2023","INTEREST CHARGE ON PURCHASES", "INTEREST CHARGE ON PURCHASES", "57.62",    "debit","Finance Charge","4676","",""
         "7/17/2023","AUTOMATIC PAYMENT - THANK YOU","AUTOMATIC PAYMENT - THANK YOU","155.00",   "credit","Credit Card Payment","4676","",""
         """
-        if self.transaction_type == 'debit':
+        if self.transaction_type == "debit":
             self.amount = 0.0 - self.amount
 
 
