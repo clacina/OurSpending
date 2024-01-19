@@ -55,8 +55,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
         const headerBackgroundColor = '#008080'
 
         // Create column definitions for this institution
-        console.log("TransactionDD: ", transactionDataDefinitions);
-        console.log("ourInstitution: ", ourInstitution);
         const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(institution_id));
         const cols = [];
 
@@ -68,7 +66,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
         const dateColumn = dataDefinition.find((item) => {
             return(item.is_transaction_date);
         });
-        console.log("DD: ", dataDefinition);
         assert(dateColumn);
         cols.push({
             dataField: dateColumn.data_id,
@@ -217,7 +214,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        console.log("Tags: ", row);
         const entity_info = {
             id: row.id,
             tags: row.tags
@@ -235,9 +231,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         setActiveRow(row);
-        console.log("Click col: ", columnIndex);
-        console.log("Click row: ", rowIndex);
-        console.log("Row: ", row);
         switch (columnIndex) {
             case 3: // tags
                 e.preventDefault();

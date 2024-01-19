@@ -259,7 +259,7 @@ resourcesRouter.get('/transactions/:batch_id/:institution_id', function(req, res
 
 resourcesRouter.get('/processed_transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/processed_transactions?limit=1000&batch_id=' + req.params['batch_id'];
+  const url = 'http://localhost:8080/processed_transactions?limit=3000&batch_id=' + req.params['batch_id'];
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {

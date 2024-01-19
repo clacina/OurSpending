@@ -8,7 +8,6 @@ import {StaticDataContext} from "../../contexts/static_data.context";
 import './batches.component.styles.css';
 import {BatchesContext} from "../../contexts/batches.context";
 import {BatchContentsContext} from "../../contexts/batch_contents.context";
-import Select from "react-select";
 
 const BatchesComponent = () => {
     const {setSectionTitle} = useContext(StaticDataContext);
@@ -20,8 +19,8 @@ const BatchesComponent = () => {
 
     const dateColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
         var utc = new Date(row.run_date);
-        var offset = 0;  // utc.getTimezoneOffset();
-        return(new Date(utc.getTime() + offset * 60000).toLocaleString());
+        var offset = utc.getTimezoneOffset();
+        return(new Date(utc.getTime() - offset * 60000).toLocaleString());
     }
 
     const notesColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
@@ -33,10 +32,8 @@ const BatchesComponent = () => {
             return(item[1].batch_id === row.id);
         })
         if(batchContent.length) {
-            console.log("BC: ", batchContent);
             var details = []
             batchContent.forEach((item) => {
-                console.log("Item: ", item);
                 /*
                     id
                     filename
@@ -48,8 +45,8 @@ const BatchesComponent = () => {
                     notes
                  */
                 var utc = new Date(item[1].added_date);
-                var offset = 0;  // utc.getTimezoneOffset();
-                const added_date = new Date(utc.getTime() + offset * 60000).toLocaleString();
+                var offset = utc.getTimezoneOffset();
+                const added_date = new Date(utc.getTime() - offset * 60000).toLocaleString();
 
                 const binfo = <tr>
                     <td>{item[1].filename}</td>
@@ -60,7 +57,6 @@ const BatchesComponent = () => {
 
                 details.push(binfo);
             })
-            console.log("Details list: ", details);
             return (
                 <div className='batchContentsTable'>
                     <table>
