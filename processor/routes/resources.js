@@ -233,7 +233,7 @@ resourcesRouter.patch('/template/:id', async function(req, res, next) {
 
 resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&limit=1000";
+  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&limit=3000";
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {
@@ -246,7 +246,7 @@ resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
 
 resourcesRouter.get('/transactions/:batch_id/:institution_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&institution_id=" + institution_id + "&limit=1000";
+  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&institution_id=" + institution_id + "&limit=3000";
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {
@@ -259,7 +259,7 @@ resourcesRouter.get('/transactions/:batch_id/:institution_id', function(req, res
 
 resourcesRouter.get('/processed_transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/processed_transactions?limit=1000&batch_id=' + req.params['batch_id'];
+  const url = 'http://localhost:8080/processed_transactions?limit=3000&batch_id=' + req.params['batch_id'];
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {
