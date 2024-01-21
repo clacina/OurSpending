@@ -132,6 +132,28 @@ resourcesRouter.get('/processed_batch/:id', async function(req, res, next) {
 });
 
 
+resourcesRouter.delete('/processed_batch/:id', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.params);
+  const url = 'http://localhost:8080/processed_batch/' + req.params['id'];
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+  }
+
+  console.log("Data: ", options);
+  try {
+    await got.delete(url, options);
+    res.status(200).send("");
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters deleting batch " + req.params['id']);
+  }
+});
+
+
 resourcesRouter.get('/qualifiers', function(req, res, next) {
   const url = 'http://localhost:8080/qualifiers';
 

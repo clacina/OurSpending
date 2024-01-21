@@ -300,6 +300,20 @@ class DBAccess:
             logging.exception({"message": f"Error updating processed batch notes: {str(e)}"})
             raise e
 
+    def delete_processed_batch(self, batch_id):
+        sql = "DELETE FROM processed_transaction_batch WHERE id=%(batch_id)s"
+        query_params = {"batch_id", batch_id}
+
+        conn = self.connect_to_db()
+        assert conn
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception({"message": f"Error deleting processed batch {batch_id}: {str(e)}"})
+            raise e
+
     def get_processed_transaction_records(self, batch_id, offset=0, limit=10):
         sql = f"{ProcessedTransactionSQL} WHERE BID=%(batch_id)s"
         sql += " LIMIT %(limit)s OFFSET %(offset)s"

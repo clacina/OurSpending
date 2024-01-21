@@ -892,6 +892,29 @@ async def update_processed_batch(batch_id: int, info: Request):
         )
 
 
+@router.delete(
+    "/processed_batch/{batch_id}",
+    summary="Remove a specific processed batch of transactions",
+)
+async def delete_batch(batch_id: int):
+    query_result = db_access.delete_processed_batch(batch_id)
+    """
+    INFO     batch: (502, datetime.datetime(2023, 11, 14, 17, 15, 39, 652767), 'Test run', 3) 
+    """
+    if query_result:
+        response = models.ProcessedTransactionBatchModel(
+            id=query_result[0],
+            run_date=query_result[1],
+            notes=query_result[2],
+            transaction_batch_id=query_result[3],
+            transaction_count=query_result[4],
+        )
+        return response
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="Batch not found."
+    )
+
+
 """ ---------- Processed Transactions ----------------------------------------------------------------------"""
 
 
