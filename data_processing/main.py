@@ -269,5 +269,25 @@ def process_a_transaction_batch(batch_id: Optional[int] = None):
         cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
 
 
+@cli.command("process_multi")
+def process_multiple_transaction_batch():
+    for i in range(0, 10):
+        batch_id = 1
+        processed_batch_id = db_utils.create_process_batch(transaction_batch_id=batch_id)
+        print(
+            f"Running transaction batch: {batch_id} into processing batch: {processed_batch_id}"
+        )
+        all_processors = select_processors_from_batch(batch_id)
+
+        for processor_info in all_processors:
+            cp = configure_processor(
+                datafile=None,
+                processor_class=processor_info[0],
+                institution_id=processor_info[1][0]
+            )
+
+            cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
+
+
 if __name__ == "__main__":
     cli.run()
