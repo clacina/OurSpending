@@ -9,6 +9,7 @@ export const ProcessedBatchesContext = createContext({
 export const ProcessedBatchesProvider = ({children}) => {
     const [processedBatches, setProcessedBatches] = useState([]);
     const [update, setUpdate] = useState(true);
+    const headers = {'Content-Type': 'application/json'}
 
     const getBatches = async () => {
         const url = 'http://localhost:8000/resources/processed_batches'
@@ -19,24 +20,36 @@ export const ProcessedBatchesProvider = ({children}) => {
 
     const updateBatchNotes = async (batch_id, note) => {
         const body = {"notes": note}
-        const headers = {'Content-Type': 'application/json'}
         const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
         const method = 'POST'
-        const request = await send({url}, {method}, {headers}, {body});
+        const request = await send(url, method, headers, body);
         setUpdate(true);
     }
 
     const getBatchDetails = async (batch_id) => {
         const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
-        const headers = {'Content-Type': 'application/json'}
         const method = 'GET'
-        const response = await send({url}, {method}, {headers}, {});
+        const response = await send(url, method, headers);
 
         var utc = new Date(response.run_date);
         var offset = utc.getTimezoneOffset();
-        response.run_date = new Date(utc.getTime() + offset * 60000).toDateString();
+        response.run_date = new Date(utc.getTime() + offset * 60000).toLocaleString();
 
         return (response);
+    }
+
+    const deleteBatches = async (batch_ids) => {
+        var response;
+        batch_ids.forEach(async (batch_id) => {
+            response = deleteBatch(batch_id);
+        });
+        return(response);
+    }
+
+    const deleteBatch = async (batch_id) => {
+        const method = 'DELETE'
+        const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
+        await send(url, method, headers, null);
     }
 
     useEffect(() => {
@@ -52,7 +65,8 @@ export const ProcessedBatchesProvider = ({children}) => {
         processedBatches,
         setUpdate,
         updateBatchNotes,
-        getBatchDetails
+        getBatchDetails,
+        deleteBatches
     };
     return <ProcessedBatchesContext.Provider value={value}>{children}</ProcessedBatchesContext.Provider>
 };

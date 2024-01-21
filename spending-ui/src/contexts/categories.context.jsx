@@ -33,13 +33,14 @@ export const CategoriesProvider = ({children}) => {
         setUpdate(true);
     }
 
-    const updateCategory = async (id, value, notes) => {
+    const updateCategory = async (id, value, is_tax_deductible, notes) => {
         const requestOptions = {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 "value": value,
-                "notes": notes
+                "notes": notes,
+                "is_tax_deductible": is_tax_deductible
             })
         };
         const url = 'http://localhost:8000/resources/categories/' + id;
