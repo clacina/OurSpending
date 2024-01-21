@@ -266,6 +266,17 @@ class Lowes(base.ProcessorBase):
 
 
 class PayPal(base.ProcessorBase):
+    """
+    Abbreviations used in r/PayPal:
+
+        NAD - Not as described.
+        SNAD - Significantly not as described.
+        INR - Item Not Received.
+        UAT - Unauthorized transaction.
+        OP - Original poster of the message.
+        F&F - Friends and Family (no protection at all.)
+        G&S - Goods and/or Services (has seller/buyer protection.)
+    """
     def __init__(self, datafile: str, config=None):
         self.name = "PayPal"
         self.skip_data_rows = 1

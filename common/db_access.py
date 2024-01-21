@@ -302,7 +302,7 @@ class DBAccess:
 
     def delete_processed_batch(self, batch_id):
         sql = "DELETE FROM processed_transaction_batch WHERE id=%(batch_id)s"
-        query_params = {"batch_id", batch_id}
+        query_params = {"batch_id": batch_id}
 
         conn = self.connect_to_db()
         assert conn
@@ -398,7 +398,7 @@ class DBAccess:
     """ Categories """
 
     def load_categories(self):
-        sql = "SELECT id, value, notes FROM categories order by value"
+        sql = "SELECT id, value, is_tax_deductible, notes FROM categories order by value"
         cur = self.get_db_cursor()
         try:
             cur.execute(sql)
@@ -409,7 +409,7 @@ class DBAccess:
             raise e
 
     def get_category(self, category_id):
-        sql = "SELECT id, value FROM categories WHERE id=%(category_id)s"
+        sql = "SELECT id, value, is_tax_deductible, notes FROM categories WHERE id=%(category_id)s"
         query_params = {"category_id": category_id}
         cur = self.get_db_cursor()
         try:
@@ -446,12 +446,12 @@ class DBAccess:
             logging.exception(f"Error creating category: {str(e)}")
             raise e
 
-    def update_category(self, category_id: int, value: str, notes: str):
+    def update_category(self, category_id: int, value: str, is_tax_deductible: bool, notes: str):
         conn = self.connect_to_db()
         assert conn
 
-        sql = 'UPDATE categories SET value=%(value)s, notes=%(notes)s WHERE id=%(category_id)s'
-        query_params = {"category_id": category_id, "value": value, "notes": notes}
+        sql = 'UPDATE categories SET value=%(value)s, notes=%(notes)s, is_tax_deductible=%(is_tax_deductible)s WHERE id=%(category_id)s'
+        query_params = {"category_id": category_id, "value": value, "notes": notes, "is_tax_deductible": is_tax_deductible}
         cur = conn.cursor()
         try:
             cur.execute(sql, query_params)

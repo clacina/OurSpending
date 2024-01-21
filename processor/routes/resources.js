@@ -146,7 +146,7 @@ resourcesRouter.delete('/processed_batch/:id', async function(req, res, next) {
   console.log("Data: ", options);
   try {
     await got.delete(url, options);
-    res.status(200).send("");
+    res.status(204).send("");
   } catch (e) {
     console.log("Got Error: ", e);
     res.status(422).send("Invalid Parameters deleting batch " + req.params['id']);
