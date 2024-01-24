@@ -100,6 +100,7 @@ class DBAccess:
         except Exception as e:
             logging.exception(f"I am unable to connect to the database:{str(e)}")
             raise e
+
     def get_db_cursor(self):
         conn = self.connect_to_db()
         assert conn
@@ -460,20 +461,67 @@ class DBAccess:
             logging.exception(f"Category specified already exists: {str(e)}")
             raise e
 
-    """ templates """
+    """ Templates """
 
     def create_template(self,
-                        institution_id: int,
-                        category: str,
-                        is_credit: bool,
-                        hint: str,
-                        notes: str,
-                        qualifiers: List[str],
-                        tags: List[str],
+                        hint,
+                        institution_id,
+                        category=None,
+                        is_credit=False,
+                        notes=None,
+                        qualifiers=None,
+                        tags=None,
                         ):
-        # does institution id exist?
-        # TODO: Needs impl
-        pass
+        conn = self.connect_to_db()
+        assert conn
+
+        sql = """
+            INSERT INTO templates (hint, institution_id, credit, notes) VALUES (%(hint)s, %(institution_id)s, %(is_credit)s, %(notes)s) RETURNING id
+        """
+        query_params = {
+            "hint": hint,
+            "institution_id": institution_id,
+            "is_credit": is_credit,
+            "notes": notes
+        }
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+            new_id = cur.fetchone()
+            logging.info(f"Got new template id: {new_id}")
+        except Exception as e:
+            logging.exception(f"Error creating template: {str(e)}")
+            raise e
+
+        # If a category was supplied
+        if category:
+            sql = f"UPDATE templates SET category_id = %(category_id)s WHERE id=%(template_id)s"
+            query_params = {
+                "category_id": category.id,
+                "template_id": new_id
+            }
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception(f"Error updating category on template: {str(e)}")
+            raise e
+
+        # if qualifiers were provided
+        if qualifiers:
+            for q in qualifiers:
+                sql = """INSERT INTO 
+                            template_qualifiers (template_id, qualifier_id, data_column) 
+                         VALUES (%(template_id)s, %(qualifier_id)s, %(data_column)s) 
+                      """
+                query_params = {
+                    "template_id": new_id,
+                    "qualifier_id": q.id,
+                    "data_column": q.data_column
+                }
+
+
 
     def fetch_template(self, template_id: int):
         sql = "SELECT id, institution_id, category_id, credit, hint, notes FROM templates WHERE id=%(template_id)s"

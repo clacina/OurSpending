@@ -30,6 +30,7 @@ class TagModel(SimpleLUTModel):
 
 class QualifierModel(SimpleLUTModel):
     institution_id: int
+    data_column: Optional[str]
 
 
 class InstitutionsModel(BaseModel):
@@ -42,6 +43,7 @@ class InstitutionsModel(BaseModel):
 class TemplateQualifierModel(BaseModel):
     template_id: int
     qualifier_id: int
+    data_column: str
 
 
 class TemplateTagModel(BaseModel):
