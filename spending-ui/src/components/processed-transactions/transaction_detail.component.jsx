@@ -4,14 +4,17 @@ import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {StaticDataContext} from "../../contexts/static_data.context.jsx";
 import CategorySelectDialog from "../category-select-dialog/category_select_dialog.component.jsx";
 import NoteEditDialog from "../note-edit-dialog/note_edit_dialog.component.jsx";
-import {ItemTable, sub_format, transactionCategoryDiv} from './transaction_detail.component.styles.jsx';
+import CreateTemplateDialogComponent from "../widgets/create-template-dialog/create.template.component";
+import {ItemTable, SubContent, TransactionDetailContainer} from './transaction_detail.component.styles.jsx';
 import 'react-dropdown/style.css';
+import Button from "react-bootstrap/Button";
 
 const TransactionDetailComponent = ({row, eventHandler}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {categoriesMap} = useContext(CategoriesContext);
     const [openCategories, setOpenCategories] = useState(false);
     const [openNotes, setOpenNotes] = useState(false);
+    const [openTemplateEditor, setOpenTemplateEditor] = useState(false);
     const categorySelectionRef = useRef();
 
     const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === row.institution_id);
@@ -29,24 +32,18 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
         options.push({value: item.id, label: item.value});
     })
 
+    const openCreateTemplate = () => {
+        setOpenTemplateEditor(true);
+    }
+
+    const closeCreateTemplate = () => {
+        setOpenTemplateEditor(false);
+    }
+
     // Sort comparators
     function compareCategories(a, b) {
         return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
     }
-
-    // const updateCategory = (event) => {
-    //     console.log("updateCategory: ", event);
-    //     // event contains an array of active entries in the select
-    //     eventHandler(event);
-    // }
-
-    // const showModal = () => {
-    //     setOpenCategories(true);
-    // }
-    //
-    // const showNotes = () => {
-    //     setOpenNotes(true);
-    // }
 
     const closeModal = (props) => {
         console.log("Closed with: ", props);
@@ -66,26 +63,25 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
     }
 
     return(
-        <div>
+        <TransactionDetailContainer>
             <div id='TransactionDetailHeader'>
                 <h2>{row.transaction.institution.name}</h2>
-                <sub_format>{row.transaction.id}</sub_format>
+                <SubContent>{row.transaction.id}</SubContent>
+
+                <div id='SetCategoryDiv'>
+                    <label id='testCategoryLabel'>Select Category</label>
+                    <Select
+                        id="categorySelection"
+                        ref={categorySelectionRef}
+                        closeMenuOnSelect={true}
+                        options={options.sort(compareCategories)}
+                        menuPortalTarget={document.body}
+                        menuPosition={'fixed'}
+                        onChange={eventHandler}/>
+                </div>
             </div>
 
-            <div id='SetCategoryDiv'>
-                <label id='testCategoryLabel'>Select Category</label>
-                <Select
-                    id="categorySelection"
-                    ref={categorySelectionRef}
-                    closeMenuOnSelect={true}
-                    options={options.sort(compareCategories)}
-                    menuPortalTarget={document.body}
-                    menuPosition={'fixed'}
-                    onChange={eventHandler}/>
-            </div>
-
-            {/*<span><button onClick={showModal}>Assign Category</button></span>*/}
-            {/*<span><button>Create Template</button></span>*/}
+            <span><Button onClick={openCreateTemplate}>Create Template</Button></span>
             <ItemTable>
                 <thead>
                     <tr>
@@ -100,8 +96,9 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
                 </tbody>
             </ItemTable>
             {openCategories && <CategorySelectDialog row={row} closeHandler={closeModal}/>}
-            {openNotes && <NoteEditDialog closeHandler={closeModal} />}
-        </div>
+            {openNotes && <NoteEditDialog closeHandler={closeModal}/>}
+            {openTemplateEditor && <CreateTemplateDialogComponent closeHandler={closeCreateTemplate} institution_id={row.institution_id}/>}
+        </TransactionDetailContainer>
     );
 }
 

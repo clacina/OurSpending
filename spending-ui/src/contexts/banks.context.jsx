@@ -11,7 +11,8 @@ export const InstitutionsProvider = ({children}) => {
     const [update, setUpdate] = useState(true);
 
     const getInstitutions = async () => {
-        const url = 'http://localhost:8000/resources/banks'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/banks`
+        console.log("URL: ", url);
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
@@ -19,7 +20,7 @@ export const InstitutionsProvider = ({children}) => {
 
     const updateInstitution = async (bank_id, body) => {
         const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/bank/' + bank_id;
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/bank/' + bank_id;
         const method = 'PUT'
         console.log("Sending update: ", body);
         const request = await send({url}, {method}, {headers}, {body});

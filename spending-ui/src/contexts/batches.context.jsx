@@ -10,7 +10,7 @@ export const BatchesProvider = ({children}) => {
     const [update, setUpdate] = useState(true);
 
     const getBatches = async () => {
-        const url = 'http://localhost:8000/resources/batches'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/batches'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);

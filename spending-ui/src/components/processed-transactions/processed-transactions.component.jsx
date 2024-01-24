@@ -490,7 +490,7 @@ const ProcessedTransactions = () => {
             {!isLoaded ? <FerrisWheelSpinner loading={!isLoaded} size={38}/> : <div style={{ display: 'block', width: '100%', padding: 30 }}>
                 <PT_TitleBlock>
                     <ul>
-                        <li>Processed Batch: {routeParams.batch_id}</li>
+                        <li>Processed Batch ID: {routeParams.batch_id}</li>
                         <li>{transactionsMap.length} Transactions</li>
                         <li>Run Date: {batchDetails.run_date}</li>
                         <li>Notes: {batchDetails.notes}</li>

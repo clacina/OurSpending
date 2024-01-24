@@ -12,7 +12,7 @@ export const ProcessedBatchesProvider = ({children}) => {
     const headers = {'Content-Type': 'application/json'}
 
     const getBatches = async () => {
-        const url = 'http://localhost:8000/resources/processed_batches'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batches'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
@@ -20,14 +20,14 @@ export const ProcessedBatchesProvider = ({children}) => {
 
     const updateBatchNotes = async (batch_id, note) => {
         const body = {"notes": note}
-        const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + batch_id;
         const method = 'POST'
         const request = await send(url, method, headers, body);
         setUpdate(true);
     }
 
     const getBatchDetails = async (batch_id) => {
-        const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + batch_id;
         const method = 'GET'
         const response = await send(url, method, headers);
 
@@ -48,7 +48,7 @@ export const ProcessedBatchesProvider = ({children}) => {
 
     const deleteBatch = async (batch_id) => {
         const method = 'DELETE'
-        const url = 'http://localhost:8000/resources/processed_batch/' + batch_id;
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + batch_id;
         await send(url, method, headers, null);
     }
 

@@ -56,7 +56,7 @@ export const TagsProvider = ({children}) => {
     const [update, setUpdate] = useState(true);
 
     const getTags = async () => {
-        const url = 'http://localhost:8000/resources/tags'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/tags'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
@@ -80,7 +80,7 @@ export const TagsProvider = ({children}) => {
             'color': color,
         }
         const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/tags';
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/tags';
         const method = 'POST'
         const request = await send({url}, {method}, {headers}, {body});
         console.log("New tag: ", request);
@@ -98,7 +98,7 @@ export const TagsProvider = ({children}) => {
                 "color": color
             })
         };
-        const url = 'http://localhost:8000/resources/tags/' + id;
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/tags/' + id;
         const response = await fetch(url, requestOptions);
         const str = await response.json();
         console.log("Response: ", str);

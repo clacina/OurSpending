@@ -11,7 +11,7 @@ export const TemplatesProvider = ({children}) => {
     const [update, setUpdate] = useState(true);
 
     const getTemplates = async () => {
-        const url = 'http://localhost:8000/resources/templates'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         setUpdate(false);
@@ -20,7 +20,7 @@ export const TemplatesProvider = ({children}) => {
 
     const updateTemplate = async (template_id, body) => {
         const headers = {'Content-Type': 'application/json'}
-        const url = 'http://localhost:8000/resources/template/' + template_id;
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/template/' + template_id;
         const method = 'PATCH'
         console.log("Sending update: ", body);
         const request = await send({url}, {method}, {headers}, {body});

@@ -11,7 +11,7 @@ export const BatchContentsProvider = ({children}) => {
     const [update, setUpdate] = useState(true);
 
     const getBatchContentsMap = async () => {
-        const url = 'http://localhost:8000/resources/batch_contents'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/batch_contents'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);

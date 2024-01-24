@@ -128,6 +128,9 @@ const TagsTableComponent = () => {
             backgroundColor: headerBackgroundColor,
             color: 'white'
         },
+        headerAttrs: {
+            width:'300px',
+        },
         sort: true})
     columns.push({dataField: 'notes', text: 'Notes',
         headerStyle: {
@@ -155,12 +158,14 @@ const TagsTableComponent = () => {
 
     // --------------------------- Render ----------------------------------------
     return (
-        <TableBaseComponent
-            columns={columns}
-            data={tagsMap}
-            keyField='id'
-            cellEdit={cellEdit}
-        />
+        <div id='tagsTableContainer'>
+            <TableBaseComponent
+                columns={columns}
+                data={tagsMap}
+                keyField='id'
+                cellEdit={cellEdit}
+            />
+        </div>
     )
 }
 

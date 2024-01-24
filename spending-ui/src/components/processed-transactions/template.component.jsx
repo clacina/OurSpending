@@ -111,15 +111,18 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
         }
     }, [templateList])
 
-    const closeModal = async (note) => {
+    const closeModal = async (id, value, save_result) => {
+        console.log("value and save: " + value + " " + save_result);
         if (openNotes) {
             setOpenNotes(false);
-            eventHandler({
-                "updateNotes": {
-                    "transaction_id": activeRow.id,
-                    "notes": note
-                }
-            })
+            if(save_result) {
+                eventHandler({
+                    "updateNotes": {
+                        "transaction_id": activeRow.id,
+                        "notes": value
+                    }
+                })
+            }
         }
     }
 

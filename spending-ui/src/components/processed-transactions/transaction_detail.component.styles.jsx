@@ -65,4 +65,14 @@ export const CButton = styled(BaseButton)`
   transform: translate(-50%, -15px);
 `;
 
+export const SubContent = styled.div`
+  margin-left: 10px;
+  font-style: italic;
+  color: darkgreen;
+`
+
+export const TransactionDetailContainer = styled.div`
+  margin-left: 20px;
+`
+
 // See header.component.styles.css for more styling in this component

@@ -2,13 +2,23 @@ import got from 'got';
 import express from 'express';
 var resourcesRouter = express.Router();
 import request from 'request';
+import "dotenv/config.js";
+
+const standardOptions = (body) => {
+  return {
+    'Accept': 'application/json',
+    'json': body
+  }
+}
+
 
 resourcesRouter.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
 resourcesRouter.get('/banks', function(req, res, next) {
-  const url = 'http://localhost:8080/institutions';
+  const url = process.env.REACT_APP_REST_SERVER + '/institutions';
+  console.log("Banks URL: ", url);
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -20,14 +30,9 @@ resourcesRouter.get('/banks', function(req, res, next) {
 resourcesRouter.put('/bank/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/institution/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/institution/' + req.params['id'];
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -40,7 +45,7 @@ resourcesRouter.put('/bank/:id', async function(req, res, next) {
 });
 
 resourcesRouter.get('/data_definitions', function(req, res, next) {
-  const url = 'http://localhost:8080/transactions_descriptions';
+  const url = process.env.REACT_APP_REST_SERVER + '/transactions_descriptions';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -50,7 +55,7 @@ resourcesRouter.get('/data_definitions', function(req, res, next) {
 });
 
 resourcesRouter.get('/tags', function(req, res, next) {
-  const url = 'http://localhost:8080/tags';
+  const url = process.env.REACT_APP_REST_SERVER + '/tags';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -60,7 +65,7 @@ resourcesRouter.get('/tags', function(req, res, next) {
 });
 
 resourcesRouter.get('/categories', function(req, res, next) {
-  const url = 'http://localhost:8080/categories';
+  const url = process.env.REACT_APP_REST_SERVER + '/categories';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -70,7 +75,7 @@ resourcesRouter.get('/categories', function(req, res, next) {
 });
 
 resourcesRouter.get('/batches', function(req, res, next) {
-  const url = 'http://localhost:8080/batches';
+  const url = process.env.REACT_APP_REST_SERVER + '/batches';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -80,7 +85,7 @@ resourcesRouter.get('/batches', function(req, res, next) {
 });
 
 resourcesRouter.get('/processed_batches', function(req, res, next) {
-  const url = 'http://localhost:8080/processed_batches';
+  const url = process.env.REACT_APP_REST_SERVER + '/processed_batches';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -92,14 +97,9 @@ resourcesRouter.get('/processed_batches', function(req, res, next) {
 resourcesRouter.post('/processed_batch/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/processed_batch/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/processed_batch/' + req.params['id'];
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -113,17 +113,10 @@ resourcesRouter.post('/processed_batch/:id', async function(req, res, next) {
 
 resourcesRouter.get('/processed_batch/:id', async function(req, res, next) {
   req.accepts('application/json');
-  const url = 'http://localhost:8080/processed_batch/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/processed_batch/' + req.params['id'];
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-  }
-
-  console.log("Data: ", options);
   try {
-    const data = await got.get(url, options).json();
+    const data = await got.get(url).json();
     res.status(200).send(data);
   } catch (e) {
     console.log("Got Error: ", e);
@@ -135,17 +128,10 @@ resourcesRouter.get('/processed_batch/:id', async function(req, res, next) {
 resourcesRouter.delete('/processed_batch/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/processed_batch/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/processed_batch/' + req.params['id'];
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-  }
-
-  console.log("Data: ", options);
   try {
-    await got.delete(url, options);
+    await got.delete(url);
     res.status(204).send("");
   } catch (e) {
     console.log("Got Error: ", e);
@@ -155,7 +141,7 @@ resourcesRouter.delete('/processed_batch/:id', async function(req, res, next) {
 
 
 resourcesRouter.get('/qualifiers', function(req, res, next) {
-  const url = 'http://localhost:8080/qualifiers';
+  const url = process.env.REACT_APP_REST_SERVER + '/qualifiers';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -164,46 +150,13 @@ resourcesRouter.get('/qualifiers', function(req, res, next) {
   });
 });
 
-/*
-Template Model
-{
-   "id": 23,
-   "institution": {
-        "id": 4,
-        "key": "WF",
-        "name": "Wells Fargo"
-    },
-    "category": {
-        "id": 34,
-        "value": "Fee"
-    },
-    "qualifiers": [
-        {
-            "id": 24,
-            "value": "ATM - "
-        }
-    ],
-    "tags": [
-        {
-            "id": 9,
-            "value": "Fee"
-        }
-    ],
-    "credit": false,
-    "hint": "ATM Withdrawal",
-    "notes": "Fines and Penalties"
-}
 
- */
 resourcesRouter.get('/templates', function(req, res, next) {
-  const url = 'http://localhost:8080/templates';
+  const url = process.env.REACT_APP_REST_SERVER + '/templates';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
     console.log("Request errors: ", error);
-
-    // Loop through each template and fill in details??
-
     res.send(body);
   });
 });
@@ -211,14 +164,9 @@ resourcesRouter.get('/templates', function(req, res, next) {
 resourcesRouter.put('/template/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/template/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/template/' + req.params['id'];
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -233,14 +181,9 @@ resourcesRouter.put('/template/:id', async function(req, res, next) {
 resourcesRouter.patch('/template/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/template/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/template/' + req.params['id'];
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -255,7 +198,7 @@ resourcesRouter.patch('/template/:id', async function(req, res, next) {
 
 resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&limit=3000";
+  const url = process.env.REACT_APP_REST_SERVER + '/transactions?batch_id=' + req.params['batch_id'] + "&limit=3000";
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {
@@ -268,7 +211,7 @@ resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
 
 resourcesRouter.get('/transactions/:batch_id/:institution_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/transactions?batch_id=' + req.params['batch_id'] + "&institution_id=" + institution_id + "&limit=3000";
+  const url = process.env.REACT_APP_REST_SERVER + '/transactions?batch_id=' + req.params['batch_id'] + "&institution_id=" + institution_id + "&limit=3000";
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {
@@ -281,7 +224,7 @@ resourcesRouter.get('/transactions/:batch_id/:institution_id', function(req, res
 
 resourcesRouter.get('/processed_transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/processed_transactions?limit=3000&batch_id=' + req.params['batch_id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/processed_transactions?limit=3000&batch_id=' + req.params['batch_id'];
   console.log("URL: ", url);
 
   request(url, (error, response, body) => {
@@ -293,13 +236,8 @@ resourcesRouter.get('/processed_transactions/:batch_id', function(req, res, next
 
 resourcesRouter.post('/categories', async function(req, res, next) {
   req.accepts('application/json');
-  const url = 'http://localhost:8080/categories';
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const url = process.env.REACT_APP_REST_SERVER + '/categories';
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -314,14 +252,9 @@ resourcesRouter.post('/categories', async function(req, res, next) {
 resourcesRouter.put('/categories/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/category/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/category/' + req.params['id'];
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -337,15 +270,10 @@ resourcesRouter.put('/categories/:id', async function(req, res, next) {
 resourcesRouter.put('/tags/:id', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/tags/' + req.params['id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/tags/' + req.params['id'];
   console.log("URL: ", url);
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -359,13 +287,8 @@ resourcesRouter.put('/tags/:id', async function(req, res, next) {
 
 resourcesRouter.post('/tags', async function(req, res, next) {
   req.accepts('application/json');
-  const url = 'http://localhost:8080/tags';
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const url = process.env.REACT_APP_REST_SERVER + '/tags';
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -382,14 +305,9 @@ resourcesRouter.post('/tags', async function(req, res, next) {
 resourcesRouter.put('/transaction/:id/tags', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/tags';
+  const url = process.env.REACT_APP_REST_SERVER + '/transaction/' + req.params['id'] + '/tags';
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -406,14 +324,9 @@ resourcesRouter.put('/transaction/:id/tags', async function(req, res, next) {
 resourcesRouter.post('/transaction/:id/notes', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.body);
-  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/notes';
+  const url = process.env.REACT_APP_REST_SERVER + '/transaction/' + req.params['id'] + '/notes';
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -428,14 +341,9 @@ resourcesRouter.post('/transaction/:id/notes', async function(req, res, next) {
 resourcesRouter.put('/transaction/:id/notes', async function(req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.body);
-  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/notes';
+  const url = process.env.REACT_APP_REST_SERVER + '/transaction/' + req.params['id'] + '/notes';
 
-  const options = {
-    headers: {
-      'Accept': 'application/json'
-    },
-    json: req.body
-  }
+  const options = standardOptions(req.body);
 
   console.log("Data: ", options);
   try {
@@ -451,7 +359,7 @@ resourcesRouter.put('/transaction/:id/notes', async function(req, res, next) {
 
 resourcesRouter.put('/transaction/:id/category', async function(req, res, next) {
   req.accepts('application/json');
-  const url = 'http://localhost:8080/transaction/' + req.params['id'] + '/category?category_id=' + req.body['category_id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/transaction/' + req.params['id'] + '/category?category_id=' + req.body['category_id'];
   console.log("URL: ", url);
   const options = {
     headers: {
@@ -471,7 +379,7 @@ resourcesRouter.put('/transaction/:id/category', async function(req, res, next) 
 });
 
 resourcesRouter.get('/saved_filters', function(req, res, next) {
-  const url = 'http://localhost:8080/saved_filters';
+  const url = process.env.REACT_APP_REST_SERVER + '/saved_filters';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -482,7 +390,7 @@ resourcesRouter.get('/saved_filters', function(req, res, next) {
 });
 
 resourcesRouter.get('/batch_contents', function(req, res, next) {
-  const url = 'http://localhost:8080/batch_contents';
+  const url = process.env.REACT_APP_REST_SERVER + '/batch_contents';
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);
@@ -493,7 +401,7 @@ resourcesRouter.get('/batch_contents', function(req, res, next) {
 });
 
 resourcesRouter.get('/batch_contents/:batch_id', function(req, res, next) {
-  const url = 'http://localhost:8080/batch_contents/' + req.params['batch_id'];
+  const url = process.env.REACT_APP_REST_SERVER + '/batch_contents/' + req.params['batch_id'];
 
   request(url, (error, response, body) => {
     console.debug("Sending back: ", body);

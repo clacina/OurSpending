@@ -117,7 +117,6 @@ const TemplateDetailComponent = ({template, eventHandler}) => {
                     />
                 </TemplateContainer>
             </TemplateCategoryDiv>
-
         )
     }
 }

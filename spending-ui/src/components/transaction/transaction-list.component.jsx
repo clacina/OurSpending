@@ -15,7 +15,6 @@ import {TagsContext} from "../../contexts/tags.context";
 import assert from "assert";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 import {TransactionsContext} from "../../contexts/transactions.context";
-import {BatchContentsContext} from "../../contexts/batch_contents.context";
 
 // https://flatuicolors.com/palette/fr
 
