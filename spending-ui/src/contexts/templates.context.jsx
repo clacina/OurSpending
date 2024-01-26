@@ -8,7 +8,9 @@ export const TemplatesContext = createContext({
 
 export const TemplatesProvider = ({children}) => {
     const [templatesMap, setTemplatesMap] = useState([]);
+    const [templateQualifiersMap, setTemplateQualifiersMap] = useState([]);
     const [update, setUpdate] = useState(true);
+    const [updateQualifiers, setUpdateQualifiers] = useState(true);
 
     const getTemplates = async () => {
         const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates'
@@ -17,6 +19,14 @@ export const TemplatesProvider = ({children}) => {
         setUpdate(false);
         return(str);
     };
+
+    const getQualifiers = async () => {
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/template_qualifiers'
+        const data = await fetch(url, { method: 'GET' })
+        var str = await data.json();
+        setUpdateQualifiers(false);
+        return(str);
+    }
 
     const updateTemplate = async (template_id, body) => {
         const headers = {'Content-Type': 'application/json'}
@@ -28,6 +38,13 @@ export const TemplatesProvider = ({children}) => {
         setUpdate(true);
     }
 
+    const getTemplateQualifiers = async (template_id) => {
+        return templateQualifiersMap.filter((x, ndx) => {
+            return (x.template_id === template_id)
+        });
+    }
+
+
 
     useEffect(() => {
         try {
@@ -37,6 +54,14 @@ export const TemplatesProvider = ({children}) => {
         }
     }, [update===true]);
 
-    const value = {templatesMap, setTemplatesMap, setUpdate, updateTemplate};
+    useEffect(() => {
+        try {
+            getQualifiers().then((res) => setTemplateQualifiersMap(res));
+        } catch (e) {
+            console.log("Error fetching database content: ", e);
+        }
+    }, [updateQualifiers===true]);
+
+    const value = {templatesMap, setTemplatesMap, setUpdate, updateTemplate, getTemplateQualifiers};
     return <TemplatesContext.Provider value={value}>{children}</TemplatesContext.Provider>
 };

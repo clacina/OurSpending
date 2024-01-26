@@ -73,13 +73,13 @@ export const StaticDataProvider = ({children}) => {
     const value = {
         transactionDataDefinitions,
         // setTransactionDataDefinitions,
-        institutions,
+        // institutions,
         // setInstitutions,
-        batches,
+        // batches,
         // setBatches,
         qualifiers,
         setQualifiers,
-        processedBatches,
+        // processedBatches,
         // setProcessedBatches,
         sectionTitle,
         setSectionTitle
