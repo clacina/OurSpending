@@ -182,6 +182,24 @@ def patch_template(template_id: int,
 
     return new_template
 
+
+@router.get(
+    "/template_qualifiers",
+    summary="Get list of template qualifiers.",
+    response_model=List[models.TemplateQualifierModel],
+)
+async def query_template_qualifiers():
+    query_result = db_access.query_templates_qualifiers()
+    response = []
+    for row in query_result:
+        entry = models.TemplateQualifierModel(
+            template_id=row[0],
+            qualifier_id=row[1],
+            data_column=row[2])
+        response.append(entry)
+    return response
+
+
 """ ---------- Batches ---------------------------------------------------------------------------"""
 
 

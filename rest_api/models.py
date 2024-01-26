@@ -43,7 +43,7 @@ class InstitutionsModel(BaseModel):
 class TemplateQualifierModel(BaseModel):
     template_id: int
     qualifier_id: int
-    data_column: str
+    data_column: Optional[str]
 
 
 class TemplateTagModel(BaseModel):

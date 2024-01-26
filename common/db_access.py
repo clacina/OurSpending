@@ -653,6 +653,17 @@ class DBAccess:
 
         # TODO Qualifiers
 
+    def query_templates_qualifiers(self):
+        sql = "SELECT template_id, qualifier_id, data_column FROM template_qualifiers"
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            result = cur.fetchall()
+            return result
+        except Exception as e:
+            logging.exception(f"Error: {str(e)}")
+            raise e
+
     """ Tags """
 
     def query_tags_for_transaction(self, transaction_id: int):
