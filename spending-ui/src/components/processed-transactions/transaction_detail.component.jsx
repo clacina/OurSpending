@@ -97,7 +97,7 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
             </ItemTable>
             {openCategories && <CategorySelectDialog row={row} closeHandler={closeModal}/>}
             {openNotes && <NoteEditDialog closeHandler={closeModal}/>}
-            {openTemplateEditor && <CreateTemplateDialogComponent closeHandler={closeCreateTemplate} institution_id={row.institution_id}/>}
+            {openTemplateEditor && <CreateTemplateDialogComponent closeHandler={closeCreateTemplate} transaction={row}/>}
         </TransactionDetailContainer>
     );
 }

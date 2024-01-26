@@ -10,6 +10,7 @@ import Form from "react-bootstrap/Form";
 import {CategoriesContext} from "../../../contexts/categories.context";
 import {ExistingQualifierList, InstitutionName} from "./create.template.dialog.styles";
 import {StaticDataContext} from "../../../contexts/static_data.context";
+import {InstitutionsContext} from "../../../contexts/banks.context";
 
 /*
     Template Fields to capture:
@@ -31,7 +32,8 @@ import {StaticDataContext} from "../../../contexts/static_data.context";
             PATCH /template/template_id
  */
 
-const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
+const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
+    const {institutionsMap} = useContext(InstitutionsContext);
     const {categoriesMap} = useContext(CategoriesContext);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const [isOpen, setIsOpen] = useState(true);
@@ -42,19 +44,31 @@ const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
     const [notesText, setNotesText] = useState("");
     const [fieldOptions, setFieldOptions] = useState([]);
     const [categoryOptions, setCategoryOptions] = useState([]);
+    const [institutionName, setInstitutionName] = useState("");
 
     // Qualifiers ----------------------------------------------
     const [qualifiers, setQualifiers] = useState([]);
     const [qualifierPhrase, setQualifierPhrase] = useState("");
+    const [qualifierField, setQualifierField] = useState();
     const qualifierSelectionRef = useRef();
+
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         if (transactionDataDefinitions.length > 0 && !isLoaded) {
-            console.log("Loading...", institution_id);
+            console.log("Loading...", transaction.institution_id);
+
+            // set institution name
+            const newName = institutionsMap.find((x) => {
+                if(x.id === transaction.institution_id) {
+                    return(x);
+                }
+            })
+            setInstitutionName(newName.name);
+
             // build qualifier field list
             const f = []
-            const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === institution_id);
+            const dataDefinition = transactionDataDefinitions.filter((x, idx) => x.institution_id === transaction.institution_id);
             for (let i = 0; i < dataDefinition.length; i++) {
                 f.push({value: i, label: dataDefinition[i].column_name});
             }
@@ -66,9 +80,6 @@ const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
                 options.push({value: item.id, label: item.value});
             })
             setCategoryOptions(options);
-
-            console.log("fieldOptions: ", f);
-            console.log("categoryOptions: ", options);
 
             setIsLoaded(true);
         }
@@ -92,12 +103,8 @@ const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
     }
 
     const updateCategory = (event) => {
-        // event contains an array of active entries in the select
-        const categories = []
-        event.forEach((item) => {
-            categories.push(item.value);
-        });
-        eventHandler({'categories': categories});
+        console.log("Update category: ", event);
+        eventHandler({'category': event});
     }
 
     const changeIsCredit = () => {
@@ -115,12 +122,34 @@ const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
         qualifiers - id, value, institution_id
         template_qualifiers - template_id, qualifier_id, data_column (string)
      */
+        // check qualifier phrase and field
+        if(qualifierPhrase.length === 0) {
+            alert("Please specify a phrase to match against the transaction.");
+            return;
+        }
+
+        // Ref IS valid here
+        console.log("Current QRef: ", qualifierSelectionRef.current.getValue());
+        if(!qualifierSelectionRef.current.getValue().length) {
+            alert("Please select a Transaction Field to match against.")
+            return;
+        }
 
     }
 
     const updateFieldSelection = (event) => {
-        console.log("QRef: ", qualifierSelectionRef.current.getValue()[0]);
-        eventHandler('qualiferPhrase', qualifierSelectionRef.current.getValue());
+        // console.log("Q-event: ", event);
+        /*
+            Ref isn't set yet so isn't valid here. We have to use the event
+            console.log("QRef: ", qualifierSelectionRef.current.getValue());
+
+            Use the data from the event to pull the data from the specified field and
+             populate the Phrase entry (if it's not populated)
+        */
+
+        // get the data from the transaction that matches field event.label and ordinal event.value
+        const fieldData = transaction.transaction.transaction_data[event.value];
+        setQualifierPhrase(fieldData);
     }
 
     function compareCategories(a, b) {
@@ -142,10 +171,10 @@ const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
                     <Modal.Header closeButton>
                         <Modal.Title>Create Template</Modal.Title>
                     </Modal.Header>
-                    <InstitutionName>Bank Name</InstitutionName>
                     <Modal.Body>
+                        <InstitutionName>{institutionName}</InstitutionName>
                         <label>Hint</label>
-                        <input value={hintText} type="text" onChange={onChangeHint}/>
+                        <input value={hintText} type="text" onChange={onChangeHint} autoFocus={true}/>
                         <label>Category</label>
                         <Select
                             id="templateCategorySelection"
@@ -155,22 +184,24 @@ const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
                             // menuPortalTarget={document.body}
                             menuPosition={'fixed'}
                             onChange={updateCategory}/>
-                        <Form.Check
-                            className='matchAll'
-                            type="switch"
-                            id="allTags"
-                            label="Is Credit"
-                            checked={isCredit}
-                            onChange={changeIsCredit}
-                        />
-                        <Form.Check
-                            className='matchAll'
-                            type="switch"
-                            id="allTags"
-                            label="Is Tax Deductible"
-                            checked={isTaxDeductible}
-                            onChange={changeIsTaxDeductible}
-                        />
+                        <div id='radio_line'>
+                            <Form.Check
+                                className='matchAll'
+                                type="switch"
+                                id='checkIsCredit'
+                                label="Is Credit"
+                                checked={isCredit}
+                                onChange={changeIsCredit}
+                            />
+                            <Form.Check
+                                className='matchAll'
+                                type="switch"
+                                id='checkIsTaxDeductible'
+                                label="Is Tax Deductible"
+                                checked={isTaxDeductible}
+                                onChange={changeIsTaxDeductible}
+                            />
+                        </div>
                         <label>Notes</label>
                         <input value={notesText} type="text" onChange={onChangeNotes}/>
                         <hr/>
@@ -189,12 +220,13 @@ const CreateTemplateDialogComponent = ({closeHandler, institution_id}) => {
                         <label>Field</label>
                         <Select
                             id="qualifierFieldSelection"
-                            ref={qualifierSelectionRef}
                             closeMenuOnSelect={true}
+                            ref={qualifierSelectionRef}
                             options={fieldOptions}
                             // menuPortalTarget={document.body}
                             menuPosition={'fixed'}
-                            onChange={updateFieldSelection}/>
+                            onChange={updateFieldSelection}
+                        />
                         <Button variant="primary" onClick={addQualifier}>Add</Button>
                     </Modal.Body>
                     <Modal.Footer>
