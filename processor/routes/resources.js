@@ -196,6 +196,18 @@ resourcesRouter.patch('/template/:id', async function(req, res, next) {
 });
 
 
+resourcesRouter.get('/template_qualifiers', function(req, res, next) {
+  const url = process.env.REACT_APP_REST_SERVER + '/template_qualifiers';
+
+  request(url, (error, response, body) => {
+    console.debug("Sending back: ", body);
+    console.log("Request errors: ", error);
+    res.send(body);
+  });
+});
+
+
+
 resourcesRouter.get('/transactions/:batch_id', function(req, res, next) {
   console.log("Params: ", req.params);
   const url = process.env.REACT_APP_REST_SERVER + '/transactions?batch_id=' + req.params['batch_id'] + "&limit=3000";
