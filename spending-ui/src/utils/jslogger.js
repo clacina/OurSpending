@@ -17,6 +17,13 @@ const utc = (now) =>
     ":" +
     ("0" + now.getSeconds()).slice(-2);
 
+
+function debug(msg) {
+    const stackTrace = Error().stack.split('\n    at ').slice(1);
+    console.log(msg, `\n\ntriggered by ${stackTrace.at(-1)}`);
+}
+
+
 /*
 
 import jslogger from '../../utils/jslogger.js';
