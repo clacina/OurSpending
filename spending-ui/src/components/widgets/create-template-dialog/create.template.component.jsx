@@ -15,6 +15,7 @@ import {StaticDataContext} from "../../../contexts/static_data.context";
 import {InstitutionsContext} from "../../../contexts/banks.context";
 import {QualifiersContext} from "../../../contexts/qualifiers.context";
 
+import Jslogger from "../../../utils/jslogger";
 /*
     Template Fields to capture:
     - Hint - Str
@@ -198,10 +199,12 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
             confirmAlert({
                 title: "Error",
                 message: "Please supply a descriptive hint for this template.",
+                closeOnEscape: false,
+                closeOnClickOutside: false,
                 buttons: [
                     {
                         label: 'Ok',
-                        onClick: () => alert('Click Yes')
+                        onClick: () => alert('Click Yes'),
                     }
                 ]
             });
