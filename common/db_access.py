@@ -800,14 +800,12 @@ class DBAccess:
         cur = conn.cursor()
         try:
             cur.execute(sql, query_params)
-            new_id = cur.fetchall()
-            print(f"Got new id of {new_id}")
+            new_id = cur.fetchall()[0]
             conn.commit()
             return new_id
         except UniqueViolation as uv:
             logging.exception(f"Error inserting qualifier {value}: {str(uv)}")
             raise uv
-
         except Exception as e:
             logging.exception(f"Error inserting qualifier {value}: {str(e)}")
             raise e
