@@ -13,3 +13,7 @@
 #checkIsTaxDeductible {
     padding-left: 10px;
 }
+
+.react-confirm-alert-overlay {
+    z-index: 3000!important;
+}
