@@ -414,7 +414,7 @@ async def get_qualifier(qualifier_id: int):
 )
 async def add_qualifier(
     value: str = Body(...),
-    institution_id: str = Body(...),
+    institution_id: int = Body(...),
 ):
     query_result = db_access.create_qualifer(value=value, institution_id=institution_id)
     if not query_result:  # qualifier exists
@@ -422,7 +422,8 @@ async def add_qualifier(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Specified Qualifier already exists.",
         )
-    return models.QualifierModel(id=query_result[0], value=query_result[1])
+    logging.info(f"New id of {query_result[0]}")
+    return models.QualifierModel(id=query_result[0], value=value, institution_id=institution_id)
 
 
 """ ---------- Tags ------------------------------------------------------------------------------"""
