@@ -23,17 +23,17 @@
 .filter {
     width: 100%;
     display: flex;
-    border: 1px solid green;
+    /*border: 1px solid green;*/
 }
 .filterHeader {
-    border: 1px solid blue;
+    /*border: 1px solid blue;*/
     padding-left: 20px;
     width: 1100px;
     margin-right: auto;
 }
 
 #filterHeaderRight {
-    border: 1px solid red;
+    /*border: 1px solid red;*/
     padding: 20px;
     margin-left: auto;
 }
