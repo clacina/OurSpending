@@ -221,10 +221,18 @@ async def get_batches():
     return response
 
 
+class ErrorItem(BaseModel):
+    value: str
+
+
 @router.get(
     "/batch/{batch_id}",
     summary="Get details for a specific batch of transactions",
-    response_model=models.TransactionBatchModel,
+    # response_model=models.TransactionBatchModel,
+    responses={
+        '404': {"model": ErrorItem, "description": "The specified batch was not found."},
+        '200': {"model": models.TransactionBatchModel}
+    }
 )
 async def get_batch(batch_id: int):
     query_result = db_access.fetch_batch(batch_id)
@@ -236,7 +244,7 @@ async def get_batch(batch_id: int):
         )
         return response
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="Batch not found."
+        status_code=status.HTTP_404_NOT_FOUND, detail="Exception batch was not found."
     )
 
 
@@ -1248,3 +1256,11 @@ async def get_contents_from_batch(batch_id: int):
         )
         content_list.append(sf)
     return content_list
+
+
+"""----------------------------Actions--------------------------"""
+
+
+@router.post("/processed_batch/rerun/{batch_id}")
+async def rereun_processed_batch(batch_id: int):
+    pass
