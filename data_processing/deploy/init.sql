@@ -64,23 +64,23 @@ CREATE TABLE template_qualifiers
     template_id  INTEGER REFERENCES templates (id) ON DELETE CASCADE  NOT NULL,
     qualifier_id INTEGER REFERENCES qualifiers (id) ON DELETE CASCADE NOT NULL,
     data_column  TEXT                                                          DEFAULT NULL,
-    sys_period   TSTZRANGE                                            NOT NULL DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, NULL),
+--     sys_period   TSTZRANGE                                            NOT NULL DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, NULL),
     unique (template_id, qualifier_id, data_column)
 );
 
-DROP TABLE IF EXISTS template_qualifiers_history;
-CREATE TABLE template_qualifiers_history
-(
-    LIKE template_qualifiers
-);
-DROP TRIGGER IF EXISTS template_qualifiers_versioning_trigger ON template_qualifiers;
-CREATE TRIGGER template_qualifiers_versioning_trigger
-    BEFORE UPDATE OR DELETE
-    ON template_qualifiers
-    FOR EACH ROW
-EXECUTE PROCEDURE versioning(
-        'sys_period', 'template_qualifiers_history', TRUE
-    );
+-- DROP TABLE IF EXISTS template_qualifiers_history;
+-- CREATE TABLE template_qualifiers_history
+-- (
+--     LIKE template_qualifiers
+-- );
+-- DROP TRIGGER IF EXISTS template_qualifiers_versioning_trigger ON template_qualifiers;
+-- CREATE TRIGGER template_qualifiers_versioning_trigger
+--     BEFORE UPDATE OR DELETE
+--     ON template_qualifiers
+--     FOR EACH ROW
+-- EXECUTE PROCEDURE versioning(
+--         'sys_period', 'template_qualifiers_history', TRUE
+--     );
 
 
 DROP TABLE IF EXISTS template_tags;
@@ -185,6 +185,26 @@ CREATE TABLE saved_filters
     search_string  TEXT DEFAULT NULL
 );
 ALTER SEQUENCE saved_filters_id_seq RESTART WITH 4000;
+
+
+DROP TABLE IF EXISTS credit_cards CASCADE;
+CREATE TABLE credit_cards
+(
+    id              SERIAL PRIMARY KEY,
+    name            TEXT NOT NULL UNIQUE,
+    institution_id  INTEGER DEFAULT NULL,
+    due_date        DATE DEFAULT NULL,
+    interest_rate   FLOAT DEFAULT NULL
+);
+
+
+DROP TABLE IF EXISTS credit_card_data CASCADE;
+CREATE TABLE credit_card_data
+(
+    card_id         INT REFERENCES credit_cards (id),
+    balance         FLOAT,
+    balance_date    DATE DEFAULT NULL
+);
 
 -- Data
 
@@ -642,4 +662,17 @@ VALUES
     (14, 26, 'Subject', 'String', false, false, false, NULL),
     (14, 27, 'Note', 'String', false, false, false, NULL),
     (14, 28, 'Balance Impact', 'String', false, false, false, NULL)
+;
+
+/*------------------------ Credit Card Info --------------------------*/
+INSERT INTO
+    credit_cards (name)
+VALUES
+    ('Wells Fargo Visa'),
+    ('Sound Visa'),
+    ('Care Credit'),
+    ('Capital One'),
+    ('Chase Visa (Amazon)'),
+    ('Home Depot'),
+    ('Lowes')
 ;
