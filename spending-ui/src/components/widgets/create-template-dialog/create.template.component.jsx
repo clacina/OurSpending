@@ -211,7 +211,21 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
             return;
         }
 
-        closeHandler();
+        const payload = {
+            "hint": hintText,
+            "category": categorySelectionRef.current,
+            "is_credit": isCredit,
+            "is_tax_deductible": isTaxDeductible,
+            "notes": notesText,
+            "qualifiers":
+                qualifiers.map((item) => {
+                    return({"id": item.id, "field": item.data_column})
+                })
+            }
+
+        console.log("Payload: ", payload);
+
+        closeHandler(payload);
     }
 
     if (isLoaded) {
