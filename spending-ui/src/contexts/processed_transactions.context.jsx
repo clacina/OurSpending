@@ -12,7 +12,7 @@ export const ProcessedTransactionsProvider = ({children}) => {
 
     const getTransactions = async (batch_id) => {
         setCurrentBatchId(batch_id);
-        const url = 'http://localhost:8000/resources/processed_transactions/' + batch_id
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_transactions/' + batch_id
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);

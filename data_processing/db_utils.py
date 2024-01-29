@@ -3,6 +3,7 @@ import sys
 # append the path of the
 # parent directory
 sys.path.append("..")
+import logging
 
 from common.db_access import DBAccess
 from data_processing.data_models import *
@@ -37,16 +38,77 @@ def load_templates(institution_id: Optional[int] = -1):
     return entities
 
 
-def create_transaction_batch():
+def create_transaction_batch(notes=None):
     conn = db_access.connect_to_db()
     assert conn
-    sql = "INSERT INTO transaction_batch (notes) VALUES('test run') RETURNING id"
+    sql = "INSERT INTO transaction_batch (notes) VALUES( %(notes)s ) RETURNING id"
+    query_params = {
+        "notes": notes if notes else 'Test Run'
+    }
     cur = conn.cursor()
     try:
-        cur.execute(sql)
+        cur.execute(sql, query_params)
         conn.commit()
         result = cur.fetchone()
-        return result[0]
+        batch_id = result[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+    return batch_id
+
+
+def add_transaction_batch_content(filename, institution_id, batch_id, file_date, notes=None):
+    conn = db_access.connect_to_db()
+    assert conn
+
+    sql = """
+        SELECT count(*) FROM transaction_records WHERE batch_id=%(batch_id)s AND institution_id=%(institution_id)s
+    """
+    query_params = {
+        "batch_id": batch_id,
+        "institution_id": institution_id
+    }
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        transaction_count = cur.fetchone()[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+    # Remove any existing batch_contents entries for this institution and batch_id
+    sql = """
+        DELETE FROM transaction_batch_contents WHERE institution_id=%(institution_id)s and batch_id=%(batch_id)s
+    """
+    query_params = {
+        "institution_id": institution_id,
+        "batch_id": batch_id
+    }
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+    # Setup transaction_batch_contents record
+    sql = """INSERT INTO transaction_batch_contents
+            (filename, institution_id, batch_id, file_date, transaction_count, notes)
+            VALUES (%(filename)s, %(institution_id)s, %(batch_id)s, %(file_date)s, %(transaction_count)s, %(notes)s)
+    """
+
+    query_params = {
+        "filename": filename,
+        "institution_id": institution_id,
+        "batch_id": batch_id,
+        "file_date": file_date,
+        "transaction_count": transaction_count,
+        "notes": notes
+    }
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
     except Exception as e:
         print(f"Error: {str(e)}")
         raise e
@@ -61,6 +123,36 @@ def update_batch_info(batch_id: int, new_notes: str):
     try:
         cur.execute(sql, query_params)
         conn.commit()
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+
+def find_institution_from_class(processor_class):
+    conn = db_access.connect_to_db()
+    assert conn
+    sql = "SELECT id FROM institutions where class=%(processor_class)s"
+    cur = conn.cursor()
+    query_params = {"processor_class": processor_class}
+    try:
+        cur.execute(sql, query_params)
+        row = cur.fetchone()
+        return row[0]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+
+def find_class_from_institution(processor_id):
+    conn = db_access.connect_to_db()
+    assert conn
+    sql = "SELECT class FROM institutions WHERE id=%(processor_id)s"
+    cur = conn.cursor()
+    query_params = {"processor_id": processor_id}
+    try:
+        cur.execute(sql, query_params)
+        row = cur.fetchone()
+        return row[0]
     except Exception as e:
         print(f"Error: {str(e)}")
         raise e
@@ -89,6 +181,7 @@ def fetch_transactions_from_batch(batch_id: int, institution_id: Optional[int] =
 
 
 def add_transaction(conn, transaction, batch_id):
+    logging.info(f"Transaction: {transaction}")
     sql = """
         INSERT INTO
             transaction_records (
@@ -269,3 +362,45 @@ def fetch_processed_transactions_from_batch(processed_batch_id: int, institution
         return result
     except Exception as e:
         print(f"Error: {str(e)}")
+
+
+def override_batch_transactions(institution_id, transactions, batch_id):
+    sql = """
+    DELETE FROM
+        transaction_records
+    WHERE 
+        institution_id = %(institution_id)s AND batch_id = %(batch_id)s        
+    """
+
+    query_params = {
+        "institution_id": institution_id,
+        "batch_id": batch_id
+    }
+
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+
+def get_institutions_from_batch_contents(batch_id):
+    sql = "SELECT DISTINCT institution_id FROM transaction_batch_contents WHERE batch_id=%(batch_id)s"
+    query_params = {
+        "batch_id": batch_id
+    }
+
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        rows = cur.fetchall()
+        return rows
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e

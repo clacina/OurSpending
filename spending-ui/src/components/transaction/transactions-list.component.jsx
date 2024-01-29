@@ -38,6 +38,7 @@ const TransactionsList = () => {
             })
 
             setGroupingArray(Object.values(trans_groups));
+            console.log(Object.values(trans_groups));
             setIsLoaded(true);
             console.timeEnd("Load Time")
         } else {

@@ -2,7 +2,7 @@ import React from "react";
 import {useContext, useEffect, useState} from "react";
 
 import "react-contexify/dist/ReactContexify.css";
-import cellEditFactory from "react-bootstrap-table2-editor";
+import cellEditFactory, {Type} from "react-bootstrap-table2-editor";
 import TableBaseComponent from '../widgets/table-base/table-base.component.jsx';
 
 import Button from "react-bootstrap/Button";
@@ -21,6 +21,13 @@ const CategoriesComponent = () => {
     const resetFormFields = () => {
         setNewEntry("");
         setNewNotes("");
+    }
+
+    const taxableFormatter = (cell, row, rowIndex, formatExtraData) => {
+        // if(row.is_tax_deductible) {
+        //     return(<div className='showTrueCell'>{row.is_tax_deductible}</div>);
+        // }
+        return(row.is_tax_deductible);
     }
 
     const headerBackgroundColor = '#008080'
@@ -54,6 +61,24 @@ const CategoriesComponent = () => {
         })
     columns.push(
         {
+            dataField: 'is_tax_deductible',
+            text: 'Tax Deductible',
+            sort: true,
+            editor: {
+                type: Type.CHECKBOX,
+                value: 'Y:N'
+            },
+            headerStyle: {
+                backgroundColor: headerBackgroundColor,
+                color: 'white'
+            },
+            headerAttrs: {
+                width:'200px',
+            },
+            style: {cursor: 'pointer'}
+        })
+    columns.push(
+        {
             dataField: 'notes',
             text: 'Notes',
             sort: false,
@@ -77,7 +102,8 @@ const CategoriesComponent = () => {
     const cellEdit = cellEditFactory({
         mode: 'click',
         afterSaveCell: async (oldValue, newValue, row, column) => {
-            updateCategory(row.id, row.value, row.notes);
+            console.log("newValue: ", newValue)
+            updateCategory(row.id, row.value, row.is_tax_deductible, row.notes);
         }
     })
 

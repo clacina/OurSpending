@@ -100,6 +100,7 @@ class DBAccess:
         except Exception as e:
             logging.exception(f"I am unable to connect to the database:{str(e)}")
             raise e
+
     def get_db_cursor(self):
         conn = self.connect_to_db()
         assert conn
@@ -300,6 +301,20 @@ class DBAccess:
             logging.exception({"message": f"Error updating processed batch notes: {str(e)}"})
             raise e
 
+    def delete_processed_batch(self, batch_id):
+        sql = "DELETE FROM processed_transaction_batch WHERE id=%(batch_id)s"
+        query_params = {"batch_id": batch_id}
+
+        conn = self.connect_to_db()
+        assert conn
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception({"message": f"Error deleting processed batch {batch_id}: {str(e)}"})
+            raise e
+
     def get_processed_transaction_records(self, batch_id, offset=0, limit=10):
         sql = f"{ProcessedTransactionSQL} WHERE BID=%(batch_id)s"
         sql += " LIMIT %(limit)s OFFSET %(offset)s"
@@ -384,7 +399,7 @@ class DBAccess:
     """ Categories """
 
     def load_categories(self):
-        sql = "SELECT id, value, notes FROM categories order by value"
+        sql = "SELECT id, value, is_tax_deductible, notes FROM categories order by value"
         cur = self.get_db_cursor()
         try:
             cur.execute(sql)
@@ -395,7 +410,7 @@ class DBAccess:
             raise e
 
     def get_category(self, category_id):
-        sql = "SELECT id, value FROM categories WHERE id=%(category_id)s"
+        sql = "SELECT id, value, is_tax_deductible, notes FROM categories WHERE id=%(category_id)s"
         query_params = {"category_id": category_id}
         cur = self.get_db_cursor()
         try:
@@ -432,12 +447,12 @@ class DBAccess:
             logging.exception(f"Error creating category: {str(e)}")
             raise e
 
-    def update_category(self, category_id: int, value: str, notes: str):
+    def update_category(self, category_id: int, value: str, is_tax_deductible: bool, notes: str):
         conn = self.connect_to_db()
         assert conn
 
-        sql = 'UPDATE categories SET value=%(value)s, notes=%(notes)s WHERE id=%(category_id)s'
-        query_params = {"category_id": category_id, "value": value, "notes": notes}
+        sql = 'UPDATE categories SET value=%(value)s, notes=%(notes)s, is_tax_deductible=%(is_tax_deductible)s WHERE id=%(category_id)s'
+        query_params = {"category_id": category_id, "value": value, "notes": notes, "is_tax_deductible": is_tax_deductible}
         cur = conn.cursor()
         try:
             cur.execute(sql, query_params)
@@ -446,20 +461,67 @@ class DBAccess:
             logging.exception(f"Category specified already exists: {str(e)}")
             raise e
 
-    """ templates """
+    """ Templates """
 
     def create_template(self,
-                        institution_id: int,
-                        category: str,
-                        is_credit: bool,
-                        hint: str,
-                        notes: str,
-                        qualifiers: List[str],
-                        tags: List[str],
+                        hint,
+                        institution_id,
+                        category=None,
+                        is_credit=False,
+                        notes=None,
+                        qualifiers=None,
+                        tags=None,
                         ):
-        # does institution id exist?
-        # TODO: Needs impl
-        pass
+        conn = self.connect_to_db()
+        assert conn
+
+        sql = """
+            INSERT INTO templates (hint, institution_id, credit, notes) VALUES (%(hint)s, %(institution_id)s, %(is_credit)s, %(notes)s) RETURNING id
+        """
+        query_params = {
+            "hint": hint,
+            "institution_id": institution_id,
+            "is_credit": is_credit,
+            "notes": notes
+        }
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+            new_id = cur.fetchone()
+            logging.info(f"Got new template id: {new_id}")
+        except Exception as e:
+            logging.exception(f"Error creating template: {str(e)}")
+            raise e
+
+        # If a category was supplied
+        if category:
+            sql = f"UPDATE templates SET category_id = %(category_id)s WHERE id=%(template_id)s"
+            query_params = {
+                "category_id": category.id,
+                "template_id": new_id
+            }
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception(f"Error updating category on template: {str(e)}")
+            raise e
+
+        # if qualifiers were provided
+        if qualifiers:
+            for q in qualifiers:
+                sql = """INSERT INTO 
+                            template_qualifiers (template_id, qualifier_id, data_column) 
+                         VALUES (%(template_id)s, %(qualifier_id)s, %(data_column)s) 
+                      """
+                query_params = {
+                    "template_id": new_id,
+                    "qualifier_id": q.id,
+                    "data_column": q.data_column
+                }
+
+
 
     def fetch_template(self, template_id: int):
         sql = "SELECT id, institution_id, category_id, credit, hint, notes FROM templates WHERE id=%(template_id)s"
@@ -590,6 +652,17 @@ class DBAccess:
             raise e
 
         # TODO Qualifiers
+
+    def query_templates_qualifiers(self):
+        sql = "SELECT template_id, qualifier_id, data_column FROM template_qualifiers"
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            result = cur.fetchall()
+            return result
+        except Exception as e:
+            logging.exception(f"Error: {str(e)}")
+            raise e
 
     """ Tags """
 
@@ -727,14 +800,12 @@ class DBAccess:
         cur = conn.cursor()
         try:
             cur.execute(sql, query_params)
-            new_id = cur.fetchall()
-            print(f"Got new id of {new_id}")
+            new_id = cur.fetchall()[0]
             conn.commit()
             return new_id
         except UniqueViolation as uv:
             logging.exception(f"Error inserting qualifier {value}: {str(uv)}")
             raise uv
-
         except Exception as e:
             logging.exception(f"Error inserting qualifier {value}: {str(e)}")
             raise e
@@ -811,5 +882,38 @@ class DBAccess:
             rows = cur.fetchall()
             return rows
         except Exception as e:
-            logging.exception(f"Error saved filters: {str(e)}")
+            logging.exception(f"Error load saved filters: {str(e)}")
+            raise e
+
+    def load_batch_contents(self):
+        sql = """SELECT 
+                    id, filename, institution_id, batch_id, added_date, file_date, transaction_count, notes
+                 FROM transaction_batch_contents
+              """
+
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return rows
+        except Exception as e:
+            logging.exception(f"Error loading batch contents: {str(e)}")
+            raise e
+
+    def load_contents_from_batch(self, batch_id):
+        sql = """SELECT 
+                    id, filename, institution_id, batch_id, added_date, file_date, transaction_count, notes
+                 FROM transaction_batch_contents
+                 WHERE batch_id=%(batch_id)s
+              """
+        query_params = {
+            "batch_id": batch_id
+        }
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql, query_params)
+            rows = cur.fetchall()
+            return rows
+        except Exception as e:
+            logging.exception(f"Error loading batch contents: {str(e)}")
             raise e

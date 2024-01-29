@@ -24,35 +24,35 @@ export const StaticDataProvider = ({children}) => {
     const [sectionTitle, setSectionTitle] = useState('Opening Section');
 
     const getBanks = async () => {
-        const url = 'http://localhost:8000/resources/banks'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/banks'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     };
 
     const getTransactionDefinitions = async () => {
-        const url = 'http://localhost:8000/resources/data_definitions'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/data_definitions'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     };
 
     const getBatches = async () => {
-        const url = 'http://localhost:8000/resources/batches'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/batches'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     };
 
     const getQualifiers = async () => {
-        const url = 'http://localhost:8000/resources/qualifiers'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/qualifiers'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     };
 
     const getProcessedBatches = async () => {
-        const url = 'http://localhost:8000/resources/processed_batches'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batches'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
@@ -73,13 +73,13 @@ export const StaticDataProvider = ({children}) => {
     const value = {
         transactionDataDefinitions,
         // setTransactionDataDefinitions,
-        institutions,
+        // institutions,
         // setInstitutions,
-        batches,
+        // batches,
         // setBatches,
         qualifiers,
         setQualifiers,
-        processedBatches,
+        // processedBatches,
         // setProcessedBatches,
         sectionTitle,
         setSectionTitle

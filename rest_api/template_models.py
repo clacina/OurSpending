@@ -4,7 +4,7 @@
 
 import logging
 from typing import Optional, List
-from rest_api.models import CategoryModel, InstitutionsModel, TagModel, QualifierModel
+from rest_api.models import CategoryModel, InstitutionsModel, TagModel, QualifierModel, TemplateQualifierModel
 from pydantic import BaseConfig, BaseModel
 
 BaseConfig.arbitrary_types_allowed = True
@@ -16,7 +16,7 @@ class TemplateInputModel(BaseModel):
     category: Optional[CategoryModel] = None
     credit: Optional[bool]
     tags: Optional[List[TagModel]]
-    qualifiers: Optional[List[QualifierModel]]
+    qualifiers: Optional[List[TemplateQualifierModel]]
     hint: Optional[str]
     notes: Optional[str]
 
@@ -34,7 +34,6 @@ class TemplateReportModel(TemplateInputModel):
 
         for t in data.tags:
             if t not in self.tags:
-
                 self.tags.append(t)
 
         for q in data.qualifiers:
@@ -236,6 +235,7 @@ def parse_template_detail_record(row):
 
     qualifier_id = row[16]
     qualifier_value = row[17]
+    qualifier_data_column = "data column"
 
     institution_id = row[4]
     institution_name = row[5]
@@ -251,7 +251,11 @@ def parse_template_detail_record(row):
         tr.category = CategoryModel(id=category_id, value=category_value)
 
     if qualifier_id:
-        qm = QualifierModel(id=qualifier_id, value=qualifier_value, institution_id=institution_id)
+        # logging.info(f"qualifier: {qualifier_id}, {institution_id}")
+        qm = QualifierModel(id=int(qualifier_id),
+                            value=qualifier_value,
+                            institution_id=int(institution_id),
+                            data_column=qualifier_data_column)
         tr.qualifiers.append(qm)
 
     if tag_id:
@@ -265,10 +269,12 @@ class TemplateQualifier:
     def __init__(self):
         self.template_id = None
         self.qualifier_id = None
+        self.data_column = None
 
     def parse(self, data: tuple):
         self.template_id = data[0]
         self.qualifier_id = data[1]
+        self.data_column = data[1]
 
     def __repr__(self):
         return f"{self.template_id} - {self.qualifier_id}"

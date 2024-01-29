@@ -69,7 +69,8 @@
     "styled-components": "^6.0.7",
     "tls": "^0.0.1",
     "url": "^0.11.3",
-    "util": "^0.12.5"
+    "util": "^0.12.5",
+    "@react-buddy/ide-toolbox": "^2.4.0"
   },
   "scripts": {
     "start": "react-app-rewired start",

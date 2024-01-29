@@ -182,6 +182,24 @@ def patch_template(template_id: int,
 
     return new_template
 
+
+@router.get(
+    "/template_qualifiers",
+    summary="Get list of template qualifiers.",
+    response_model=List[models.TemplateQualifierModel],
+)
+async def query_template_qualifiers():
+    query_result = db_access.query_templates_qualifiers()
+    response = []
+    for row in query_result:
+        entry = models.TemplateQualifierModel(
+            template_id=row[0],
+            qualifier_id=row[1],
+            data_column=row[2])
+        response.append(entry)
+    return response
+
+
 """ ---------- Batches ---------------------------------------------------------------------------"""
 
 
@@ -203,10 +221,18 @@ async def get_batches():
     return response
 
 
+class ErrorItem(BaseModel):
+    value: str
+
+
 @router.get(
     "/batch/{batch_id}",
     summary="Get details for a specific batch of transactions",
-    response_model=models.TransactionBatchModel,
+    # response_model=models.TransactionBatchModel,
+    responses={
+        '404': {"model": ErrorItem, "description": "The specified batch was not found."},
+        '200': {"model": models.TransactionBatchModel}
+    }
 )
 async def get_batch(batch_id: int):
     query_result = db_access.fetch_batch(batch_id)
@@ -218,7 +244,7 @@ async def get_batch(batch_id: int):
         )
         return response
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="Batch not found."
+        status_code=status.HTTP_404_NOT_FOUND, detail="Exception batch was not found."
     )
 
 
@@ -237,7 +263,8 @@ async def get_categories():
         cat = models.CategoryModel(
             id=q[0],
             value=q[1],
-            notes=q[2]
+            is_tax_deductible=q[2],
+            notes=q[3]
         )
         response.append(cat)
 
@@ -284,9 +311,11 @@ async def update_category(
     category_id: int,
     value: str = Body(...),
     notes: str = Body(...),
+    is_tax_deductible: bool = Body(...),
 ):
     try:
-        db_access.update_category(category_id=category_id, value=value, notes=notes)
+        db_access.update_category(category_id=category_id, value=value,
+                                  is_tax_deductible=is_tax_deductible, notes=notes)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -393,7 +422,7 @@ async def get_qualifier(qualifier_id: int):
 )
 async def add_qualifier(
     value: str = Body(...),
-    institution_id: str = Body(...),
+    institution_id: int = Body(...),
 ):
     query_result = db_access.create_qualifer(value=value, institution_id=institution_id)
     if not query_result:  # qualifier exists
@@ -401,7 +430,8 @@ async def add_qualifier(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Specified Qualifier already exists.",
         )
-    return models.QualifierModel(id=query_result[0], value=query_result[1])
+    logging.info(f"New id of {query_result[0]}")
+    return models.QualifierModel(id=query_result[0], value=value, institution_id=institution_id)
 
 
 """ ---------- Tags ------------------------------------------------------------------------------"""
@@ -892,6 +922,14 @@ async def update_processed_batch(batch_id: int, info: Request):
         )
 
 
+@router.delete(
+    "/processed_batch/{batch_id}", status_code=204,
+    summary="Remove a specific processed batch of transactions",
+)
+async def delete_batch(batch_id: int):
+    db_access.delete_processed_batch(batch_id)
+
+
 """ ---------- Processed Transactions ----------------------------------------------------------------------"""
 
 
@@ -1159,3 +1197,70 @@ async def get_saved_filters():
         sf = models.SavedFilterModel(name=f[1], id=f[0], created=f[2], tags=tag_list)
         filter_list.append(sf)
     return filter_list
+
+
+@router.get(
+    "/batch_contents",
+    summary="Get details for all transaction batches",
+    response_model=List[models.BatchContentsModel],
+)
+async def get_batch_contents():
+    """
+    class BatchContents(BaseModel):
+    id: int
+    filename: str
+    institution_id: int
+    batch_id: int
+    added_date: datetime
+    notes: str
+    """
+    contents = db_access.load_batch_contents()
+    logging.info(f"Batch Contents: {contents}")
+
+    content_list = []
+    for f in contents:
+        # id  filename    institution_id  batch_id    added_date  notes
+        sf = models.BatchContentsModel(
+            id=f[0],
+            filename=f[1],
+            institution_id=f[2],
+            batch_id=f[3],
+            added_date=f[4],
+            file_date=f[5],
+            transaction_count=f[6],
+            notes=f[7]
+        )
+        content_list.append(sf)
+    return content_list
+
+
+@router.get(
+    "/batch_contents/{batch_id}",
+    summary="Get details for a specific processed transaction batch",
+    response_model=List[models.BatchContentsModel],
+)
+async def get_contents_from_batch(batch_id: int):
+    contents = db_access.load_contents_from_batch(batch_id)
+    content_list = []
+    for f in contents:
+        # id  filename    institution_id  batch_id    added_date  notes
+        sf = models.BatchContentsModel(
+            id=f[0],
+            filename=f[1],
+            institution_id=f[2],
+            batch_id=f[3],
+            added_date=f[4],
+            file_date=f[5],
+            transaction_count=f[6],
+            notes=f[7]
+        )
+        content_list.append(sf)
+    return content_list
+
+
+"""----------------------------Actions--------------------------"""
+
+
+@router.post("/processed_batch/rerun/{batch_id}")
+async def rereun_processed_batch(batch_id: int):
+    pass

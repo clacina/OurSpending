@@ -3,17 +3,49 @@ Processors for each banking entity
 All are derived from base.ProcessorBase and store
 transactions derived from transaction_models.BaseTransaction
 
+We need a unique processor for each bank / institution so we can
+have the proper Institution name for database lookup.
+
+        self.name = "Base"
+        self.datafile = datafile
+        self.transactions = list()
+        self.config = config
+
+        # analysis output
+        self.unrecognized_transactions = list()
+        self.spending = {}
+        self.category_breakdown = {}
+
+It will also handle the different data formats accordingly using abstract functions.
+
+parse_datafile(datafile)
+    Uses CSV reader to read each line in the file and creates the associated object model
+    which is used to parse the line data.  The result is a transaction that is added to the collection.
+
+def parse_raw_data(self, dataset: list):
+    Used to parse the result of fetch_transactions_from_batch(batch_id, institution_id)
+    which are raw transaction_record rows.  Creates a list of model objects
+
+def parse_processed_data(self, dataset: list):
+    Used to parse the result of fetch_processed_transactions_from_batch(processed_batch_id, institution_id)
+    which is a list of transaction records with the processed batch id appended.
+    This replaces the existing transactions for the processor
+
 
 """
 import csv
+import sys
+
 import data_processing.transaction_models as models
 import data_processing.base as base
+from data_processing import db_utils
 
 
 class CapitalOne(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
+        self.skip_data_rows = 1
         self.name = "Capital One"
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -22,7 +54,9 @@ class CapitalOne(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)  # skip header row
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 if row:
                     data = models.CapitalOneTransaction()
@@ -56,18 +90,23 @@ class CapitalOne(base.ProcessorBase):
 
 
 class CareCredit(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
         self.name = "Care Credit"
+        self.skip_data_rows = 1
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
         "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
         "5/03/2023","SOUNDVIEW VETERINARY HOSPTACOMA WA. DEFERRED/NO INT IF PD IN FULL 6080","SOUNDVIEW VETERINARY HOSPTACOMA WA. DEFERRED/NO INT IF PD IN FULL 6080","436.58","debit","Veterinary","4676","",""
+        "7/25/2023","INTEREST CHARGE ON PURCHASES","INTEREST CHARGE ON PURCHASES","57.62","debit","Finance Charge","4676","",""
+        "7/17/2023","AUTOMATIC PAYMENT - THANK YOU","AUTOMATIC PAYMENT - THANK YOU","155.00","credit","Credit Card Payment","4676","",""
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.CareCreditTransaction()
                 data.parse_entry(row)
@@ -99,9 +138,10 @@ class CareCredit(base.ProcessorBase):
 
 
 class Chase(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
         self.name = "Chase"
+        self.skip_data_rows = 1
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -110,7 +150,9 @@ class Chase(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)  # skip header row
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.ChaseTransaction()
                 data.parse_entry(row)
@@ -143,9 +185,10 @@ class Chase(base.ProcessorBase):
 
 
 class HomeDepot(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
         self.name = "Home Depot"
+        self.skip_data_rows = 0
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -153,6 +196,9 @@ class HomeDepot(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.HomeDepotTransaction()
                 data.parse_entry(row)
@@ -185,9 +231,10 @@ class HomeDepot(base.ProcessorBase):
 
 
 class Lowes(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
         self.name = "Lowes"
+        self.skip_data_rows = 1
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile: str):
         pass
@@ -219,9 +266,21 @@ class Lowes(base.ProcessorBase):
 
 
 class PayPal(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    """
+    Abbreviations used in r/PayPal:
+
+        NAD - Not as described.
+        SNAD - Significantly not as described.
+        INR - Item Not Received.
+        UAT - Unauthorized transaction.
+        OP - Original poster of the message.
+        F&F - Friends and Family (no protection at all.)
+        G&S - Goods and/or Services (has seller/buyer protection.)
+    """
+    def __init__(self, datafile: str, config=None):
         self.name = "PayPal"
+        self.skip_data_rows = 1
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -230,7 +289,9 @@ class PayPal(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)  # skip header row
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.PayPalCCTransaction()
                 data.parse_entry(row)
@@ -264,9 +325,10 @@ class PayPal(base.ProcessorBase):
 
 
 class SoundChecking(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
-        self.name = "Sound Checking"
+    def __init__(self, datafile: str, name: str, config=None):
+        self.name = name
+        self.skip_data_rows = 4
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -276,7 +338,9 @@ class SoundChecking(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.SoundCheckingTransaction()
                 data.parse_entry(row)
@@ -308,98 +372,35 @@ class SoundChecking(base.ProcessorBase):
         return raw_transactions
 
 
-class SoundCheckingChrista(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+class SoundCheckingHouse(SoundChecking):
+    def __init__(self, datafile: str, config=None):
+        self.name = "Sound Checking - House"
+        super().__init__(datafile, config, self.name)
+
+
+class SoundCheckingChrista(SoundChecking):
+    def __init__(self, datafile: str, config=None):
         self.name = "Sound Checking - Christa"
-
-    def parse_datafile(self, datafile):
-        """
-        "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
-        "1/29/2023","Payments Home Banking Transfer From Share 10 TRANSFER","Payments Home Banking Transfer From Share 10 TRANSFER","50.00","credit","Transfer","SELECT VISA","",""
-        """
-        with open(datafile, "rt") as infile:
-            csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
-            for row in csv_reader:
-                data = models.SoundCheckingTransactionChrista()
-                data.parse_entry(row)
-                self.transactions.append(data)
-
-    def parse_raw_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundCheckingTransactionChrista()
-            data.parse_json(row[3])
-            data.transaction_id = row[0]
-            data.institution_id = row[1]
-            data.normalize_data()
-            raw_transactions.append(data)
-
-        return raw_transactions
-
-    def parse_processed_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundCheckingTransactionChrista()
-            data.parse_json(row[5])
-            data.transaction_id = row[0]
-            data.template_id = row[1]
-            data.institution_id = row[3]
-            data.normalize_data()
-            raw_transactions.append(data)
-
-        return raw_transactions
+        super().__init__(datafile, config, self.name)
 
 
-class SoundVisa(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+class SoundVisa(SoundChecking):
+    def __init__(self, datafile: str, config=None):
         self.name = "Sound Visa"
+        super().__init__(datafile, config, self.name)
 
-    def parse_datafile(self, datafile):
-        """
-        "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
-        "1/29/2023","Payments Home Banking Transfer From Share 10 TRANSFER","Payments Home Banking Transfer From Share 10 TRANSFER","50.00","credit","Transfer","SELECT VISA","",""
-        """
-        with open(datafile, "rt") as infile:
-            csv_reader = csv.reader(infile, delimiter=",")
-            next(csv_reader)
-            for row in csv_reader:
-                data = models.SoundVisaTransaction()
-                data.parse_entry(row)
-                self.transactions.append(data)
 
-    def parse_raw_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundVisaTransaction()
-            data.parse_json(row[3])
-            data.transaction_id = row[0]
-            data.institution_id = row[1]
-            data.normalize_data()
-            raw_transactions.append(data)
-
-        return raw_transactions
-
-    def parse_processed_data(self, dataset: list):
-        raw_transactions = list()
-        for row in dataset:
-            data = models.SoundVisaTransaction()
-            data.parse_json(row[5])
-            data.transaction_id = row[0]
-            data.template_id = row[1]
-            data.institution_id = row[3]
-            data.normalize_data()
-            raw_transactions.append(data)
-
-        return raw_transactions
+class SoundSavings(SoundChecking):
+    def __init__(self, datafile: str, config=None):
+        self.name = "Sound Savings"
+        super().__init__(datafile, config, self.name)
 
 
 class WellsfargoChecking(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
         self.name = "Wellsfargo Checking"
+        self.skip_data_rows = 0
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -408,6 +409,9 @@ class WellsfargoChecking(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.WellsCheckingTransaction()
                 data.parse_entry(row)
@@ -440,9 +444,10 @@ class WellsfargoChecking(base.ProcessorBase):
 
 
 class WellsfargoVisa(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
         self.name = "Wellsfargo Visa"
+        self.skip_data_rows = 0
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -451,6 +456,9 @@ class WellsfargoVisa(base.ProcessorBase):
         """
         with open(datafile, "rt") as infile:
             csv_reader = csv.reader(infile, delimiter=",")
+            for i in range(0, self.skip_data_rows):
+                next(csv_reader)  # skip header row
+
             for row in csv_reader:
                 data = models.WellsCheckingTransaction()
                 data.parse_entry(row)
@@ -483,9 +491,10 @@ class WellsfargoVisa(base.ProcessorBase):
 
 
 class AmazonRetail(base.ProcessorBase):
-    def __init__(self, datafile: str, config):
-        super().__init__(datafile, config)
+    def __init__(self, datafile: str, config=None):
         self.name = "Amazon Chris"
+        self.skip_data_rows = 1
+        super().__init__(datafile, config, self.name, self.skip_data_rows)
 
     def parse_datafile(self, datafile):
         """
@@ -526,3 +535,79 @@ class AmazonRetail(base.ProcessorBase):
             raw_transactions.append(data)
 
         return raw_transactions
+
+
+# institution_mapping = {
+#     'CAP_VISA': CapitalOne,
+#     'AMZN_CHRIS': AmazonRetail,
+#     'AMZN_CHRISTA': AmazonRetail,
+#     'CC': CareCredit,
+#     'CH_VISA': Chase,
+#     'HD': HomeDepot,
+#     'LWS': Lowes,
+#     'PP-Chris': PayPal,
+#     'PP-Christa': PayPal,
+#     'SND_CHK': SoundCheckingChrista,
+#     'SND_CHK_HOUSE': SoundChecking,
+#     'SND_VISA': SoundVisa,
+#     'WLS_CHK': WellsfargoChecking,
+#     'WLS_VISA': WellsfargoVisa
+# }
+
+""" When naming / saving bank statements, use a combination of the 'keys' below
+- SoundChecking - House - 2023.csv
+- Amazon Christa - Jan2024.csv
+...
+"""
+
+
+class InstitutionNaming:
+    def __init__(self, terms, processor):
+        self.processor = processor
+        self.terms = terms
+
+
+institution_file_mapping = [
+    InstitutionNaming(['capital'], 'CapitalOne'),
+    InstitutionNaming(['care', 'credit'], 'CareCredit'),
+    InstitutionNaming(['chase'], 'Chase'),
+    InstitutionNaming(['home'], 'HomeDepot'),
+    InstitutionNaming(['sound', 'checking', 'house'], 'SoundChecking'),
+    InstitutionNaming(['sound', 'checking', 'christa'], 'SoundCheckingChrista'),
+    InstitutionNaming(['sound', 'Savings'], 'SoundSavings'),
+    InstitutionNaming(['sound', 'visa'], 'SoundVisa'),
+    InstitutionNaming(['wells', 'fargo', 'visa'], 'WellsfargoVisa'),
+    InstitutionNaming(['wells', 'fargo', 'checking'], 'WellsfargoChecking'),
+    InstitutionNaming(['amazon', 'christopher'], 'AmazonRetail'),
+    InstitutionNaming(['amazon', 'christa'], 'AmazonRetail'),
+    InstitutionNaming(['paypal', 'christopher'], 'PayPal'),
+    InstitutionNaming(['paypal', 'christa'], 'PayPal'),
+    InstitutionNaming(['lowes'], 'Lowes'),
+]
+
+
+def select_processor_from_file(datafile):
+    file_name_check = datafile.lower()
+
+    for m in institution_file_mapping:
+        found_phrases = 0
+        for phrase in m.terms:
+            if phrase.lower() in file_name_check:
+                found_phrases += 1
+
+        if found_phrases == len(m.terms):
+            return m.processor
+
+    print(f"Unable to determine processor from datafile {datafile}")
+    assert 0
+
+
+def select_processors_from_batch(batch_id):
+    processor_list = []
+    institutions_list = db_utils.get_institutions_from_batch_contents(batch_id)
+
+    for bank_id in institutions_list:
+        processor_class = db_utils.find_class_from_institution(bank_id[0])
+        processor_list.append((processor_class, bank_id))
+
+    return processor_list

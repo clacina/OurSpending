@@ -15,6 +15,7 @@ import {TagsContext} from "../../contexts/tags.context";
 import assert from "assert";
 import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component";
 import {TransactionsContext} from "../../contexts/transactions.context";
+import {InstitutionsContext} from "../../contexts/banks.context";
 
 // https://flatuicolors.com/palette/fr
 
@@ -22,6 +23,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const {transactionDataDefinitions, institutions} = useContext(StaticDataContext);
     const {updateTransactionNotes, updateTransactionTags} = useContext(TransactionsContext);
+    const {institutionsMap} = useContext(InstitutionsContext);
     const [activeRow, setActiveRow] = useState(0);
     const [openNotes, setOpenNotes] = useState(false);
     const [editColumn, setEditColumn] = useState(-1);
@@ -36,8 +38,8 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
     const {tagsMap} = useContext(TagsContext);
 
     useEffect(() => {
-        if(transactionDataDefinitions.length !== 0 && institutions.length !== 0) {
-            const inst = institutions.find((i) => {
+        if(transactionDataDefinitions.length !== 0 && institutionsMap.length !== 0) {
+            const inst = institutionsMap.find((i) => {
                 return (i.id === institution_id)
             })
             setOurInstitution(inst);
@@ -47,7 +49,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
         } else {
             console.info("No definitions yet");
         }
-    }, [transactionDataDefinitions.length, institutions.length, institutions]);
+    }, [transactionDataDefinitions.length, institutionsMap.length, institutionsMap]);
 
     const generateColumns = () => {
         //-------------- Configure our table -----------------------------
@@ -178,7 +180,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
     }
 
     const updateNotes = async (transaction_id, note) => {
-        updateTransactionNotes(transaction_id, note);
+        updateTransactionNotes(transaction_id, [note]);
         setTransactionContentUpdated(true);
         setContentUpdated(true);
     }
@@ -213,7 +215,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
 
     // Setup tags column as a multi-select
     const tagColumnFormatter = (cell, row, rowIndex, formatExtraData) => {
-        console.log("Tags: ", row);
         const entity_info = {
             id: row.id,
             tags: row.tags
@@ -231,9 +232,6 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
 
     const colEvent = (e, column, columnIndex, row, rowIndex) => {
         setActiveRow(row);
-        console.log("Click col: ", columnIndex);
-        console.log("Click row: ", rowIndex);
-        console.log("Row: ", row);
         switch (columnIndex) {
             case 3: // tags
                 e.preventDefault();

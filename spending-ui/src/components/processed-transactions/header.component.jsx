@@ -5,7 +5,8 @@ import {InputActionMeta} from "react-select";
 import Select from "react-select";
 import {CategoriesContext} from "../../contexts/categories.context.jsx";
 import {TagsContext} from "../../contexts/tags.context.jsx";
-import {StaticDataContext} from "../../contexts/static_data.context.jsx";
+// import {StaticDataContext} from "../../contexts/static_data.context.jsx";
+import {InstitutionsContext} from "../../contexts/banks.context";
 import {SavedFiltersContext} from "../../contexts/saved_filters_context";
 import TagSelector from "../widgets/tag-selector/tag-selector.component.jsx";
 import './header.component.styles.css';
@@ -20,7 +21,7 @@ import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component
 const HeaderComponent = ({eventHandler}) => {
     const {tagsMap} = useContext(TagsContext);
     const {categoriesMap} = useContext(CategoriesContext);
-    const {institutions} = useContext(StaticDataContext);
+    const {institutionsMap} = useContext(InstitutionsContext);
     const {filtersMap} = useContext(SavedFiltersContext);
     const [searchText, setSearchText] = useState("") ;
     const [startDateFilter, setStartDateFilter] = useState();
@@ -44,7 +45,7 @@ const HeaderComponent = ({eventHandler}) => {
     })
 
     const banks = [];
-    institutions.forEach((bank) => {
+    institutionsMap.forEach((bank) => {
         banks.push({value: bank.id, label: bank.name})
     })
 

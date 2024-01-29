@@ -11,7 +11,7 @@ export const SavedFiltersProvider = ({children}) => {
     const [update, setUpdate] = useState(true);
 
     const getFilters = async () => {
-        const url = 'http://localhost:8000/resources/saved_filters'
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/saved_filters'
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);

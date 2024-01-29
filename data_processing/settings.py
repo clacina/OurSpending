@@ -8,7 +8,6 @@ import data_processing.db_utils as db_utils
 """ -------------------------- Entry Point ----------------------------- """
 
 
-
 class ConfigurationData:
     def __init__(self):
         self.institution_id = None
@@ -70,7 +69,7 @@ lacinaslair=# select * from institutions;
 ----+---------------+--------------------------
   1 | WLS_CHK       | Wellsfargo Checking
   2 | WLS_VISA      | Wellsfargo Visa
-  3 | CONE_VISA     | Capital One Visa
+  3 | CAP_VISA      | Capital One Visa
   4 | CH_VISA       | Chase Visa
   5 | HD            | Home Depot
   6 | PP            | PayPal

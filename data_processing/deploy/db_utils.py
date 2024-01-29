@@ -33,9 +33,9 @@ def create_template(conn, entity: Entity):
     for q in entity.qualifiers:
         sql = """
             INSERT INTO
-                template_qualifiers(template_id, qualifier_id)
+                template_qualifiers(template_id, qualifier_id, data_column)
             VALUES (
-                %(template_id)s, %(qualifier_id)s
+                %(template_id)s, %(qualifier_id)s, 'description'
             )
         """
         query_params = {"template_id": new_id[0], "qualifier_id": q}
@@ -128,19 +128,19 @@ def create_tables():
             raise e
 
 
-def create_template_qualifier(conn, template_id, qualifier_id):
-    sql = """
-        INSERT INTO 
-            template_qualifiers (template_id, qualifier_id) VALUES (
-            %(template_id)s, %(qualifier_id)s
-            )
-    """
-    query_params = {"template_id": template_id, "qualifier_id": qualifier_id}
-
-    cur = conn.cursor()
-    try:
-        cur.execute(sql, query_params)
-        conn.commit()
-    except Exception as e:
-        print(f"Error inserting qualifier: {str(e)}")
-        raise e
+# def create_template_qualifier(conn, template_id, qualifier_id):
+#     sql = """
+#         INSERT INTO
+#             template_qualifiers (template_id, qualifier_id) VALUES (
+#             %(template_id)s, %(qualifier_id)s
+#             )
+#     """
+#     query_params = {"template_id": template_id, "qualifier_id": qualifier_id}
+#
+#     cur = conn.cursor()
+#     try:
+#         cur.execute(sql, query_params)
+#         conn.commit()
+#     except Exception as e:
+#         print(f"Error inserting qualifier: {str(e)}")
+#         raise e

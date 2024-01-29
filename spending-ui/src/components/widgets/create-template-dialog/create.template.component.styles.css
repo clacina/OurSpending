@@ -1,0 +1,15 @@
+#templateCategorySelection {
+    z-index: 1000;
+}
+
+#qualifier_instructions {
+    font-size: small;
+}
+
+#radio_line {
+    display: flex;
+}
+
+#checkIsTaxDeductible {
+    padding-left: 10px;
+}

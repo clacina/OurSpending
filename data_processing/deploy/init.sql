@@ -6,6 +6,7 @@ CREATE TABLE institutions
     id   SERIAL PRIMARY KEY,
     key  VARCHAR(100),
     name TEXT,
+    class TEXT NOT NULL,
     notes TEXT DEFAULT NULL,
     unique (key)
 );
@@ -63,23 +64,23 @@ CREATE TABLE template_qualifiers
     template_id  INTEGER REFERENCES templates (id) ON DELETE CASCADE  NOT NULL,
     qualifier_id INTEGER REFERENCES qualifiers (id) ON DELETE CASCADE NOT NULL,
     data_column  TEXT                                                          DEFAULT NULL,
-    sys_period   TSTZRANGE                                            NOT NULL DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, NULL),
+--     sys_period   TSTZRANGE                                            NOT NULL DEFAULT TSTZRANGE(CURRENT_TIMESTAMP, NULL),
     unique (template_id, qualifier_id, data_column)
 );
 
-DROP TABLE IF EXISTS template_qualifiers_history;
-CREATE TABLE template_qualifiers_history
-(
-    LIKE template_qualifiers
-);
-DROP TRIGGER IF EXISTS template_qualifiers_versioning_trigger ON template_qualifiers;
-CREATE TRIGGER template_qualifiers_versioning_trigger
-    BEFORE UPDATE OR DELETE
-    ON template_qualifiers
-    FOR EACH ROW
-EXECUTE PROCEDURE versioning(
-        'sys_period', 'template_qualifiers_history', TRUE
-    );
+-- DROP TABLE IF EXISTS template_qualifiers_history;
+-- CREATE TABLE template_qualifiers_history
+-- (
+--     LIKE template_qualifiers
+-- );
+-- DROP TRIGGER IF EXISTS template_qualifiers_versioning_trigger ON template_qualifiers;
+-- CREATE TRIGGER template_qualifiers_versioning_trigger
+--     BEFORE UPDATE OR DELETE
+--     ON template_qualifiers
+--     FOR EACH ROW
+-- EXECUTE PROCEDURE versioning(
+--         'sys_period', 'template_qualifiers_history', TRUE
+--     );
 
 
 DROP TABLE IF EXISTS template_tags;
@@ -90,13 +91,25 @@ CREATE TABLE template_tags
     unique (template_id, tag_id)
 );
 
-
 DROP TABLE IF EXISTS transaction_batch CASCADE;
 CREATE TABLE transaction_batch
 (
     id       SERIAL PRIMARY KEY,
     run_date TIMESTAMP NOT NULL DEFAULT NOW(),
     notes    TEXT
+);
+
+DROP TABLE IF EXISTS transaction_batch_contents CASCADE;
+CREATE TABLE transaction_batch_contents
+(
+    id                  SERIAL PRIMARY KEY,
+    filename            TEXT,
+    institution_id      INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
+    batch_id            INTEGER REFERENCES transaction_batch (id) ON DELETE CASCADE NOT NULL,
+    added_date          TIMESTAMP NOT NULL DEFAULT NOW(),
+    file_date           TIMESTAMP NOT NULL,
+    transaction_count   INTEGER DEFAULT 0,
+    notes               TEXT
 );
 
 DROP TABLE IF EXISTS transaction_records CASCADE;
@@ -173,32 +186,61 @@ CREATE TABLE saved_filters
 );
 ALTER SEQUENCE saved_filters_id_seq RESTART WITH 4000;
 
+
+DROP TABLE IF EXISTS credit_cards CASCADE;
+CREATE TABLE credit_cards
+(
+    id              SERIAL PRIMARY KEY,
+    name            TEXT NOT NULL UNIQUE,
+    institution_id  INTEGER DEFAULT NULL,
+    due_date        DATE DEFAULT NULL,
+    interest_rate   FLOAT DEFAULT NULL
+);
+
+
+DROP TABLE IF EXISTS credit_card_data CASCADE;
+CREATE TABLE credit_card_data
+(
+    card_id         INT REFERENCES credit_cards (id),
+    balance         FLOAT,
+    balance_date    DATE DEFAULT NULL
+);
+
 -- Data
 
-INSERT INTO institutions(key, name)
-VALUES ('WLS_CHK', 'Wellsfargo Checking');
-INSERT INTO institutions(key, name)
-VALUES ('WLS_VISA', 'Wellsfargo Visa');
-INSERT INTO institutions(key, name)
-VALUES ('CONE_VISA', 'Capital One Visa');
-INSERT INTO institutions(key, name)
-VALUES ('CH_VISA', 'Chase Visa');
-INSERT INTO institutions(key, name)
-VALUES ('HD', 'Home Depot');
-INSERT INTO institutions(key, name)
-VALUES ('PP', 'PayPal');
-INSERT INTO institutions(key, name)
-VALUES ('LWS', 'Lowes');
-INSERT INTO institutions(key, name)
-VALUES ('SND_CHK_HOUSE', 'Sound Checking - House');
-INSERT INTO institutions(key, name)
-VALUES ('SND_CHK', 'Sound Checking - Christa');
-INSERT INTO institutions(key, name)
-VALUES ('SND_VISA', 'Sound Visa');
-INSERT INTO institutions(key, name)
-VALUES ('CC', 'Care Credit');
-INSERT INTO institutions(key, name)
-VALUES ('AMZN_CHRIS', 'Amazon Chris');
+
+INSERT INTO institutions(key, name, class)
+VALUES ('WLS_CHK', 'Wells Fargo Checking', 'WellsfargoChecking');
+INSERT INTO institutions(key, name, class)
+VALUES ('WLS_VISA', 'Wells Fargo Visa', 'WellsfargoVisa');
+INSERT INTO institutions(key, name, class)
+VALUES ('CAP_VISA', 'Capital One Visa', 'CapitalOne');
+INSERT INTO institutions(key, name, class)
+VALUES ('CH_VISA', 'Chase Visa', 'Chase');
+INSERT INTO institutions(key, name, class)
+VALUES ('HD', 'Home Depot', 'HomeDepot');
+INSERT INTO institutions(key, name, class)
+VALUES ('PP-Chris', 'PayPal Chris', 'PayPal');
+INSERT INTO institutions(key, name, class)
+VALUES ('LWS', 'Lowes', 'Lowes');
+INSERT INTO institutions(key, name, class)
+VALUES ('SND_CHK_HOUSE', 'Sound Checking - House', 'SoundChecking');
+INSERT INTO institutions(key, name, class)
+VALUES ('SND_CHK', 'Sound Checking - Christa', 'SoundCheckingChrista');
+INSERT INTO institutions(key, name, class)
+VALUES ('SND_VISA', 'Sound Visa', 'SoundVisa');
+INSERT INTO institutions(key, name, class)
+VALUES ('CC', 'Care Credit', 'CareCredit');
+INSERT INTO institutions(key, name, class)
+VALUES ('AMZN_CHRIS', 'Amazon Chris', 'AmazonRetail');
+INSERT INTO institutions(key, name, class)
+VALUES ('AMZN_CHRISTA', 'Amazon Christa', 'AmazonRetail');
+INSERT INTO institutions(key, name, class)
+VALUES ('PP-Christa', 'PayPal Christa', 'PayPal');
+INSERT INTO institutions(key, name, class)
+VALUES ('SND_SAVINGS', 'Sound Savings', 'SoundSavings');
+
+-- Categories
 
 INSERT INTO categories(value)
 VALUES ('Unknown');
@@ -261,6 +303,8 @@ VALUES ('Return');
 INSERT INTO categories(value)
 VALUES ('Rent');
 
+-- Tags
+
 INSERT INTO tags(value, color)
 VALUES ('Cable Addition', '#00B8D9');
 INSERT INTO tags(value, color)
@@ -277,6 +321,8 @@ INSERT INTO tags(value, color)
 VALUES ('Loan', '#00875A');
 INSERT INTO tags(value, color)
 VALUES ('Transfer', '#253858');
+INSERT INTO tags(value, color)
+VALUES ('Savings', '#D9C595');
 
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users
@@ -375,7 +421,7 @@ VALUES
     (5, 3, 'Type', 'String', false, false, false, NULL)
 ;
 
--- Sound Checking - Christa, Visa, House 9, 10, 8
+-- Sound Checking - Christa, Visa, House 9, 10, 8, 15
 -- "Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"
 -- "5/16/2023","Withdrawal ACH PAYPAL TYPE: INST XFER ID: PAYPALSI77 CO: PAYPAL NAME: CHRISTA SMILEY","Withdrawal ACH PAYPAL TYPE: INST XFER ID: PAYPALSI77 CO: PAYPAL NAME: CHRISTA SMILEY","28.21","debit","Shopping","S10 FREE CHECKIN","",""
 INSERT INTO
@@ -418,6 +464,20 @@ VALUES
     (10, 6, 'Account Name', 'String', false, false, false, NULL),
     (10, 7, 'Labels', 'String', false, false, false, NULL),
     (10, 8, 'Notes', 'String', false, false, false, NULL)
+;
+
+INSERT INTO
+    transaction_data_description (institution_id, column_number, column_name, column_type, is_description, is_amount, is_transaction_date, data_id)
+VALUES
+    (15, 0, 'Date', 'Date', false, false, true, 'transaction_date'),
+    (15, 1, 'Description', 'String', true, false, false, 'description'),
+    (15, 2, 'Original Description', 'String', false, false, false, NULL),
+    (15, 3, 'Amount', 'Currency', false, true, false, 'amount'),
+    (15, 4, 'Transaction Type', 'String', false, false, false, NULL),
+    (15, 5, 'Category', 'String', false, false, false, NULL),
+    (15, 6, 'Account Name', 'String', false, false, false, NULL),
+    (15, 7, 'Labels', 'String', false, false, false, NULL),
+    (15, 8, 'Notes', 'String', false, false, false, NULL)
 ;
 
 -- Wells Fargo Checking id 1
@@ -522,4 +582,97 @@ VALUES
     (6, 26, 'Subject', 'String', false, false, false, NULL),
     (6, 27, 'Note', 'String', false, false, false, NULL),
     (6, 28, 'Balance Impact', 'String', false, false, false, NULL)
+;
+
+-- Amazon-Christa id 13
+-- "Website","Order ID","Order Date","Purchase Order Number","Currency","Unit Price",
+-- "Unit Price Tax","Shipping Charge","Total Discounts","Total Owed","Shipment Item Subtotal",
+-- "Shipment Item Subtotal Tax","ASIN","Product Condition","Quantity","Payment Instrument Type",
+-- "Order Status","Shipment Status","Ship Date","Shipping Option","Shipping Address",
+-- "Billing Address","Carrier Name & Tracking Number",
+-- "Product Name","Gift Message","Gift Sender Name","Gift Recipient Contact Details"
+INSERT INTO
+    transaction_data_description (institution_id, column_number, column_name, column_type, is_description, is_amount, is_transaction_date, data_id)
+VALUES
+    (13, 0, 'Website', 'String', false, false, false, NULL),
+    (13, 1, 'Order ID', 'String', false, false, false, NULL),
+    (13, 2, 'Order Date', 'Date', false, false, true, 'transaction_date'),
+    (13, 3, 'Purchase Order Number', 'String', false, false, false, NULL),
+    (13, 4, 'Currency', 'String', false, false, false, NULL),
+    (13, 5, 'Unit Price', 'Currency', false, false, false, NULL),
+    (13, 6, 'Unit Price Tax', 'String', false, false, false, NULL),
+    (13, 7, 'Shipping Charge', 'String', false, false, false, NULL),
+    (13, 8, 'Total Discounts', 'String', false, false, false, NULL),
+    (13, 9, 'Total Owed', 'String', false, true, false, 'amofalse, unt'),
+    (13, 10, 'Shipment Item Subtotal', 'String', false, false, false, NULL),
+    (13, 11, 'Shipment Item Subtotal Tax', 'String', false, false, false, NULL),
+    (13, 12, 'ASIN', 'String', false, false, false, NULL),
+    (13, 13, 'Product Condition', 'String', false, false, false, NULL),
+    (13, 14, 'Quantity', 'String', false, false, false, NULL),
+    (13, 15, 'Payment Instrument Type', 'String', false, false, false, NULL),
+    (13, 16, 'Order Status', 'String', false, false, false, NULL),
+    (13, 17, 'Shipment Status', 'String', false, false, false, NULL),
+    (13, 18, 'Ship Date', 'String', false, false, false, NULL),
+    (13, 19, 'Shipping Option', 'String', false, false, false, NULL),
+    (13, 20, 'Shipping Address', 'String', false, false, false, NULL),
+    (13, 21, 'Billing Address', 'String', false, false, false, NULL),
+    (13, 22, 'Carrier Name & Tracking Number', 'String', false, false, false, NULL),
+    (13, 23, 'Product Name', 'String', true, false, false, 'descriptfalse, ion'),
+    (13, 24, 'Gift Message', 'String', false, false, false, NULL),
+    (13, 25, 'Gift Sender Name', 'String', false, false, false, NULL),
+    (13, 26, 'Gift Recipient Contact Details', 'String', false, false, false, NULL)
+;
+
+-- Paypal-Christa id 14
+-- "Date","Time","TimeZone","Name","Type","Status","Currency","Gross","Fee","Net",
+-- "From Email Address","To Email Address","Transaction ID","Item Title","Item ID",
+-- "Sales Tax","Option 1 Name","Option 1 Value","Option 2 Name","Option 2 Value",
+-- "Reference Txn ID","Invoice Number","Custom Number","Quantity","Receipt ID",
+-- "Balance","Subject","Note","Balance Impact"
+-- "01/03/2023","13:57:10","PST","Uber Technologies, Inc","General Authorization","Pending","USD","-42.92","0.00","-42.92","clacina@mindspring.com","paypal-us@uber.com","91C639911G078574E","","","0.00","","","","","B-34X4798607464050W","2MwMW7bv4u0RhriNV6REgza0","","1","","0.00","","","Memo"
+INSERT INTO
+    transaction_data_description (institution_id, column_number, column_name, column_type, is_description, is_amount, is_transaction_date, data_id)
+VALUES
+    (14, 0, 'Date', 'Date', false, false, true, 'transaction_date'),
+    (14, 1, 'Time', 'String', false, false, false, NULL),
+    (14, 2, 'TimeZone', 'String', false, false, false, NULL),
+    (14, 3, 'Name', 'String', true, false, false, NULL),
+    (14, 4, 'Type', 'String', false, false, false, NULL),
+    (14, 5, 'Status', 'String', false, false, false, NULL),
+    (14, 6, 'Currency', 'String', false, false, false, NULL),
+    (14, 7, 'Gross', 'Currency', false, true, false, 'amofalse, unt'),
+    (14, 8, 'Fee', 'String', false, false, false, NULL),
+    (14, 9, 'Net', 'String', false, false, false, NULL),
+    (14, 10, 'From Email Address', 'String', false, false, false, NULL),
+    (14, 11, 'To Email Address', 'String', false, false, false, NULL),
+    (14, 12, 'Transaction ID', 'String', false, false, false, NULL),
+    (14, 13, 'Item Title', 'String', false, false, false, 'descriptfalse, ion'),
+    (14, 14, 'Item ID', 'String', false, false, false, NULL),
+    (14, 15, 'Sales Tax', 'String', false, false, false, NULL),
+    (14, 16, 'Option 1 Name', 'String', false, false, false, NULL),
+    (14, 17, 'Option 1 Value', 'String', false, false, false, NULL),
+    (14, 18, 'Option 2 Name', 'String', false, false, false, NULL),
+    (14, 19, 'Option 2 Value', 'String', false, false, false, NULL),
+    (14, 20, 'Reference Txn ID', 'String', false, false, false, NULL),
+    (14, 21, 'Invoice Number', 'String', false, false, false, NULL),
+    (14, 22, 'Custom Number', 'String', false, false, false, NULL),
+    (14, 23, 'Quantity', 'String', false, false, false, NULL),
+    (14, 24, 'Receipt ID', 'String', false, false, false, NULL),
+    (14, 25, 'Balance', 'String', false, false, false, NULL),
+    (14, 26, 'Subject', 'String', false, false, false, NULL),
+    (14, 27, 'Note', 'String', false, false, false, NULL),
+    (14, 28, 'Balance Impact', 'String', false, false, false, NULL)
+;
+
+/*------------------------ Credit Card Info --------------------------*/
+INSERT INTO
+    credit_cards (name)
+VALUES
+    ('Wells Fargo Visa'),
+    ('Sound Visa'),
+    ('Care Credit'),
+    ('Capital One'),
+    ('Chase Visa (Amazon)'),
+    ('Home Depot'),
+    ('Lowes')
 ;

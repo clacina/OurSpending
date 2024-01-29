@@ -42,6 +42,7 @@ class InstitutionsModel(BaseModel):
 class TemplateQualifierModel(BaseModel):
     template_id: int
     qualifier_id: int
+    data_column: Optional[str]
 
 
 class TemplateTagModel(BaseModel):
@@ -134,3 +135,14 @@ class SavedFilterModel(BaseModel):
     start_date: Optional[datetime.datetime]
     end_date: Optional[datetime.datetime]
     search_string: Optional[str]
+
+
+class BatchContentsModel(BaseModel):
+    id: Optional[int]
+    filename: Optional[str]
+    institution_id: Optional[int]
+    batch_id: Optional[int]
+    added_date: Optional[datetime.datetime]
+    file_date: Optional[datetime.datetime]
+    transaction_count: Optional[int]
+    notes: Optional[str]
