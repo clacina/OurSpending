@@ -1,6 +1,6 @@
 import './App.css';
 import {Route, Routes} from "react-router-dom";
-import {Fragment, useState} from "react";
+import {Fragment} from "react";
 
 import MenuBar from "./routes/navigation/navigation.component";
 import BanksComponent from "./components/banks/banks.component";
@@ -13,6 +13,7 @@ import Reports from "./components/reports/reports.component.jsx";
 import TagsComponent from "./components/tags/tags.component";
 import TemplateList from "./components/templates/template-list.component";
 import TransactionsList from "./components/transaction/transactions-list.component.jsx";
+import CreditCards from "./components/credit-cards/credit.card.component";
 
 // Setup Logger
 // import jsLogger from './utils/jslogger.js';
@@ -42,6 +43,7 @@ function App() {
                 <Route path='processed_batches/*' element={<ProcessedBatches/>}/>
                 <Route path='processed_transactions/:batch_id' element={<ProcessedTransactions/>}/>
                 <Route path='reports/*' element={<Reports/>}/>
+                <Route path='cards/*' element={<CreditCards/>}/>
                 <Route path='*' element={<PageNotFound />}/>
             </Routes>
         </Fragment>

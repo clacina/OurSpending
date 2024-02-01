@@ -73,7 +73,7 @@ const TemplateComponent = ({bank, templateTransactions, eventHandler}) => {
 
             // Build our title string
             const workingTemplate = templatesMap.find((i) => Number(i.id) === Number(templateId));
-            var title = "Template Transactions"
+            var title = `No Matching Template - ${trans.length} Transactions`
             if (workingTemplate) {
                 title = `${workingTemplate.hint} - Template Id: ${templateId}, ${trans.length} Transactions (${workingTemplate.category.value} )`;
                 if(workingTemplate.credit) {

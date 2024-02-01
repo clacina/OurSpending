@@ -16,6 +16,7 @@ import {TransactionsProvider} from "./contexts/transactions.context";
 import {ProcessedBatchesProvider} from "./contexts/processed_batches.context";
 import {ProcessedTransactionsProvider} from "./contexts/processed_transactions.context";
 import {BatchContentsProvider} from "./contexts/batch_contents.context";
+import {QualifiersProvider} from "./contexts/qualifiers.context";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -27,17 +28,19 @@ root.render(
                       <ProcessedTransactionsProvider>
                           <TagsProvider>
                               <TransactionsProvider>
-                                  <CategoriesProvider>
-                                      <TemplatesProvider>
-                                          <SavedFiltersProvider>
-                                              <InstitutionsProvider>
-                                                  <BatchContentsProvider>
-                                                      <App />
-                                                  </BatchContentsProvider>
-                                              </InstitutionsProvider>
-                                          </SavedFiltersProvider>
-                                      </TemplatesProvider>
-                                  </CategoriesProvider>
+                                  <QualifiersProvider>
+                                      <CategoriesProvider>
+                                          <TemplatesProvider>
+                                              <SavedFiltersProvider>
+                                                  <InstitutionsProvider>
+                                                      <BatchContentsProvider>
+                                                          <App />
+                                                      </BatchContentsProvider>
+                                                  </InstitutionsProvider>
+                                              </SavedFiltersProvider>
+                                          </TemplatesProvider>
+                                      </CategoriesProvider>
+                                  </QualifiersProvider>
                               </TransactionsProvider>
                           </TagsProvider>
                       </ProcessedTransactionsProvider>

@@ -3,24 +3,12 @@ import {createContext, useEffect, useState} from "react";
 export const StaticDataContext = createContext({
     transactionDataDefinitions: [],
     setTransactionDataDefinitions: () => null,
-    institutions: [],
-    setInstitutions: () => null,
-    batches: [],
-    setBatches: () => null,
-    qualifiers: [],
-    setQualifiers: () => null,
-    processedBatches: [],
-    setProcessedBatches: () => null,
     sectionTitle: 'Section Title',
     setSectionTitle: () => null,
 });
 
 export const StaticDataProvider = ({children}) => {
     const [transactionDataDefinitions, setTransactionDataDefinitions] = useState([]);
-    const [institutions, setInstitutions] = useState([]);
-    const [batches, setBatches] = useState([]);
-    const [qualifiers, setQualifiers] = useState([]);
-    const [processedBatches, setProcessedBatches] = useState([]);
     const [sectionTitle, setSectionTitle] = useState('Opening Section');
 
     const getBanks = async () => {
@@ -60,11 +48,11 @@ export const StaticDataProvider = ({children}) => {
 
     useEffect(() => {
         try {
-            getBanks().then((res) => setInstitutions(res));
+            // getBanks().then((res) => setInstitutions(res));
             getTransactionDefinitions().then((res) => setTransactionDataDefinitions(res));
-            getBatches().then((res) => setBatches(res));
-            getQualifiers().then((res) => setQualifiers(res));
-            getProcessedBatches().then((res) => setProcessedBatches(res));
+            // getBatches().then((res) => setBatches(res));
+            // getQualifiers().then((res) => setQualifiers(res));
+            // getProcessedBatches().then((res) => setProcessedBatches(res));
         } catch (e) {
             console.log("Error fetching database content: ", e);
         }
@@ -77,8 +65,8 @@ export const StaticDataProvider = ({children}) => {
         // setInstitutions,
         // batches,
         // setBatches,
-        qualifiers,
-        setQualifiers,
+        // qualifiers,
+        // setQualifiers,
         // processedBatches,
         // setProcessedBatches,
         sectionTitle,

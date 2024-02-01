@@ -17,6 +17,77 @@ const utc = (now) =>
     ":" +
     ("0" + now.getSeconds()).slice(-2);
 
+// Logger.debug(“Cache set to”, {value}, Framework.Cache)
+
+class Framework {
+
+    // FRAMEWORK_COMPONENT_COLORS = {
+    //     [Framework.PT]: 'MediumTurquoise',
+    //     [Framwork.Debug]: 'White',
+    //     [Framework.Error]: 'Red',
+    // };
+
+    getStyles = () => {
+        return(
+        "border-radius: 25px;" +
+        "background: MediumTurquoise;" +
+        "padding: 5px;" +
+        "color: DarkBlue"
+        )
+    }
+
+    getErrorStyles = () => {
+        return(
+            "border-radius: 25px;" +
+            "background: Red;" +
+            "padding: 5px;" +
+            "color: Yellow"
+        )
+    }
+
+    getPTStyles = () => {
+        return(
+            "border-radius: 25px;" +
+            "background: #73AD21;" +
+            "padding: 5px;"
+        )
+    }
+
+    debug = (msg) => {
+        console.log("%c%s", "color: DodgerBlue", msg);
+    }
+
+    info = (msg) => {
+        // console.clear();
+        // const stackTrace = Error().stack.split('\n    at ').slice(1);
+        // console.log(msg, `triggered by ${stackTrace}`);
+        // console.log(Error().stack);
+        // console.log(msg, `\n\ntriggered by ${stackTrace}`);
+        // {stackTrace.forEach((item) => {
+        //     console.log("Item: ", item);
+        // })}
+        // const stackInfo = stackTrace.at(1);
+        // const ndxStart = stackInfo.indexOf('.');
+        // const ndxEnd = stackInfo.indexOf(')');
+        // const stackData = stackInfo.slice(ndxStart, ndxEnd);
+        console.log("%c%s", this.getStyles(), msg);
+    }
+
+    pt = (msg) => {
+        console.log("%c%s", this.getPTStyles(), msg);
+    }
+
+    error = (msg) => {
+        console.log("%c%s", this.getErrorStyles(), msg);
+    }
+}
+
+// const Logger = new Framework();
+// Logger.info('Logger start');
+// Logger.info('Startup for new logging system.');
+// Logger.pt("Processed Transactions")
+// Logger.debug("Debug Message");
+// Logger.error("Error Message")
 
 function debug(msg) {
     const stackTrace = Error().stack.split('\n    at ').slice(1);
@@ -86,7 +157,7 @@ const ColorDefinitions = [
     {"name": "DarkOrchid",  "value": "#9932cc"},
     {"name": "DarkSeaGreen",  "value": "#8fbc8f"},
     {"name": "DarkSlateGray",  "value": "#2f4f4f"},
-    {"name": "DogerBlue",  "value": "#1e90ff"},
+    {"name": "DodgerBlue",  "value": "#1e90ff"},
     {"name": "FireBrick",  "value": "#b22222"},
     {"name": "GreenYellow",  "value": "#Adff2f"},
     {"name": "MediumPurple",  "value": "#9370db"},

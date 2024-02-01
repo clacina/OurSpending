@@ -65,4 +65,10 @@ export const SidebarData = [
         icon: <FaIcons.FaBook />,
         cName: "nav-text",
     },
+    {
+        title: "Credit Cards",
+        path: "/cards",
+        icon: <FaIcons.FaAddressCard />,
+        cName: "nav-text",
+    },
 ];

@@ -5,10 +5,12 @@ import request from 'request';
 import "dotenv/config.js";
 
 const standardOptions = (body) => {
-  return {
-    'Accept': 'application/json',
-    'json': body
-  }
+  return({
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: body
+  });
 }
 
 
@@ -149,6 +151,29 @@ resourcesRouter.get('/qualifiers', function(req, res, next) {
     res.send(body);
   });
 });
+
+
+resourcesRouter.post('/qualifiers', async function(req, res, next) {
+  const url = process.env.REACT_APP_REST_SERVER + '/qualifiers';
+  req.accepts('application/json');
+
+  const options = {
+    headers: {
+      'Accept': 'application/json'
+    },
+    json: req.body
+  }
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.post(url, options).json();
+    res.status(201).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
 
 
 resourcesRouter.get('/templates', function(req, res, next) {

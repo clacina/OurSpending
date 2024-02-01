@@ -7,11 +7,15 @@ import './create.template.component.styles.css';
 
 import Select from "react-select";
 import Form from "react-bootstrap/Form";
+import {confirmAlert} from "react-confirm-alert";
+import 'react-confirm-alert/src/react-confirm-alert.css';
 import {CategoriesContext} from "../../../contexts/categories.context";
 import {ExistingQualifierList, InstitutionName} from "./create.template.dialog.styles";
 import {StaticDataContext} from "../../../contexts/static_data.context";
 import {InstitutionsContext} from "../../../contexts/banks.context";
+import {QualifiersContext} from "../../../contexts/qualifiers.context";
 
+import Jslogger from "../../../utils/jslogger";
 /*
     Template Fields to capture:
     - Hint - Str
@@ -36,7 +40,10 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     const {institutionsMap} = useContext(InstitutionsContext);
     const {categoriesMap} = useContext(CategoriesContext);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
+    const {createQualifier} = useContext(QualifiersContext);
+
     const [isOpen, setIsOpen] = useState(true);
+
     const categorySelectionRef = useRef();
     const [isTaxDeductible, setIsTaxDeductible] = useState(false);
     const [isCredit, setIsCredit] = useState(false);
@@ -60,8 +67,8 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
 
             // set institution name
             const newName = institutionsMap.find((x) => {
-                if(x.id === transaction.institution_id) {
-                    return(x);
+                if (x.id === transaction.institution_id) {
+                    return (x);
                 }
             })
             setInstitutionName(newName.name);
@@ -84,6 +91,11 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
             setIsLoaded(true);
         }
     }, [isLoaded]);
+
+    // when we add a new qualifier, add it to the UI
+    // useEffect(() => {
+    // }, [qualifiers]);
+
 
     const eventHandler = (section) => {
         // funnel all changes through here
@@ -118,28 +130,42 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     }
 
     const addQualifier = () => {
-    /*
-        qualifiers - id, value, institution_id
-        template_qualifiers - template_id, qualifier_id, data_column (string)
-     */
+        /*
+            qualifiers - id, value, institution_id
+            template_qualifiers - template_id, qualifier_id, data_column (string)
+         */
         // check qualifier phrase and field
-        if(qualifierPhrase.length === 0) {
+        if (qualifierPhrase.length === 0) {
             alert("Please specify a phrase to match against the transaction.");
             return;
         }
 
         // Ref IS valid here
         console.log("Current QRef: ", qualifierSelectionRef.current.getValue());
-        if(!qualifierSelectionRef.current.getValue().length) {
+        if (!qualifierSelectionRef.current.getValue().length) {
             alert("Please select a Transaction Field to match against.")
             return;
         }
+        const new_qid = createQualifier(qualifierPhrase, transaction.institution_id);
+        console.log("New qualifier: ", new_qid);
 
+        // Add new qualifier to our list of qualifiers for this template
+        setQualifiers([...qualifiers, {
+            id: new_qid,
+            value: qualifierPhrase,
+            institution_id: transaction.institution_id,
+            data_column: qualifierSelectionRef.current.getValue()[0].label
+        }]);
+
+        // clear out UI
+        qualifierSelectionRef.current.clearValue();
+        setQualifierPhrase("");
     }
 
     const updateFieldSelection = (event) => {
-        // console.log("Q-event: ", event);
         /*
+            Selection of Transaction Field
+
             Ref isn't set yet so isn't valid here. We have to use the event
             console.log("QRef: ", qualifierSelectionRef.current.getValue());
 
@@ -148,8 +174,12 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
         */
 
         // get the data from the transaction that matches field event.label and ordinal event.value
-        const fieldData = transaction.transaction.transaction_data[event.value];
-        setQualifierPhrase(fieldData);
+        if(event) {
+            // console.log("TData: ", transaction.transaction.transaction_data);
+            const fieldData = transaction.transaction.transaction_data[event.value];
+            setQualifierPhrase(fieldData);
+            setQualifierField(event);
+        }
     }
 
     function compareCategories(a, b) {
@@ -157,16 +187,49 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     }
 
     const cancelEdit = () => {
+        // If qualifiers have been created, warn that they won't be associated with a template
+        if(qualifiers.length !== 0) {
+            alert("There are unsaved qualifiers.  Do you want to cancel?");
+        }
         closeHandler();
     }
 
     const submitEdit = () => {
-        closeHandler();
+        if(hintText.length === 0) {
+            confirmAlert({
+                title: "Error",
+                message: "Please supply a descriptive hint for this template.",
+                closeOnEscape: false,
+                closeOnClickOutside: false,
+                buttons: [
+                    {
+                        label: 'Ok',
+                        onClick: () => alert('Click Yes'),
+                    }
+                ]
+            });
+            return;
+        }
+
+        const payload = {
+            "hint": hintText,
+            "category": categorySelectionRef.current,
+            "is_credit": isCredit,
+            "is_tax_deductible": isTaxDeductible,
+            "notes": notesText,
+            "qualifiers":
+                qualifiers.map((item) => {
+                    return({"id": item.id, "field": item.data_column})
+                })
+            }
+
+        console.log("Payload: ", payload);
+
+        closeHandler(payload);
     }
 
-    if(isLoaded) {
-        return (
-            <div>
+    if (isLoaded) {
+        return (<div>
                 <Modal show={isOpen} onHide={cancelEdit}>
                     <Modal.Header closeButton>
                         <Modal.Title>Create Template</Modal.Title>
@@ -206,13 +269,19 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                         <input value={notesText} type="text" onChange={onChangeNotes}/>
                         <hr/>
                         <h5>Qualifiers</h5>
-                        <p id='qualifier_instructions'>The software will attempt to match the following phase(s) against the field(s) specified when trying to assign a Category to the transaction.</p>
+                        <p id='qualifier_instructions'>The software will attempt to match the following phase(s) against
+                            the field(s) specified when trying to assign a Category to the transaction.</p>
                         <ExistingQualifierList>
                             <thead>
-                            <tr><th>Phrase</th><th>Data Field</th></tr>
+                            <tr>
+                                <th>Phrase</th>
+                                <th>Data Field</th>
+                            </tr>
                             </thead>
                             <tbody>
-
+                            {qualifiers.map((item) => {
+                                return(<tr><td>{item.value}</td><td>{item.data_column}</td></tr>);
+                            })}
                             </tbody>
                         </ExistingQualifierList>
                         <label>Phrase</label>
@@ -238,8 +307,7 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                         </Button>
                     </Modal.Footer>
                 </Modal>
-            </div>
-        );
+            </div>);
     }
 }
 
