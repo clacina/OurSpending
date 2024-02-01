@@ -220,7 +220,7 @@ def import_datafiles(source: Optional[str] = None,
     """Load activity reports for processing."""
     print(f"Got source: {source}, file: {fileentry}, override: {override}, notes: {notes}")
     processors = load_sources(source, fileentry)
-    if not override:
+    if not override or not db_utils.fetch_transaction_batch(override):
         batch_id = create_batch(processors, notes)
         print(f"Batch Created: {batch_id}")
     else:

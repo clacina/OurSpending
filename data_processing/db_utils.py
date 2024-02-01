@@ -38,6 +38,23 @@ def load_templates(institution_id: Optional[int] = -1):
     return entities
 
 
+def fetch_transaction_batch(batch_id):
+    conn = db_access.connect_to_db()
+    assert conn
+    sql = "select * from transaction_batch where id=%(batch_id)s"
+    query_params = {
+        "batch_id": batch_id
+    }
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        result = cur.fetchall()
+        return result
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+
 def create_transaction_batch(notes=None):
     conn = db_access.connect_to_db()
     assert conn
