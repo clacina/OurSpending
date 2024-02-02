@@ -1,6 +1,10 @@
 import React, {useContext, useEffect, useRef, useState} from "react";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
+import * as FaIcons from "react-icons/hi";
+import * as AiIcons from "react-icons/ai";
+import { HiOutlineReceiptTax } from "react-icons/hi";
+import { Tooltip } from 'react-tooltip';
 
 import './create.template.dialog.styles.jsx';
 import './create.template.component.styles.css';
@@ -15,7 +19,6 @@ import {StaticDataContext} from "../../../contexts/static_data.context";
 import {InstitutionsContext} from "../../../contexts/banks.context";
 import {QualifiersContext} from "../../../contexts/qualifiers.context";
 
-import Jslogger from "../../../utils/jslogger";
 /*
     Template Fields to capture:
     - Hint - Str
@@ -50,6 +53,7 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     const [hintText, setHintText] = useState("");
     const [notesText, setNotesText] = useState("");
     const [fieldOptions, setFieldOptions] = useState([]);
+    const [category, setCategory] = useState();
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [institutionName, setInstitutionName] = useState("");
 
@@ -84,23 +88,34 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
             // Format categories selector
             const options = [];
             categoriesMap.forEach((item) => {
-                options.push({value: item.id, label: item.value});
+                const id = item.id;
+                var label = item.value;
+                if(item.is_tax_deductible) {
+                    label = (
+                        <>
+                            <span style={{color: "green", paddingRight: "5px"}}>{item.value}</span>
+                            <HiOutlineReceiptTax data-tooltip-id="test_tip" style={{color: "green", paddingBottom: "2px"}}/>
+                            <Tooltip id="test_tip">
+                                <div>
+                                    <h3>This is a very interesting header</h3>
+                                    <p>Here's some interesting stuff:</p>
+                                    <ul>
+                                        <li>Some</li>
+                                        <li>Interesting</li>
+                                        <li>Stuff</li>
+                                    </ul>
+                                </div>
+                            </Tooltip>
+                        </>
+                    )
+                }
+                options.push({value: id, label: label, label_text: item.value});
             })
             setCategoryOptions(options);
 
             setIsLoaded(true);
         }
     }, [isLoaded]);
-
-    // when we add a new qualifier, add it to the UI
-    // useEffect(() => {
-    // }, [qualifiers]);
-
-
-    const eventHandler = (section) => {
-        // funnel all changes through here
-
-    }
 
     const onChangeHint = (event) => {
         setHintText(event.target.value);
@@ -116,20 +131,18 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
 
     const updateCategory = (event) => {
         console.log("Update category: ", event);
-        eventHandler({'category': event});
+        setCategory(event.value);
     }
 
     const changeIsCredit = () => {
         setIsCredit(!isCredit);
-        eventHandler('isCredit')
     }
 
     const changeIsTaxDeductible = () => {
         setIsTaxDeductible(!isTaxDeductible);
-        eventHandler('isTaxDeductible');
     }
 
-    const addQualifier = () => {
+    const addQualifier = async () => {
         /*
             qualifiers - id, value, institution_id
             template_qualifiers - template_id, qualifier_id, data_column (string)
@@ -146,7 +159,7 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
             alert("Please select a Transaction Field to match against.")
             return;
         }
-        const new_qid = createQualifier(qualifierPhrase, transaction.institution_id);
+        const new_qid = await createQualifier(qualifierPhrase, transaction.institution_id);
         console.log("New qualifier: ", new_qid);
 
         // Add new qualifier to our list of qualifiers for this template
@@ -183,7 +196,7 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     }
 
     function compareCategories(a, b) {
-        return ('' + a.label.toLowerCase()).localeCompare(b.label.toLowerCase());
+        return ('' + a.label_text.toLowerCase()).localeCompare(b.label_text.toLowerCase());
     }
 
     const cancelEdit = () => {
@@ -213,14 +226,15 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
 
         const payload = {
             "hint": hintText,
-            "category": categorySelectionRef.current,
+            "category_id": category,
             "is_credit": isCredit,
-            "is_tax_deductible": isTaxDeductible,
             "notes": notesText,
+            "institution_id": transaction.institution_id,
             "qualifiers":
                 qualifiers.map((item) => {
-                    return({"id": item.id, "field": item.data_column})
-                })
+                    return({"id": item.id, "data_column": item.data_column})
+                }),
+            "tags": []
             }
 
         console.log("Payload: ", payload);
@@ -239,15 +253,14 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                         <label>Hint</label>
                         <input value={hintText} type="text" onChange={onChangeHint} autoFocus={true}/>
                         <label>Category</label>
-                        <Select
-                            id="templateCategorySelection"
-                            ref={categorySelectionRef}
-                            closeMenuOnSelect={true}
-                            options={categoryOptions.sort(compareCategories)}
-                            // menuPortalTarget={document.body}
-                            menuPosition={'fixed'}
-                            onChange={updateCategory}/>
-                        <div id='radio_line'>
+                        <div id="radio_line">
+                            <Select
+                                id="templateCategorySelection"
+                                ref={categorySelectionRef}
+                                closeMenuOnSelect={true}
+                                options={categoryOptions.sort(compareCategories)}
+                                menuPosition={'fixed'}
+                                onChange={updateCategory}/>
                             <Form.Check
                                 className='matchAll'
                                 type="switch"
@@ -255,14 +268,6 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                                 label="Is Credit"
                                 checked={isCredit}
                                 onChange={changeIsCredit}
-                            />
-                            <Form.Check
-                                className='matchAll'
-                                type="switch"
-                                id='checkIsTaxDeductible'
-                                label="Is Tax Deductible"
-                                checked={isTaxDeductible}
-                                onChange={changeIsTaxDeductible}
                             />
                         </div>
                         <label>Notes</label>
@@ -280,23 +285,30 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                             </thead>
                             <tbody>
                             {qualifiers.map((item) => {
-                                return(<tr><td>{item.value}</td><td>{item.data_column}</td></tr>);
+                                return (<tr>
+                                    <td>{item.value}</td>
+                                    <td>{item.data_column}</td>
+                                </tr>);
                             })}
                             </tbody>
                         </ExistingQualifierList>
-                        <label>Phrase</label>
-                        <input value={qualifierPhrase} type="text" onChange={onChangeQualifierPhrase}/>
-                        <label>Field</label>
-                        <Select
-                            id="qualifierFieldSelection"
-                            closeMenuOnSelect={true}
-                            ref={qualifierSelectionRef}
-                            options={fieldOptions}
-                            // menuPortalTarget={document.body}
-                            menuPosition={'fixed'}
-                            onChange={updateFieldSelection}
-                        />
-                        <Button variant="primary" onClick={addQualifier}>Add</Button>
+                        <div>
+                            <label>Field</label>
+                            <Select
+                                id="qualifierFieldSelection"
+                                closeMenuOnSelect={true}
+                                ref={qualifierSelectionRef}
+                                options={fieldOptions}
+                                // menuPortalTarget={document.body}
+                                menuPosition={'fixed'}
+                                onChange={updateFieldSelection}
+                            />
+                        </div>
+                        <div id="qualifierPhraseDiv">
+                            <label>Phrase</label>
+                            <input value={qualifierPhrase} type="text" onChange={onChangeQualifierPhrase}/>
+                        </div>
+                        <Button variant="outline-primary" onClick={addQualifier}>Add Qualifier</Button>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={cancelEdit}>

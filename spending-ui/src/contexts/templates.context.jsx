@@ -44,7 +44,16 @@ export const TemplatesProvider = ({children}) => {
         });
     }
 
-
+    const createTemplate = async (payload) => {
+        const headers = {'Content-Type': 'application/json'}
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates';
+        const method = 'POST'
+        console.log("Sending update: ", payload);
+        const response = await send(url, method, headers, payload);
+        console.log("Response: ", response);
+        setUpdate(true);
+        return(response);
+    }
 
     useEffect(() => {
         try {
@@ -62,6 +71,6 @@ export const TemplatesProvider = ({children}) => {
         }
     }, [updateQualifiers===true]);
 
-    const value = {templatesMap, setTemplatesMap, setUpdate, updateTemplate, getTemplateQualifiers};
+    const value = {templatesMap, setTemplatesMap, setUpdate, updateTemplate, getTemplateQualifiers, createTemplate};
     return <TemplatesContext.Provider value={value}>{children}</TemplatesContext.Provider>
 };
