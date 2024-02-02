@@ -4,35 +4,31 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, List
 from typing import Annotated
+from typing import Optional, List
 
 import fastapi
-from fastapi import FastAPI, Path
-from pydantic import BaseConfig, BaseModel
-
 from fastapi import APIRouter, Query, HTTPException, status, Body, Request
+from fastapi import Path
+from pydantic import BaseModel
 
 import rest_api.models as models
 from common.db_access import DBAccess
+from rest_api.models import CategoryModel
+from rest_api.models import QualifierModel
+from rest_api.models import TagModel
+from rest_api.reports import report_processor
+from rest_api.reports import reports
 from rest_api.template_models import (
     TemplateDetailModel,
     TemplatesDetailReportBuilder,
     TemplateReportModel,
     TemplateDetailReportBuilder,
-    TemplateInputModel,
     SingleTemplateReportBuilder,
 )
-from rest_api.reports import reports
-from rest_api.reports import report_processor
-from rest_api.models import CategoryModel
-from rest_api.models import TagModel
-from rest_api.models import QualifierModel
-
 
 router = APIRouter()
 db_access = DBAccess()
-
 
 """ ---------- Templates -------------------------------------------------------------------------"""
 
@@ -58,20 +54,26 @@ async def query_templates(institution_id: Optional[int] = Query(-1)):
 
 @router.post(
     "/templates",
-    summary="Add a new template for a given institituion",
+    summary="Add a new template for a given institution",
     status_code=status.HTTP_201_CREATED,
-    response_model=TemplateReportModel,
+    response_model=TemplateDetailModel,
 )
-def add_template(template: TemplateInputModel = Body(...)):
-    db_access.create_template(
-        institution_id=template.institution_id,
-        category=template.category,
-        is_credit=template.credit,
-        hint=template.hint,
-        notes=template.notes,
-        qualifiers=template.qualifiers,
-        tags=template.tags,
+async def add_template(info: Request = None):
+    template = await info.json()
+    logging.info(f"Template: {template}")
+    template_id = db_access.create_template(
+        institution_id=template['institution_id'],
+        category_id=template['category_id'],
+        is_credit=template['is_credit'],
+        hint=template['hint'],
+        notes=template['notes'],
+        qualifiers=template['qualifiers'],
+        tags=template['tags'],
     )
+
+    query_result = db_access.query_templates_by_id(template_id)
+    if query_result:
+        return TemplateDetailReportBuilder(query_result).process()
 
 
 @router.get(
@@ -308,10 +310,10 @@ async def add_category(info: Request):
     response_model=models.CategoryModel,
 )
 async def update_category(
-    category_id: int,
-    value: str = Body(...),
-    notes: str = Body(...),
-    is_tax_deductible: bool = Body(...),
+        category_id: int,
+        value: str = Body(...),
+        notes: str = Body(...),
+        is_tax_deductible: bool = Body(...),
 ):
     try:
         db_access.update_category(category_id=category_id, value=value,
@@ -374,10 +376,11 @@ async def get_institution(institution_id: int):
     summary="Update the details for an institution",
     response_model=models.InstitutionsModel,
 )
-async def update_institution(institution_id: int, info: Request=None):
+async def update_institution(institution_id: int, info: Request = None):
     data = await info.json()
     try:
-        db_access.update_institution(institution_id=institution_id, name=data["name"], key=data["key"], notes=data["notes"])
+        db_access.update_institution(institution_id=institution_id, name=data["name"], key=data["key"],
+                                     notes=data["notes"])
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -421,8 +424,8 @@ async def get_qualifier(qualifier_id: int):
     status_code=status.HTTP_201_CREATED,
 )
 async def add_qualifier(
-    value: str = Body(...),
-    institution_id: int = Body(...),
+        value: str = Body(...),
+        institution_id: int = Body(...),
 ):
     query_result = db_access.create_qualifer(value=value, institution_id=institution_id)
     if not query_result:  # qualifier exists
@@ -472,9 +475,9 @@ async def get_tag(tag_id: int):
     status_code=status.HTTP_201_CREATED,
 )
 async def add_tag(
-    value: str = Body(...),
-    notes: str = Body(...),
-    color: str = Body(...),
+        value: str = Body(...),
+        notes: str = Body(...),
+        color: str = Body(...),
 ):
     query_result = db_access.create_tag(value=value, notes=notes, color=color)
     if not query_result:  # tag exists
@@ -492,10 +495,10 @@ async def add_tag(
     status_code=status.HTTP_200_OK
 )
 async def update_tag(
-    tag_id: Annotated[int, Path(title="Used to identify the Tag in question")],
-    value: str = Body(...),
-    notes: str = Body(...),
-    color: str = Body(...),
+        tag_id: Annotated[int, Path(title="Used to identify the Tag in question")],
+        value: str = Body(...),
+        notes: str = Body(...),
+        color: str = Body(...),
 ):
     query_result = db_access.update_tag(tag_id=tag_id, value=value, notes=notes, color=color)
     if not query_result:  # tag exists
@@ -504,6 +507,7 @@ async def update_tag(
             detail="Specified Tag already exists.",
         )
     return models.TagModel(id=query_result[0], value=query_result[1], notes=query_result[2], color=query_result[3])
+
 
 """ ---------- Transactions ----------------------------------------------------------------------"""
 
@@ -766,8 +770,8 @@ async def reset_transaction_notes(transaction_id: int, info: Request):
     response_model=models.TransactionRecordModel,
 )
 async def reset_transaction_tags(
-    transaction_id: int,
-    tag_ids: List[int] = None,
+        transaction_id: int,
+        tag_ids: List[int] = None,
 ):
     sql = 'delete from transaction_tags where transaction_id=%(transaction_id)s'
     query_params = {'transaction_id': transaction_id}
@@ -1033,6 +1037,7 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID,
 
     return list(transaction_record[transaction_id])
 
+
 """ Aggregate Results """
 
 
@@ -1094,10 +1099,10 @@ def build_report_processors(report_data, batch_id):
 
 @router.get("/processed/templates", summary="Template Matching Data")
 async def query_processed_templates(
-    processed_batch_id: int,
-    institution_id: Optional[int] = None,
-    include_spending: Optional[bool] = True,
-    include_missing: Optional[bool] = False,
+        processed_batch_id: int,
+        institution_id: Optional[int] = None,
+        include_spending: Optional[bool] = True,
+        include_missing: Optional[bool] = False,
 ):
     """
     Builds a json model list transaction to template matches and omissions.

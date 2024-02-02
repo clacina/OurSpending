@@ -466,7 +466,7 @@ class DBAccess:
     def create_template(self,
                         hint,
                         institution_id,
-                        category=None,
+                        category_id=None,
                         is_credit=False,
                         notes=None,
                         qualifiers=None,
@@ -495,10 +495,10 @@ class DBAccess:
             raise e
 
         # If a category was supplied
-        if category:
-            sql = f"UPDATE templates SET category_id = %(category_id)s WHERE id=%(template_id)s"
+        if category_id:
+            sql = "UPDATE templates SET category_id = %(category_id)s WHERE id=%(template_id)s"
             query_params = {
-                "category_id": category.id,
+                "category_id": category_id,
                 "template_id": new_id
             }
         try:
@@ -510,6 +510,7 @@ class DBAccess:
 
         # if qualifiers were provided
         if qualifiers:
+            logging.info(f"Adding qualifiers: {qualifiers}")
             for q in qualifiers:
                 sql = """INSERT INTO 
                             template_qualifiers (template_id, qualifier_id, data_column) 
@@ -517,11 +518,35 @@ class DBAccess:
                       """
                 query_params = {
                     "template_id": new_id,
-                    "qualifier_id": q.id,
-                    "data_column": q.data_column
+                    "qualifier_id": q['id'],
+                    "data_column": q['data_column']
+                }
+            try:
+                cur.execute(sql, query_params)
+                conn.commit()
+            except Exception as e:
+                logging.exception(f"Error updating qualifiers on template: {str(e)}")
+                raise e
+
+        # Handle any passed in tags
+        if tags:
+            for t in tags:
+                sql = """ INSERT INTO
+                            template_tags (template_id, tag_id) VALUES (%(template_id)s, %(tag_id)s)
+                      """
+                query_params = {
+                    "template_id": new_id,
+                    "tag_id": t
                 }
 
+            try:
+                cur.execute(sql, query_params)
+                conn.commit()
+            except Exception as e:
+                logging.exception(f"Error updating tags on template: {str(e)}")
+                raise e
 
+        return new_id
 
     def fetch_template(self, template_id: int):
         sql = "SELECT id, institution_id, category_id, credit, hint, notes FROM templates WHERE id=%(template_id)s"
