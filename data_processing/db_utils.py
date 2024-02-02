@@ -298,7 +298,7 @@ def load_template_tags(template_id: Optional[int] = None):
     return tags
 
 
-def create_process_batch(transaction_batch_id: int):
+def create_process_batch(transaction_batch_id: int, notes: Optional[str]):
     conn = db_access.connect_to_db()
     assert conn
     sql = """
@@ -311,7 +311,7 @@ def create_process_batch(transaction_batch_id: int):
     cur = conn.cursor()
     query_params = {
         'transaction_batch_id': transaction_batch_id,
-        'notes': 'Test run'
+        'notes': notes
     }
     try:
         cur.execute(sql, query_params)
@@ -418,6 +418,20 @@ def get_institutions_from_batch_contents(batch_id):
         cur.execute(sql, query_params)
         rows = cur.fetchall()
         return rows
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise e
+
+
+def delete_processed_batch(batch_id):
+    sql = "DELETE FROM processed_transaction_batch WHERE id=%(batch_id)s"
+    query_params = {"batch_id": batch_id}
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        conn.commit()
     except Exception as e:
         print(f"Error: {str(e)}")
         raise e
