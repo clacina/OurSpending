@@ -30,6 +30,24 @@ from rest_api.template_models import (
 router = APIRouter()
 db_access = DBAccess()
 
+
+""" ---------- Endpoint Taqgs --------------------------------------------------------------------"""
+tags_metadata = [
+    {"name": "Batches"},
+    {"name": "Batch Details"},
+    {"name": "Categories"},
+    {"name": "Institutions"},
+    {"name": "Processed Batches"},
+    {"name": "Processed Transactions"},
+    {"name": "Qualifiers"},
+    {"name": "Saved Filters"},
+    {"name": "Tags"},
+    {"name": "Templates"},
+    {"name": "Transactions"},
+    {"name": "Actions"},
+]
+
+
 """ ---------- Templates -------------------------------------------------------------------------"""
 
 
@@ -37,10 +55,14 @@ db_access = DBAccess()
     "/templates",
     summary="Get list of available templates. May restrict the search by Institution",
     response_model=List[TemplateDetailModel],
+    description="Test of route description",
+    response_description="Test of response description",
+    tags=["Templates"]
 )
 async def query_templates(institution_id: Optional[int] = Query(-1)):
     """
     :param institution_id: Institution id.
+    NOTE: this text will show up in the docs
     """
     query_result = db_access.query_templates_by_institution(institution_id)
     if query_result:
@@ -57,6 +79,7 @@ async def query_templates(institution_id: Optional[int] = Query(-1)):
     summary="Add a new template for a given institution",
     status_code=status.HTTP_201_CREATED,
     response_model=TemplateDetailModel,
+    tags=["Templates"]
 )
 async def add_template(info: Request = None):
     template = await info.json()
@@ -80,6 +103,7 @@ async def add_template(info: Request = None):
     "/template/{template_id}",
     summary="Get details for a specific template.",
     response_model=TemplateDetailModel,
+    tags=["Templates"]
 )
 async def get_template(template_id: int):
     query_result = db_access.query_templates_by_id(template_id)
@@ -95,6 +119,7 @@ async def get_template(template_id: int):
     "/template/{template_id}",
     summary="Update a specific template",
     response_model=TemplateDetailModel,
+    tags=["Templates"]
 )
 def update_template(template_id: int, template: TemplateReportModel = Body(...)):
     query_result = db_access.query_templates_by_id(template_id)
@@ -143,6 +168,7 @@ class TemplateUpdate(BaseModel):
     "/template/{template_id}",
     summary="Update the category for a specific template",
     response_model=TemplateDetailModel,
+    tags=["Templates"]
 )
 def patch_template(template_id: int,
                    template: TemplateUpdate):
@@ -189,6 +215,7 @@ def patch_template(template_id: int,
     "/template_qualifiers",
     summary="Get list of template qualifiers.",
     response_model=List[models.TemplateQualifierModel],
+    tags=["Templates"]
 )
 async def query_template_qualifiers():
     query_result = db_access.query_templates_qualifiers()
@@ -209,6 +236,7 @@ async def query_template_qualifiers():
     "/batches",
     summary="List all transaction batches in the system.",
     response_model=List[models.TransactionBatchModel],
+    tags=["Batches"]
 )
 async def get_batches():
     query_result = db_access.list_batches()
@@ -230,7 +258,7 @@ class ErrorItem(BaseModel):
 @router.get(
     "/batch/{batch_id}",
     summary="Get details for a specific batch of transactions",
-    # response_model=models.TransactionBatchModel,
+    tags=["Batches"],
     responses={
         '404': {"model": ErrorItem, "description": "The specified batch was not found."},
         '200': {"model": models.TransactionBatchModel}
@@ -257,6 +285,7 @@ async def get_batch(batch_id: int):
     "/categories",
     summary="Get list of available categories.",
     response_model=List[models.CategoryModel],
+    tags=["Categories"]
 )
 async def get_categories():
     query_result = db_access.load_categories()
@@ -277,6 +306,7 @@ async def get_categories():
     "/category/{category_id}",
     summary="Query a single category",
     response_model=models.CategoryModel,
+    tags=["Categories"]
 )
 async def get_category(category_id: int):
     query_result = db_access.get_category(category_id)
@@ -292,6 +322,7 @@ async def get_category(category_id: int):
     summary="Add a new Category",
     response_model=models.CategoryModel,
     status_code=status.HTTP_201_CREATED,
+    tags=["Categories"]
 )
 async def add_category(info: Request):
     json_data = await info.json()
@@ -308,6 +339,7 @@ async def add_category(info: Request):
     "/category/{category_id}",
     summary="Update the value for a single category",
     response_model=models.CategoryModel,
+    tags=["Categories"]
 )
 async def update_category(
         category_id: int,
@@ -333,6 +365,7 @@ async def update_category(
     "/institutions",
     summary="Get a list of institutions",
     response_model=List[models.InstitutionsModel],
+    tags=["Institutions"]
 )
 async def get_institutions():
     query_result = db_access.load_institutions()
@@ -349,6 +382,7 @@ async def get_institutions():
     status_code=status.HTTP_201_CREATED,
     summary="Create a new Institution record for processing",
     response_model=models.InstitutionsModel,
+    tags=["Institutions"]
 )
 async def create_institution(info: Request = None):
     data = await info.json()
@@ -362,6 +396,7 @@ async def create_institution(info: Request = None):
     "/institution/{institution_id}",
     summary="Get details for a specific institution",
     response_model=models.InstitutionsModel,
+    tags=["Institutions"]
 )
 async def get_institution(institution_id: int):
     query_result = db_access.fetch_institution(institution_id)
@@ -375,6 +410,7 @@ async def get_institution(institution_id: int):
     "/institution/{institution_id}",
     summary="Update the details for an institution",
     response_model=models.InstitutionsModel,
+    tags=["Institutions"]
 )
 async def update_institution(institution_id: int, info: Request = None):
     data = await info.json()
@@ -393,7 +429,9 @@ async def update_institution(institution_id: int, info: Request = None):
 
 
 @router.get(
-    "/qualifiers", summary="List qualifiers", response_model=List[models.QualifierModel]
+    "/qualifiers", summary="List qualifiers",
+    response_model=List[models.QualifierModel],
+    tags=["Qualifiers"]
 )
 async def get_qualifiers():
     query_result = db_access.load_qualifiers()
@@ -409,6 +447,7 @@ async def get_qualifiers():
     "/qualifier/{qualifier_id}",
     summary="Get details for a specific qualifier",
     response_model=models.QualifierModel,
+    tags=["Qualifiers"]
 )
 async def get_qualifier(qualifier_id: int):
     q = db_access.fetch_qualifier(qualifier_id)
@@ -422,6 +461,7 @@ async def get_qualifier(qualifier_id: int):
     summary="Create a new qualifier keyphrase.",
     response_model=models.QualifierModel,
     status_code=status.HTTP_201_CREATED,
+    tags=["Qualifiers"]
 )
 async def add_qualifier(
         value: str = Body(...),
@@ -440,7 +480,11 @@ async def add_qualifier(
 """ ---------- Tags ------------------------------------------------------------------------------"""
 
 
-@router.get("/tags", summary="List existing tags", response_model=List[models.TagModel])
+@router.get("/tags",
+            summary="List existing tags",
+            response_model=List[models.TagModel],
+            tags=["Tags"]
+            )
 async def get_tags():
     query_result = db_access.load_tags()
     response = []
@@ -460,6 +504,7 @@ async def get_tags():
     "/tag/{tag_id}",
     summary="Get details for a specific tag record",
     response_model=models.TagModel,
+    tags=["Tags"]
 )
 async def get_tag(tag_id: int):
     q = db_access.fetch_tag(tag_id)
@@ -473,6 +518,7 @@ async def get_tag(tag_id: int):
     summary="Create a new tag keyphrase.",
     response_model=models.TagModel,
     status_code=status.HTTP_201_CREATED,
+    tags=["Tags"]
 )
 async def add_tag(
         value: str = Body(...),
@@ -492,7 +538,8 @@ async def add_tag(
     "/tags/{tag_id}",
     summary="Update a tag value or note.",
     response_model=models.TagModel,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags = ["Tags"]
 )
 async def update_tag(
         tag_id: Annotated[int, Path(title="Used to identify the Tag in question")],
@@ -514,7 +561,9 @@ async def update_tag(
 
 @router.get("/transactions",
             summary="Get list of Transactions from a given transaction Batch",
-            response_model=List[models.TransactionRecordModel])
+            response_model=List[models.TransactionRecordModel],
+            tags=["Transactions"]
+            )
 async def get_transactions(batch_id: int, institution_id: int = None, limit: int = 100, offset: int = 0):
     transactions = db_access.query_transactions_from_batch(
         batch_id=batch_id, offset=offset, limit=limit, institution_id=institution_id
@@ -632,6 +681,7 @@ def parse_transaction_record(row):
     "/transaction/{transaction_id}",
     summary="Get details for a specific transaction",
     response_model=models.TransactionRecordModel,
+    tags=["Transactions"]
 )
 async def get_transaction(transaction_id: int):
     transaction = db_access.fetch_transaction(
@@ -658,6 +708,7 @@ async def get_transaction(transaction_id: int):
     "/transaction/{transaction_id}/notes",
     summary="Get notes for a specific transaction",
     response_model=List[models.TransactionNoteModel],
+    tags=["Transactions"]
 )
 async def get_transaction_notes(transaction_id: int):
     notes = db_access.query_notes_for_transaction(transaction_id=transaction_id)
@@ -673,6 +724,7 @@ async def get_transaction_notes(transaction_id: int):
     "/transaction/{transaction_id}/category",
     summary="Add a category to the given transaction",
     response_model=models.TransactionRecordModel,
+    tags=["Transactions"]
 )
 async def add_transaction_category(transaction_id: int, category_id: int):
     db_access.assign_category_to_transaction(transaction_id, category_id)
@@ -700,6 +752,7 @@ async def add_transaction_category(transaction_id: int, category_id: int):
     "/transaction/{transaction_id}/notes",
     summary="Add a note to the given transaction",
     response_model=models.TransactionRecordModel,
+    tags=["Transactions"]
 )
 async def add_transaction_note(transaction_id: int, info: Request):
     json_data = await info.json()
@@ -729,6 +782,7 @@ async def add_transaction_note(transaction_id: int, info: Request):
     "/transaction/{transaction_id}/notes",
     summary="Reset notes for the given transaction",
     response_model=models.TransactionRecordModel,
+    tags=["Transactions"]
 )
 async def reset_transaction_notes(transaction_id: int, info: Request):
     """
@@ -768,6 +822,7 @@ async def reset_transaction_notes(transaction_id: int, info: Request):
     "/transaction/{transaction_id}/tags",
     summary="Reset the tags for a given transaction",
     response_model=models.TransactionRecordModel,
+    tags=["Transactions"]
 )
 async def reset_transaction_tags(
         transaction_id: int,
@@ -812,6 +867,7 @@ async def reset_transaction_tags(
     "/transaction/{transaction_id}/tags",
     summary="Get tags for a specific transaction",
     response_model=List[models.TagModel],
+    tags=["Transactions"]
 )
 async def get_transaction_tags(transaction_id: int):
     # id, batch_id, institution_id, transaction_date, transaction_data, description, amount
@@ -830,6 +886,7 @@ async def get_transaction_tags(transaction_id: int):
     "/transactions_descriptions",
     summary="List the column definitions for each bank's data format.",
     response_model=List[models.TransactionDescriptionModel],
+    tags=["Transactions"]
 )
 async def get_transaction_descriptions():
     # SELECT id, institution_id, transaction_date, transaction_data, description, amount
@@ -859,6 +916,7 @@ async def get_transaction_descriptions():
     "/processed_batches",
     summary="List all processed batches (PT) in the system.",
     response_model=List[models.ProcessedTransactionBatchModel],
+    tags=["Processed Batches"]
 )
 async def get_processed_batches():
     query_result = db_access.list_processed_batches()
@@ -879,6 +937,7 @@ async def get_processed_batches():
     "/processed_batch/{batch_id}",
     summary="Get details for a specific processed batch of transactions",
     response_model=models.ProcessedTransactionBatchModel,
+    tags=["Processed Batches"]
 )
 async def get_batch(batch_id: int):
     query_result = db_access.fetch_processed_batch(batch_id)
@@ -904,6 +963,7 @@ async def get_batch(batch_id: int):
     summary="Update details for a specific processed batch of transactions",
     status_code=status.HTTP_200_OK,
     response_model=models.ProcessedTransactionBatchModel,
+    tags=["Processed Batches"]
 )
 async def update_processed_batch(batch_id: int, info: Request):
     json_data = await info.json()
@@ -929,6 +989,7 @@ async def update_processed_batch(batch_id: int, info: Request):
 @router.delete(
     "/processed_batch/{batch_id}", status_code=204,
     summary="Remove a specific processed batch of transactions",
+    tags=["Processed Batches"]
 )
 async def delete_batch(batch_id: int):
     db_access.delete_processed_batch(batch_id)
@@ -940,6 +1001,7 @@ async def delete_batch(batch_id: int):
 @router.get(
     "/processed_transactions",
     response_model=List[models.ProcessedTransactionRecordModel],
+    tags=["Processed Transactions"]
 )
 async def get_processed_transactions(batch_id: int, limit: int = 100, offset: int = 0):
     transactions = db_access.get_processed_transaction_records(
@@ -986,6 +1048,7 @@ SELECT   processed_transaction_records.id as PID,
     "/processed_transaction/{transaction_id}",
     summary="Get details for a specific processed transaction",
     response_model=models.ProcessedTransactionRecordModel,
+    tags=["Processed Transactions"]
 )
 async def get_processed_transaction(transaction_id: int):
     """
@@ -1097,7 +1160,10 @@ def build_report_processors(report_data, batch_id):
     return all_processors
 
 
-@router.get("/processed/templates", summary="Template Matching Data")
+@router.get("/processed/templates",
+            summary="Template Matching Data",
+            tags=["Processed Transactions"]
+            )
 async def query_processed_templates(
         processed_batch_id: int,
         institution_id: Optional[int] = None,
@@ -1137,7 +1203,10 @@ def template_report(batch_id: int):
     )
 
 
-@router.get("/processed/categories", summary="Category Breakdown Report")
+@router.get("/processed/categories",
+            summary="Category Breakdown Report",
+            tags=["Processed Transactions"]
+            )
 async def query_processed_categories(processed_batch_id: int):
     """
     Builds a json model list transactions broken down by categories
@@ -1168,6 +1237,7 @@ def category_report(batch_id: int):
     "/saved_filters",
     summary="Get details for a specific processed transaction",
     response_model=List[models.SavedFilterModel],
+    tags=["Saved Filters"]
 )
 async def get_saved_filters():
     filter_data = db_access.load_saved_filters()
@@ -1208,6 +1278,7 @@ async def get_saved_filters():
     "/batch_contents",
     summary="Get details for all transaction batches",
     response_model=List[models.BatchContentsModel],
+    tags=["Batch Details"]
 )
 async def get_batch_contents():
     """
@@ -1243,6 +1314,7 @@ async def get_batch_contents():
     "/batch_contents/{batch_id}",
     summary="Get details for a specific processed transaction batch",
     response_model=List[models.BatchContentsModel],
+    tags=["Batch Details"]
 )
 async def get_contents_from_batch(batch_id: int):
     contents = db_access.load_contents_from_batch(batch_id)
@@ -1266,6 +1338,8 @@ async def get_contents_from_batch(batch_id: int):
 """----------------------------Actions--------------------------"""
 
 
-@router.post("/processed_batch/rerun/{batch_id}")
+@router.post("/processed_batch/rerun/{batch_id}",
+             tags=["Actions"]
+             )
 async def rereun_processed_batch(batch_id: int):
     pass
