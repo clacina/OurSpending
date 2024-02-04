@@ -6,54 +6,49 @@ from data_processing.backend import *
 from data_processing.logger import setup_rich_logger
 from data_processing.processors import select_processors_from_batch
 
-setup_rich_logger()
-# app = Flask(__name__)
-
-
 from apiflask import APIFlask, Schema, abort
 from apiflask.fields import Integer, String
 from apiflask.validators import Length, OneOf
 
+setup_rich_logger()
+
 # set openapi.info.title and openapi.info.version
-app = APIFlask(__name__, title='Pet API', version='1.0')
+app = APIFlask(__name__, title='Data Processing', version='1.0')
 
 # All the OpenAPI field config can be set with the corresponding attributes of the app instance:
 # app.description = '...'
 
 # openapi.info.description
 app.config['DESCRIPTION'] = """
-The description for this API. It can be very long and **Markdown** is supported.
-
-In this example, the tags is manually set. However, in a real world application, it will be
-enough to use the automatic tags feature based on blueprint, see the example for blueprint
-tags under the "examples/blueprint_tags" folder:
+Expose access to the data processing side of the solution.  This includes the ability to
+load datafiles and processes them.
 
 ```
-$ cd ..
-$ cd blueprint_tags
-$ flask run
+$ cd OurSpending
+$ cd data_processing
+$ flask run --host=0.0.0.0 --port=8880 --reload
 ```
 
-The source can be found at [examples/blueprint_tags/app.py][_blueprint_tags].
+The source can be found at [github][_blueprint_tags].
 
-[_blueprint_tags]: https://github.com/apiflask/apiflask/tree/main/examples/blueprint_tags/app.py
+[_blueprint_tags]: https://github.com/clacina/OurSpending
 """
 
 # openapi.info.contact
-app.config['CONTACT'] = {
-    'name': 'API Support',
-    'url': 'https://greyli.com/en',
-    'email': 'withlihui@gmail.com'
-}
+# app.config['CONTACT'] = {
+#     'name': 'API Support',
+#     'url': 'https://greyli.com/en',
+#     'email': 'withlihui@gmail.com'
+# }
 
 # openapi.info.license
-app.config['LICENSE'] = {
-    'name': 'MIT',
-    'url': 'https://opensource.org/licenses/MIT'
-}
+# app.config['LICENSE'] = {
+#     'name': 'MIT',
+#     'url': 'https://opensource.org/licenses/MIT'
+# }
 
 # openapi.info.termsOfService
-app.config['TERMS_OF_SERVICE'] = 'http://example.com'
+# app.config['TERMS_OF_SERVICE'] = 'http://example.com'
 
 # The four info fields above can be set with the INFO key:
 # app.config['INFO'] = {
@@ -71,19 +66,19 @@ app.config['TERMS_OF_SERVICE'] = 'http://example.com'
 # }
 
 # openapi.tags
-app.config['TAGS'] = [
-    {'name': 'Hello', 'description': 'The description of the **Hello** tag.'},
-    {'name': 'Pet', 'description': 'The description of the **Pet** tag.'}
-]
+# app.config['TAGS'] = [
+#     {'name': 'Hello', 'description': 'The description of the **Hello** tag.'},
+#     {'name': 'Pet', 'description': 'The description of the **Pet** tag.'}
+# ]
 
 # If you don't need to set tag "description" or tag "externalDocs", just pass a list a string:
-# app.config['TAGS'] = ['Hello', 'Pet']
+app.config['TAGS'] = ['Batches', 'Actions', 'Reports']
 
 # openapi.servers
 app.config['SERVERS'] = [
     {
         'name': 'Development Server',
-        'url': 'http://localhost:5000'
+        'url': 'http://192.168.1.77:8880'
     },
     {
         'name': 'Production Server',
@@ -101,6 +96,8 @@ app.config['EXTERNAL_DOCS'] = {
     'url': 'https://apiflask.com/docs'
 }
 
+"""
+# Schema Examples
 pets = [
     {'id': 0, 'name': 'Kitty', 'category': 'cat'},
     {'id': 1, 'name': 'Coco', 'category': 'dog'},
@@ -125,11 +122,19 @@ class PetOut(Schema):
     id = Integer(metadata={'title': 'Pet ID', 'description': 'The ID of the pet.'})
     name = String(metadata={'title': 'Pet Name', 'description': 'The name of the pet.'})
     category = String(metadata={'title': 'Pet Category', 'description': 'The category of the pet.'})
+"""
 
 
 @app.get('/')
 def root():
     return 'Hello World'
+
+
+tags_metadata = [
+    {"name": "Batches"},
+    {"name": "Actions"},
+    {"name": "Reports"},
+]
 
 
 # ---------------------------------- Command Line Interface Handling (CLI) ------------------------------------
@@ -141,8 +146,14 @@ class LoadSchema(Schema):
     notes = String(metadata={'title': 'Notes', 'description': 'Optional notes for this batch.'})
 
 
+class ProcessSchema(Schema):
+    batch_id = Integer()
+    notes = String()
+
+
 @app.post('/import')
 @app.input(LoadSchema, location='json')
+@app.doc(tags=['Batches'])
 def load_datafiles(payload):
     """Load activity reports for processing."""
     # logging.info(f"Loading data files...{request.json}")
@@ -168,8 +179,10 @@ def load_datafiles(payload):
 
 
 @app.route('/process', methods=['POST'])
-def process_a_transaction_batch():
-    payload = request.json
+@app.doc(tags=['Batches'])
+@app.input(ProcessSchema, location='json')
+def process_a_transaction_batch(json_data):
+    payload = json_data
 
     batch_id = payload.get('batch_id', None)
     notes = payload.get('notes', None)
@@ -194,14 +207,8 @@ def process_a_transaction_batch():
     return f"Process load complete.  New Processed batch: {processed_batch_id}"
 
 
-@app.route('/process/<batch_id>', methods=['DELETE'])
-def delete_a_transaction_batch(batch_id: int):
-    # Delete this batch id
-    db_utils.delete_processed_batch(batch_id)
-    return f"Deleting Processed Batch: {batch_id}"
-
-
 @app.route('/templatereport/<batch_id>')
+@app.doc(tags=['Reports'])
 def template_report(batch_id: int):
     return f"Creating template report for batch {batch_id}"
 
@@ -228,6 +235,7 @@ def template_report(batch_id: int):
 
 
 @app.route('/categoryreport/<batch_id>')
+@app.doc(tags=['Reports'])
 def category_report(batch_id: int):
     """Generate a Category Breakdown Report"""
     return f"Creating a category report for processed batch: {batch_id}"
@@ -254,17 +262,14 @@ def category_report(batch_id: int):
 """----------------------------Actions--------------------------"""
 
 
-@app.post("/batch/{batch_id}/process")
-async def process_batch(batch_id: int):
-    return f"Generating processed batch from {batch_id}"
-
-
 @app.post("/processed_batch/{batch_id}/rerun")
+@app.doc(tags=['Actions'])
 async def rereun_processed_batch(batch_id: int):
     return f"Rerunning batch {batch_id}"
 
 
 @app.post("/processed_batch/apply_template/{template_id}")
+@app.doc(tags=['Actions'])
 async def apply_template(template_id: int):
     return f"Applying template: {template_id}"
 
