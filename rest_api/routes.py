@@ -1333,13 +1333,3 @@ async def get_contents_from_batch(batch_id: int):
         )
         content_list.append(sf)
     return content_list
-
-
-"""----------------------------Actions--------------------------"""
-
-
-@router.post("/processed_batch/rerun/{batch_id}",
-             tags=["Actions"]
-             )
-async def rereun_processed_batch(batch_id: int):
-    pass

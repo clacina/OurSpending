@@ -1,147 +1,153 @@
 import logging
-import os
 
 from flask import Flask, request
-from data_processing import db_utils
-import sys
-from data_processing import settings
+
+from data_processing.backend import *
 from data_processing.logger import setup_rich_logger
-from data_processing.processors import select_processor_from_file, select_processors_from_batch
-from data_processing.settings import data_mgr
-from data_processing.settings import ConfigurationData
+from data_processing.processors import select_processors_from_batch
 
 setup_rich_logger()
-app = Flask(__name__)
+# app = Flask(__name__)
 
 
-@app.route('/')
+from apiflask import APIFlask, Schema, abort
+from apiflask.fields import Integer, String
+from apiflask.validators import Length, OneOf
+
+# set openapi.info.title and openapi.info.version
+app = APIFlask(__name__, title='Pet API', version='1.0')
+
+# All the OpenAPI field config can be set with the corresponding attributes of the app instance:
+# app.description = '...'
+
+# openapi.info.description
+app.config['DESCRIPTION'] = """
+The description for this API. It can be very long and **Markdown** is supported.
+
+In this example, the tags is manually set. However, in a real world application, it will be
+enough to use the automatic tags feature based on blueprint, see the example for blueprint
+tags under the "examples/blueprint_tags" folder:
+
+```
+$ cd ..
+$ cd blueprint_tags
+$ flask run
+```
+
+The source can be found at [examples/blueprint_tags/app.py][_blueprint_tags].
+
+[_blueprint_tags]: https://github.com/apiflask/apiflask/tree/main/examples/blueprint_tags/app.py
+"""
+
+# openapi.info.contact
+app.config['CONTACT'] = {
+    'name': 'API Support',
+    'url': 'https://greyli.com/en',
+    'email': 'withlihui@gmail.com'
+}
+
+# openapi.info.license
+app.config['LICENSE'] = {
+    'name': 'MIT',
+    'url': 'https://opensource.org/licenses/MIT'
+}
+
+# openapi.info.termsOfService
+app.config['TERMS_OF_SERVICE'] = 'http://example.com'
+
+# The four info fields above can be set with the INFO key:
+# app.config['INFO'] = {
+#     'description': '...',
+#     'termsOfService': 'http://example.com',
+#     'contact': {
+#         'name': 'API Support',
+#         'url': 'http://www.example.com/support',
+#         'email': 'support@example.com'
+#     },
+#     'license': {
+#          'name': 'Apache 2.0',
+#          'url': 'http://www.apache.org/licenses/LICENSE-2.0.html'
+#      }
+# }
+
+# openapi.tags
+app.config['TAGS'] = [
+    {'name': 'Hello', 'description': 'The description of the **Hello** tag.'},
+    {'name': 'Pet', 'description': 'The description of the **Pet** tag.'}
+]
+
+# If you don't need to set tag "description" or tag "externalDocs", just pass a list a string:
+# app.config['TAGS'] = ['Hello', 'Pet']
+
+# openapi.servers
+app.config['SERVERS'] = [
+    {
+        'name': 'Development Server',
+        'url': 'http://localhost:5000'
+    },
+    {
+        'name': 'Production Server',
+        'url': 'http://api.example.com'
+    },
+    {
+        'name': 'Testing Server',
+        'url': 'http://test.example.com'
+    }
+]
+
+# openapi.externalDocs
+app.config['EXTERNAL_DOCS'] = {
+    'description': 'Find more info here',
+    'url': 'https://apiflask.com/docs'
+}
+
+pets = [
+    {'id': 0, 'name': 'Kitty', 'category': 'cat'},
+    {'id': 1, 'name': 'Coco', 'category': 'dog'},
+    {'id': 2, 'name': 'Flash', 'category': 'cat'}
+]
+
+
+class PetIn(Schema):
+    name = String(
+        required=True,
+        validate=Length(0, 10),
+        metadata={'title': 'Pet Name', 'description': 'The name of the pet.'}
+    )
+    category = String(
+        required=True,
+        validate=OneOf(['dog', 'cat']),
+        metadata={'title': 'Pet Category', 'description': 'The category of the pet.'}
+    )
+
+
+class PetOut(Schema):
+    id = Integer(metadata={'title': 'Pet ID', 'description': 'The ID of the pet.'})
+    name = String(metadata={'title': 'Pet Name', 'description': 'The name of the pet.'})
+    category = String(metadata={'title': 'Pet Category', 'description': 'The category of the pet.'})
+
+
+@app.get('/')
 def root():
     return 'Hello World'
 
 
-def build_config_for_institution(config, institution_id):
-    """
-    Look through main template list and filter by the specified id
-    :param config:
-    :param institution_id:
-    :return: new ConfigurationData object matching the specified id
-    """
-    new_config = ConfigurationData()
-    new_config.institution_id = institution_id
-    for e in config.templates:
-        if e.institution_id == institution_id:
-            new_config.templates.append(e)
-
-    return new_config
-
-
-def configure_processor(datafile, processor_class, institution_id):
-    """
-    Find the institution_id for the specified institution name, then
-    build the template config for that institution, finally create
-    the Processor object that will load the data file specified
-    :param datafile: Datafile that will be processed - can be None
-    :param processor_class: String name of processor to create
-    :institution_id: Id from institutions table matching the processor type
-    :return: a derived object from ProcessorBase and the processor type passed
-    """
-    class_ = getattr(sys.modules['data_processing.processors'], processor_class, None)
-    processor = class_(datafile)
-
-    processor.institution_id = institution_id
-    inst_config = build_config_for_institution(data_mgr, processor.institution_id)
-    processor.config = inst_config
-
-    return processor
-
-
-def create_batch(processors, notes=None):
-    transactions_processed = 0
-    batch_id = None
-
-    for account in processors:
-        print(f"Loading data for account: {account.name}")
-        if not batch_id:
-            batch_id = db_utils.create_transaction_batch()
-
-    update_batch(processors, batch_id, notes)
-
-    if not notes:
-        notes = f"{len(processors)} Processors, {transactions_processed} Transactions"
-
-    db_utils.update_batch_info(batch_id, notes)
-    return batch_id
-
-
-def update_batch(processors, batch_id, notes):
-    # remove any transactions from the specified batch that are from the processors id
-    transactions_processed = 0
-    for account in processors:
-        db_utils.override_batch_transactions(account.institution_id, account.transactions, batch_id)
-        account.process_transactions(batch_id)
-
-        transactions_processed += len(account.transactions)
-        db_utils.add_transaction_batch_content(filename=account.datafile,
-                                               institution_id=account.institution_id,
-                                               file_date=account.file_date,
-                                               batch_id=batch_id, notes=notes)
-
-    if not notes:
-        notes = f"{len(processors)} Processors, {transactions_processed} Transactions"
-
-
-def load_source_file(datafile):
-    """
-    returns: a processor with the data from the specified file loaded
-              or None if no matching processor could be found
-    """
-    if not os.path.exists(datafile):
-        print(f"Error: File {datafile} not found.")
-        return None
-    # Figure out which processor / institution this file represents
-    processor_class = select_processor_from_file(datafile)
-    if processor_class:
-        # we found the processor, but we need the institution id
-        institution_id = db_utils.find_institution_from_class(processor_class)
-        cp = configure_processor(
-            datafile=datafile,
-            processor_class=processor_class,
-            institution_id=institution_id
-        )
-        return cp
-    return None
-
-
-def load_sources(source, file):
-    """
-    Load either a source folder or a single file
-    :param source: source folder designation
-    :param file: single file path
-    :return: list of configured processors with their normalized transactions
-    """
-    data = []
-
-    if source:  # load folder
-        for subdir, dirs, files in os.walk(source):
-            for f in files:
-                filepath = os.path.join(subdir, f)
-                data.append(load_source_file(filepath))
-    elif file:  # single file
-        data.append(load_source_file(file))
-    else:
-        print(f"Error loading sources, not source specified: {source}, {file}")
-
-    return data
-
-
 # ---------------------------------- Command Line Interface Handling (CLI) ------------------------------------
 
+class LoadSchema(Schema):
+    source = String(metadata={'title': 'Source Folder', 'description': 'Folder to load.'})
+    fileentry = String(metadata={'title': 'File Source', 'description': 'Single file to load.'})
+    override = Integer(metadata={'title': 'Batch Override', 'description': 'Replace contents of specified batch.'})
+    notes = String(metadata={'title': 'Notes', 'description': 'Optional notes for this batch.'})
 
-@app.route('/import', methods=['POST'])
-def load_datafiles():
+
+@app.post('/import')
+@app.input(LoadSchema, location='json')
+def load_datafiles(payload):
     """Load activity reports for processing."""
-    logging.info(f"Loading data files...{request.json}")
-    payload = request.json
+    # logging.info(f"Loading data files...{request.json}")
+    # payload = request.json
+    logging.info(f"Loading data files...{payload}")
 
     source = payload.get('source', None)
     fileentry = payload.get('file', None)
@@ -199,6 +205,7 @@ def delete_a_transaction_batch(batch_id: int):
 def template_report(batch_id: int):
     return f"Creating template report for batch {batch_id}"
 
+
 #     if not batch_id:
 #         batch_id = present_processed_batch_menu_select()
 #
@@ -224,6 +231,8 @@ def template_report(batch_id: int):
 def category_report(batch_id: int):
     """Generate a Category Breakdown Report"""
     return f"Creating a category report for processed batch: {batch_id}"
+
+
 #     if not batch_id:
 #         batch_id = present_processed_batch_menu_select()
 #
@@ -240,6 +249,24 @@ def category_report(batch_id: int):
 #         all_processors,
 #         "report_output/categories.html",
 #     )
+
+
+"""----------------------------Actions--------------------------"""
+
+
+@app.post("/batch/{batch_id}/process")
+async def process_batch(batch_id: int):
+    return f"Generating processed batch from {batch_id}"
+
+
+@app.post("/processed_batch/{batch_id}/rerun")
+async def rereun_processed_batch(batch_id: int):
+    return f"Rerunning batch {batch_id}"
+
+
+@app.post("/processed_batch/apply_template/{template_id}")
+async def apply_template(template_id: int):
+    return f"Applying template: {template_id}"
 
 
 if __name__ == '__main__':
