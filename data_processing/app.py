@@ -1,6 +1,6 @@
 import logging
 
-from flask import Flask, request
+from flask import Flask, request, json
 
 from data_processing.backend import *
 from data_processing.logger import setup_rich_logger
@@ -182,6 +182,9 @@ def load_datafiles(payload):
 @app.doc(tags=['Batches'])
 @app.input(ProcessSchema, location='json')
 def process_a_transaction_batch(json_data):
+    data = request.json
+    logging.info(f"Found data: {data}")
+    logging.info(f"Process payload: {json_data}")
     payload = json_data
 
     batch_id = payload.get('batch_id', None)
@@ -262,16 +265,51 @@ def category_report(batch_id: int):
 """----------------------------Actions--------------------------"""
 
 
-@app.post("/processed_batch/{batch_id}/rerun")
+@app.post("/processed_batch/<batch_id>/rerun")
 @app.doc(tags=['Actions'])
 async def rereun_processed_batch(batch_id: int):
     return f"Rerunning batch {batch_id}"
 
 
-@app.post("/processed_batch/apply_template/{template_id}")
+@app.route("/batch/<batch_id>/process", methods=["POST"])
 @app.doc(tags=['Actions'])
-async def apply_template(template_id: int):
-    return f"Applying template: {template_id}"
+def process_batch(batch_id: int):
+    json_data = json.loads(request.get_data())
+    logging.info(f"Json data: {json_data}")
+    processed_batch_id = db_utils.create_process_batch(transaction_batch_id=batch_id, notes=json_data['notes'])
+    logging.info(f"Running transaction batch: {batch_id} into processing batch: {processed_batch_id}")
+
+    # Now build our list of processors from the above institution list
+    all_processors = select_processors_from_batch(batch_id)
+
+    for processor_info in all_processors:
+        cp = configure_processor(
+            datafile=None,
+            processor_class=processor_info[0],
+            institution_id=processor_info[1][0]
+        )
+
+        cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
+
+    return f"Processing batch {processed_batch_id}"
+
+
+@app.post("/processed_batch/{batch_id}/apply_template/{template_id}")
+@app.doc(tags=['Actions'])
+async def apply_template(batch_id: int, template_id: int):
+    # Get institution id from template
+    template = db_utils.db_access.fetch_template(template_id)
+
+    # Now configure our processor from the above institution
+    processor_class = db_utils.find_class_from_institution(template.institution_id)
+    cp = configure_processor(
+        datafile=None,
+        processor_class=processor_class,
+        institution_id=template.institution_id
+    )
+
+    cp.match_templates(batch_id=batch_id, processed_batch_id=batch_id)
+    return f"Applying template: {template_id} to batch {batch_id}"
 
 
 if __name__ == '__main__':

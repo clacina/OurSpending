@@ -298,7 +298,7 @@ def load_template_tags(template_id: Optional[int] = None):
     return tags
 
 
-def create_process_batch(transaction_batch_id: int, notes: Optional[str]):
+def create_process_batch(transaction_batch_id: int, notes: str):
     conn = db_access.connect_to_db()
     assert conn
     sql = """
