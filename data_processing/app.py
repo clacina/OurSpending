@@ -291,7 +291,9 @@ def process_batch(batch_id: int):
 
         cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
 
-    return f"Processing batch {processed_batch_id}"
+    resp = json_data
+    resp["processed_batch_id"] = processed_batch_id
+    return resp
 
 
 @app.post("/processed_batch/{batch_id}/apply_template/{template_id}")
