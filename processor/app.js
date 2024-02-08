@@ -16,6 +16,7 @@ import indexRouter from './routes/index.js';
 import usersRouter from './routes/users.js';
 import resourcesRouter from './routes/resources.js';
 import reportsRouter from './routes/reports.js';
+import actionsRouter from './routes/actions.js';
 
 var app = express();
 app.listen(8000);
@@ -29,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 import cors from 'cors';
 
-const whitelist = ["http://localhost:3000"]
+const whitelist = ["http://localhost:3000", "http://192.168.1.191:3000", "http://192.168.1.77:8880"]
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {
@@ -46,6 +47,7 @@ app.use(cors(corsOptions))
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/resources', resourcesRouter);
+app.use('/actions', actionsRouter);
 app.use('/reports', reportsRouter);
 // app.use('/login', );
 // app.use('/logout', );
