@@ -17,35 +17,38 @@ import {ProcessedBatchesProvider} from "./contexts/processed_batches.context";
 import {ProcessedTransactionsProvider} from "./contexts/processed_transactions.context";
 import {BatchContentsProvider} from "./contexts/batch_contents.context";
 import {QualifiersProvider} from "./contexts/qualifiers.context";
+import {ActionsProvider} from "./contexts/actions.context";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
       <BrowserRouter>
           <StaticDataProvider>
-              <BatchesProvider>
-                  <ProcessedBatchesProvider>
-                      <ProcessedTransactionsProvider>
-                          <TagsProvider>
-                              <TransactionsProvider>
-                                  <QualifiersProvider>
-                                      <CategoriesProvider>
-                                          <TemplatesProvider>
-                                              <SavedFiltersProvider>
-                                                  <InstitutionsProvider>
-                                                      <BatchContentsProvider>
-                                                          <App />
-                                                      </BatchContentsProvider>
-                                                  </InstitutionsProvider>
-                                              </SavedFiltersProvider>
-                                          </TemplatesProvider>
-                                      </CategoriesProvider>
-                                  </QualifiersProvider>
-                              </TransactionsProvider>
-                          </TagsProvider>
-                      </ProcessedTransactionsProvider>
-                  </ProcessedBatchesProvider>
-              </BatchesProvider>
+              <ActionsProvider>
+                  <BatchesProvider>
+                      <ProcessedBatchesProvider>
+                          <ProcessedTransactionsProvider>
+                              <TagsProvider>
+                                  <TransactionsProvider>
+                                      <QualifiersProvider>
+                                          <CategoriesProvider>
+                                              <TemplatesProvider>
+                                                  <SavedFiltersProvider>
+                                                      <InstitutionsProvider>
+                                                          <BatchContentsProvider>
+                                                              <App />
+                                                          </BatchContentsProvider>
+                                                      </InstitutionsProvider>
+                                                  </SavedFiltersProvider>
+                                              </TemplatesProvider>
+                                          </CategoriesProvider>
+                                      </QualifiersProvider>
+                                  </TransactionsProvider>
+                              </TagsProvider>
+                          </ProcessedTransactionsProvider>
+                      </ProcessedBatchesProvider>
+                  </BatchesProvider>
+              </ActionsProvider>
           </StaticDataProvider>
       </BrowserRouter>
   </React.StrictMode>

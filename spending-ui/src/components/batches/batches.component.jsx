@@ -8,12 +8,17 @@ import {StaticDataContext} from "../../contexts/static_data.context";
 import './batches.component.styles.css';
 import {BatchesContext} from "../../contexts/batches.context";
 import {BatchContentsContext} from "../../contexts/batch_contents.context";
+import {contextMenu, Item, Menu, Separator} from "react-contexify";
+import BootstrapTable from "react-bootstrap-table-next";
+import {ActionsContext} from "../../contexts/actions.context";
 
 const BatchesComponent = () => {
     const {setSectionTitle} = useContext(StaticDataContext);
     const {batches} = useContext(BatchesContext);
     const {batchContentsMap} = useContext(BatchContentsContext);
+    const {processBatch} = useContext(ActionsContext);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [activeRow, setActiveRow] = useState(0);
     const navigate = useNavigate();
     setSectionTitle('Transaction Batches');
 
@@ -138,15 +143,47 @@ const BatchesComponent = () => {
         navigate('/transactions/' + row.id);
     }
 
+    const rowEvents = {
+        onContextMenu: (e, row, index) => {
+            e.stopPropagation();
+            showContext(e, row);
+        }
+    };
+
+    const showContext = (event, row) => {
+        setActiveRow(row);
+        event.preventDefault();
+        contextMenu.show({
+            id: "context-menu",
+            event: event
+        });
+    };
+
+    const initiateProcessing = () => {
+        console.log("Process batch for id: ", activeRow.id);
+        processBatch(activeRow.id, "UI Initiated");
+    }
+
     if(isLoaded) {
         return (
             <div id='batches_container'>
                 <p>Double click a batch below to see the related transactions.</p>
-                <TableBaseComponent columns={columns}
-                                    data={batches}
-                                    keyField='id'
-                                    double_click_handler={double_click_handler}
-                                    />
+                <BootstrapTable
+                    columns={columns}
+                    data={batches}
+                    rowEvents={rowEvents}
+                    keyField='id'
+                    double_click_handler={double_click_handler}
+                    />
+                <Menu id="context-menu" theme='dark'>
+                    {activeRow && (
+                        <>
+                            <Item className="text-center">Transaction Batch ID: {activeRow.id}</Item>
+                            <Separator/>
+                            <Item onClick={initiateProcessing}>Process Batch</Item>
+                        </>
+                    )}
+                </Menu>
             </div>
         )
     } else {
