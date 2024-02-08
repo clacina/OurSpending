@@ -1,6 +1,6 @@
 import logging
 
-from flask import Flask, request, json
+from flask import Flask, request, json, jsonify
 
 from data_processing.backend import *
 from data_processing.logger import setup_rich_logger
@@ -182,8 +182,6 @@ def load_datafiles(payload):
 @app.doc(tags=['Batches'])
 @app.input(ProcessSchema, location='json')
 def process_a_transaction_batch(json_data):
-    data = request.json
-    logging.info(f"Found data: {data}")
     logging.info(f"Process payload: {json_data}")
     payload = json_data
 
@@ -191,7 +189,7 @@ def process_a_transaction_batch(json_data):
     notes = payload.get('notes', None)
 
     processed_batch_id = db_utils.create_process_batch(transaction_batch_id=batch_id, notes=notes)
-    print(
+    logging.info(
         f"Running transaction batch: {batch_id} into processing batch: {processed_batch_id}"
     )
 
@@ -207,7 +205,11 @@ def process_a_transaction_batch(json_data):
         )
 
         cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
-    return f"Process load complete.  New Processed batch: {processed_batch_id}"
+
+    resp = json_data
+    resp["processed_batch_id"] = processed_batch_id
+    logging.info(f"Returning response: {jsonify(resp)}")
+    return jsonify(resp)
 
 
 @app.route('/templatereport/<batch_id>')
@@ -282,6 +284,7 @@ def process_batch(batch_id: int):
     # Now build our list of processors from the above institution list
     all_processors = select_processors_from_batch(batch_id)
 
+    logging.info("a")
     for processor_info in all_processors:
         cp = configure_processor(
             datafile=None,
@@ -290,10 +293,11 @@ def process_batch(batch_id: int):
         )
 
         cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
-
+    logging.info("b")
     resp = json_data
     resp["processed_batch_id"] = processed_batch_id
-    return resp
+    logging.info(f"Returning response: {jsonify(resp)}")
+    return jsonify(resp)
 
 
 @app.post("/processed_batch/{batch_id}/apply_template/{template_id}")
