@@ -53,7 +53,7 @@ class TemplateTagModel(BaseModel):
 class TransactionBatchModel(BaseModel):
     id: int
     run_date: datetime.datetime
-    notes: str
+    notes: Optional[str]
 
 
 class ProcessedTransactionBatchModel(TransactionBatchModel):

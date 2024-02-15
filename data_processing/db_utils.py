@@ -169,6 +169,7 @@ def find_class_from_institution(processor_id):
     try:
         cur.execute(sql, query_params)
         row = cur.fetchone()
+        logging.info(f"Returned row: {row} for processor_id: {processor_id}")
         return row[0]
     except Exception as e:
         print(f"Error: {str(e)}")

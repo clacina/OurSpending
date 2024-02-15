@@ -11,6 +11,7 @@ SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes,
          , tt.template_id, tt.tag_id
          , c.id as category_id, c.value as category_value, c.notes as category_notes 
          , q.id AS qualifier_id, q.value as qualifier_value
+         , tq.data_column
          FROM templates
          JOIN institutions bank on templates.institution_id = bank.id
          full outer JOIN template_tags tt on tt.template_id = templates.id
@@ -58,6 +59,44 @@ SELECT   transaction_records.id AS TID, transaction_records.batch_id,
          , tt.transaction_id, tt.tag_id
          , c.id as category_id, c.value as category_value 
          , tn.id, tn.note
+         FROM transaction_records
+         JOIN institutions bank on transaction_records.institution_id = bank.id
+         full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
+         full OUTER JOIN tags t on t.id = tt.tag_id
+         full outer JOIN categories c on transaction_records.category_id = c.id
+         full outer JOIN transaction_notes tn on transaction_records.id = tn.transaction_id
+),
+
+
+plist AS (
+SELECT   processed_transaction_records.id as PID,
+         processed_transaction_records.processed_batch_id as BID, 
+         processed_transaction_records.institution_id,
+         processed_transaction_records.template_id, processed_transaction_records.transaction_id,
+         tr.*         
+FROM 
+         processed_transaction_records
+JOIN 
+         tlist tr on processed_transaction_records.transaction_id = tr.TID
+)
+SELECT * FROM plist
+"""
+
+
+ProcessedTransactionSQLwTemplate = """
+WITH tlist AS(
+SELECT   transaction_records.id AS TID, transaction_records.batch_id, 
+         transaction_records.transaction_date, 
+         transaction_records.institution_id as BANK_ID,
+         transaction_records.transaction_data,
+         transaction_records.description,
+         transaction_records.amount
+         , bank.name as bank_name, bank.key
+         , t.id as tag_id, t.value as tag_value 
+         , tt.transaction_id, tt.tag_id
+         , c.id as category_id, c.value as category_value 
+         , tn.id, tn.note
+         , tmp.id, tmp.category_id, tmp.hint, tmp.credit, tmp.notes
          FROM transaction_records
          JOIN institutions bank on transaction_records.institution_id = bank.id
          full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
@@ -326,6 +365,27 @@ class DBAccess:
             return result
         except Exception as e:
             logging.exception({"message": f"Error in transaction query: {str(e)}"})
+            raise e
+
+    def update_processed_transaction(self, id, template_id):
+        sql = """
+                UPDATE 
+                    processed_transaction_records 
+                SET 
+                    template_id=%(template_id)s WHERE id=%(id)s
+            """
+        query_params = {
+            "template_id": template_id,
+            "id": id
+        }
+        conn = self.connect_to_db()
+        assert conn
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, query_params)
+            conn.commit()
+        except Exception as e:
+            logging.exception({"message": f"Error updating processed transaction query: {str(e)}"})
             raise e
 
     """ Institutions """

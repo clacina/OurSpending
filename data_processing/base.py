@@ -7,11 +7,36 @@
 
 """
 import abc
+import logging
 import os.path
 import time
 
 # import csv
 import data_processing.db_utils
+
+
+def match_template(qualifiers, transaction):
+    # template.qualifiers is a list of strings
+    found_count = 0
+    # match_all should come from template somewhere
+    logging.info(f"CJL-qualifiers:  {qualifiers}")
+    logging.info(f"----transaction: {transaction}")
+    for q in qualifiers:
+        if q[1] == 'Description':
+            if q[0].upper() in transaction.description.upper():
+                found_count += 1
+        elif q[1] == 'Category':
+            if q[0].upper() in transaction.category.upper():
+                found_count += 1
+
+    """
+    # -- For when we use the match_all flag
+    if found_count >= len(template.qualifiers or (found_count > 0 and match_all is False):
+        return template
+    elif found_count > 0:
+        print(f"Found partial match {found_count} of {len(be.qualifiers)}")
+    """
+    return found_count >= len(qualifiers)
 
 
 class ProcessorBase(metaclass=abc.ABCMeta):
@@ -66,25 +91,12 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         :return: matching template or None if not found
         """
         if "Deposit Home Banking Transfer From Sha" in transaction.description:
-            print("Found")
+            print("Found Description")
         if "Deposit Home Banking Transfer From Sha" in transaction.category:
-            print("Found")
+            print("Found Category")
 
         for be in self.config.templates:
-            found_count = 0
-            # match_all should come from template somewhere
-            for q in be.qualifiers:
-                if q.upper() in transaction.description.upper():
-                    found_count += 1
-                elif q.upper() in transaction.category.upper():
-                    found_count += 1
-
-            if found_count >= len(
-                be.qualifiers
-            ):  # or (found_count > 0 and match_all is False):
-                return be
-            # elif found_count > 0:
-            #     print(f"Found partial match {found_count} of {len(be.qualifiers)}")
+            match_template(be, transaction)
 
         return None
 
@@ -144,7 +156,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
                 Category Breakdown Dictionary
             otherwise it adds the transaction to the 'Extras' list
         :param batch_id: batch to process
-               processed_batch_id:
+        :param processed_batch_id: processed batch to reference
         :return: None
         """
         # Load data to process
