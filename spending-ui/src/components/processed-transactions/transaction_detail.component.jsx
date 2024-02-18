@@ -43,8 +43,10 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
     }
 
     const closeCreateTemplate = (payload) => {
-        console.log("Got Payload: ", payload);
-        createTemplate(payload).then((res) => returnFromCreate(res));
+        console.log("closeCreateTemplate::Got Payload: ", payload);
+        if(payload !== undefined) {
+            createTemplate(payload).then((res) => returnFromCreate(res));
+        }
 
         setOpenTemplateEditor(false);
     }

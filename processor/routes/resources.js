@@ -58,15 +58,11 @@ Sending back:  16423
 Req:  /qualifiers
 Sending back:  9951
 
+*/
 
-
-
- */
-
-
-
-
-
+//-------------------------------------------------------------------------------
+// Debugging helpers
+//-------------------------------------------------------------------------------
 const defaultReturn = (body, error, req=null) => {
   const exclusionList = [
       '/banks',
@@ -98,10 +94,9 @@ const defaultReturn = (body, error, req=null) => {
   }
 }
 
-resourcesRouter.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
-
+//-------------------------------------------------------------------------------
+//  Resource Routes
+//-------------------------------------------------------------------------------
 resourcesRouter.get('/banks', function(req, res, next) {
   const url = process.env.REACT_APP_REST_SERVER + '/institutions';
   console.log("Banks URL: ", url);
@@ -216,6 +211,24 @@ resourcesRouter.delete('/processed_batch/:id', async function(req, res, next) {
   } catch (e) {
     console.log("Got Error: ", e);
     res.status(422).send("Invalid Parameters deleting batch " + req.params['id']);
+  }
+});
+
+
+resourcesRouter.post('/processed_batch/:id/apply_template/:template_id', async function (req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.params);
+  const url = process.env.REACT_APP_DATA_PROCESSING + '/processed_batch/' + req.params['id'] + '/apply_template/' + req.params['template_id'];
+
+  const options = standardOptions(req.body);
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.post(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
   }
 });
 

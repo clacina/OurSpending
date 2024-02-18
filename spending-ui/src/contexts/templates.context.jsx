@@ -45,14 +45,17 @@ export const TemplatesProvider = ({children}) => {
     }
 
     const createTemplate = async (payload) => {
-        const headers = {'Content-Type': 'application/json'}
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates';
-        const method = 'POST'
-        console.log("Sending update: ", payload);
-        const response = await send(url, method, headers, payload);
-        console.log("Response: ", response);
-        setUpdate(true);
-        return(response);
+        console.log("Create Template");
+        if(payload !== undefined) {
+            const headers = {'Content-Type': 'application/json'}
+            const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates';
+            const method = 'POST'
+            console.log("Sending update: ", payload);
+            const response = await send(url, method, headers, payload);
+            console.log("Response: ", response);
+            setUpdate(true);
+            return (response);
+        }
     }
 
     useEffect(() => {

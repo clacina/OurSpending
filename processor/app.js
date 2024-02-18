@@ -4,6 +4,12 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import dns from 'node:dns';
 
+// Open API Support
+import bodyParser from 'body-parser';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express'
+const swaggerFile = import('./public/swagger-output.json', {assert: {type: 'json'}});
+
 // Hack to use module type (newer)
 // https://stackoverflow.com/questions/8817423/why-is-dirname-not-defined-in-node-repl
 import { fileURLToPath } from 'url';
@@ -12,6 +18,8 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+
+// Routes
 import indexRouter from './routes/index.js';
 import usersRouter from './routes/users.js';
 import resourcesRouter from './routes/resources.js';
@@ -41,9 +49,19 @@ const corsOptions = {
     },
     credentials: true,
 }
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
+app.use(bodyParser.json());
 
+// Swagger Docs Setup
+var options = {
+  swaggerOptions: {
+    explorer: true,
+    url: 'http://localhost:8000/swagger-output.json'
+  }
+}
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(null, options));
 
+// Router & Routes Setup
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/resources', resourcesRouter);
