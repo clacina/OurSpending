@@ -17,7 +17,7 @@ CREATE TABLE qualifiers
     id             SERIAL PRIMARY KEY,
     value          TEXT,
     institution_id INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
-    unique (value)
+    unique (value, institution_id)
 );
 ALTER SEQUENCE qualifiers_id_seq RESTART WITH 5000;
 
