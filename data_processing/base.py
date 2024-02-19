@@ -16,11 +16,10 @@ import data_processing.db_utils
 
 
 def match_template(qualifiers, transaction):
-    # template.qualifiers is a list of strings
+    # template.qualifiers is a list of tuples containing the qualifier value (string) and the field name
     found_count = 0
     # match_all should come from template somewhere
-    logging.info(f"CJL-qualifiers:  {qualifiers}")
-    logging.info(f"----transaction: {transaction}")
+    logging.info(f"Checking qualifiers: {qualifiers} against: {transaction}")
     for q in qualifiers:
         if q[1] == 'Description':
             if q[0].upper() in transaction.description.upper():
@@ -36,6 +35,8 @@ def match_template(qualifiers, transaction):
     elif found_count > 0:
         print(f"Found partial match {found_count} of {len(be.qualifiers)}")
     """
+    if found_count >= len(qualifiers):
+        logging.info("---match")
     return found_count >= len(qualifiers)
 
 
@@ -83,6 +84,40 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         pass
 
     """ -------------------- Template Matching Algorithm  -----------------"""
+
+    def match_templates_dup(self, batch_id: int, processed_batch_id: int):
+        """
+        This loads the given transaction_batch from the database and then analyzes each
+        transaction:
+            First it finds a matching template for the transaction
+            if successful:
+                Updates the Spending Dictionary as well as the
+                Category Breakdown Dictionary
+            otherwise it adds the transaction to the 'Extras' list
+        :param batch_id: batch to process
+               processed_batch_id:
+        :return: None
+        """
+        # Load data to process
+        raw_data = data_processing.db_utils.fetch_transactions_from_batch(
+            batch_id=batch_id, institution_id=self.config.institution_id
+        )
+        self.transactions = self.parse_raw_data(raw_data)
+
+        # Loop through all transactions in the dataset
+        for transaction in self.transactions:
+            # loop through our templates and qualifiers to find a match
+            found_match = self.find_banking_template(transaction=transaction)
+            template_id_match = None
+            if found_match:
+                template_id_match = found_match.id
+
+            data_processing.db_utils.add_processed_transaction(
+                transaction_id=transaction.transaction_id,
+                template_id=template_id_match,
+                processed_batch_id=processed_batch_id,
+                institution_id=self.config.institution_id,
+            )
 
     def find_banking_template(self, transaction):
         """
