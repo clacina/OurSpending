@@ -142,6 +142,10 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
         setIsTaxDeductible(!isTaxDeductible);
     }
 
+    const checkMatches = async () => {
+
+    }
+
     const addQualifier = async () => {
         /*
             qualifiers - id, value, institution_id
@@ -159,12 +163,12 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
             alert("Please select a Transaction Field to match against.")
             return;
         }
-        const new_qid = await createQualifier(qualifierPhrase, transaction.institution_id);
-        console.log("New qualifier: ", new_qid);
+        // const new_qid = await createQualifier(qualifierPhrase, transaction.institution_id);
+        // console.log("New qualifier: ", new_qid);
 
         // Add new qualifier to our list of qualifiers for this template
         setQualifiers([...qualifiers, {
-            id: new_qid,
+            id: null,
             value: qualifierPhrase,
             institution_id: transaction.institution_id,
             data_column: qualifierSelectionRef.current.getValue()[0].label
@@ -202,9 +206,28 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     const cancelEdit = () => {
         // If qualifiers have been created, warn that they won't be associated with a template
         if(qualifiers.length !== 0) {
-            alert("There are unsaved qualifiers.  Do you want to cancel?");
+            confirmAlert({
+                title: "Warning",
+                message: "There are unsaved Qualifiers.  Are you sure you wish to exit?",
+                closeOnEscape: true,
+                closeOnClickOutside: true,
+                buttons: [
+                    {
+                        label: 'Yes',
+                        onClick: () => closeHandler(),
+                    },
+                    {
+                        label: 'No',
+                        onClick: () => {
+                            setIsOpen(true);
+                        }
+                    }
+                ]
+            });
+        } else {
+            setIsOpen(false);
+            closeHandler();
         }
-        closeHandler();
     }
 
     const submitEdit = () => {
@@ -243,83 +266,96 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     }
 
     if (isLoaded) {
-        return (<div>
-                <Modal show={isOpen} onHide={cancelEdit}>
+        return (
+                <Modal
+                    show={isOpen}
+                    scrollable={true}
+                    onHide={cancelEdit}
+                    size="xl"
+                >
                     <Modal.Header closeButton>
                         <Modal.Title>Create Template</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <InstitutionName>{institutionName}</InstitutionName>
-                        <label>Hint</label>
-                        <input value={hintText} type="text" onChange={onChangeHint} autoFocus={true}/>
-                        <label>Category</label>
-                        <div id="radio_line">
-                            <Select
-                                id="templateCategorySelection"
-                                ref={categorySelectionRef}
-                                closeMenuOnSelect={true}
-                                options={categoryOptions.sort(compareCategories)}
-                                menuPosition={'fixed'}
-                                onChange={updateCategory}/>
-                            <Form.Check
-                                className='matchAll'
-                                type="switch"
-                                id='checkIsCredit'
-                                label="Is Credit"
-                                checked={isCredit}
-                                onChange={changeIsCredit}
-                            />
+                        <div id='template_edit_container' className='row'>
+                            <div id='template_data_div' className='col-md-4'>
+                                <label>Hint</label>
+                                <input value={hintText} type="text" onChange={onChangeHint} autoFocus={true}/>
+                                <label>Category</label>
+                                <div id="radio_line">
+                                    <Select
+                                        id="templateCategorySelection"
+                                        ref={categorySelectionRef}
+                                        closeMenuOnSelect={true}
+                                        options={categoryOptions.sort(compareCategories)}
+                                        menuPosition={'fixed'}
+                                        onChange={updateCategory}/>
+                                    <Form.Check
+                                        className='matchAll'
+                                        type="switch"
+                                        id='checkIsCredit'
+                                        label="Is Credit"
+                                        checked={isCredit}
+                                        onChange={changeIsCredit}
+                                    />
+                                </div>
+                                <label style={{'margin-top': '20px'}}>Notes</label>
+                                <input value={notesText} type="text" onChange={onChangeNotes}/>
+                            </div>
+                            <div id='template_qualifiers_div' className='col-md-6'>
+                                <h5>Qualifiers</h5>
+                                <p id='qualifier_instructions'>The software will attempt to match the following phase(s)
+                                    against
+                                    the field(s) specified when trying to assign a Category to the transaction.</p>
+                                <ExistingQualifierList>
+                                    <thead>
+                                    <tr>
+                                        <th>Phrase</th>
+                                        <th>Data Field</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {qualifiers.map((item) => {
+                                        return (<tr>
+                                            <td>{item.value}</td>
+                                            <td>{item.data_column}</td>
+                                        </tr>);
+                                    })}
+                                    </tbody>
+                                </ExistingQualifierList>
+                                <div>
+                                    <label>Field</label>
+                                    <Select
+                                        id="qualifierFieldSelection"
+                                        closeMenuOnSelect={true}
+                                        ref={qualifierSelectionRef}
+                                        options={fieldOptions}
+                                        // menuPortalTarget={document.body}
+                                        menuPosition={'fixed'}
+                                        onChange={updateFieldSelection}
+                                    />
+                                </div>
+                                <div id="qualifierPhraseDiv">
+                                    <label>Phrase</label>
+                                    <input value={qualifierPhrase} type="text" onChange={onChangeQualifierPhrase}/>
+                                </div>
+                                <Button variant="outline-primary" onClick={addQualifier}>Add Qualifier</Button>
+                                <Button variant="outline-primary" style={{float: 'right'}} onClick={checkMatches}>Check Matches</Button>
+                            </div>
+                            <hr/>
+                            <div id='template_match_div' className='col-d-2'>
+                                <p>This is my results</p>
+
+                            </div>
                         </div>
-                        <label>Notes</label>
-                        <input value={notesText} type="text" onChange={onChangeNotes}/>
-                        <hr/>
-                        <h5>Qualifiers</h5>
-                        <p id='qualifier_instructions'>The software will attempt to match the following phase(s) against
-                            the field(s) specified when trying to assign a Category to the transaction.</p>
-                        <ExistingQualifierList>
-                            <thead>
-                            <tr>
-                                <th>Phrase</th>
-                                <th>Data Field</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {qualifiers.map((item) => {
-                                return (<tr>
-                                    <td>{item.value}</td>
-                                    <td>{item.data_column}</td>
-                                </tr>);
-                            })}
-                            </tbody>
-                        </ExistingQualifierList>
-                        <div>
-                            <label>Field</label>
-                            <Select
-                                id="qualifierFieldSelection"
-                                closeMenuOnSelect={true}
-                                ref={qualifierSelectionRef}
-                                options={fieldOptions}
-                                // menuPortalTarget={document.body}
-                                menuPosition={'fixed'}
-                                onChange={updateFieldSelection}
-                            />
-                        </div>
-                        <div id="qualifierPhraseDiv">
-                            <label>Phrase</label>
-                            <input value={qualifierPhrase} type="text" onChange={onChangeQualifierPhrase}/>
-                        </div>
-                        <Button variant="outline-primary" onClick={addQualifier}>Add Qualifier</Button>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={cancelEdit}>
-                            Cancel
-                        </Button>
-                        <Button variant="primary" onClick={submitEdit}>
-                            Save Changes
-                        </Button>
+                    <Button variant="secondary" onClick={cancelEdit}>Cancel</Button>
+                    <Button variant="primary" onClick={submitEdit}>Save Template</Button>
                     </Modal.Footer>
                 </Modal>
-            </div>);
+        );
     }
 }
 
