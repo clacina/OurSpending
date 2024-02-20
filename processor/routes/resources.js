@@ -218,7 +218,7 @@ resourcesRouter.delete('/processed_batch/:id', async function(req, res, next) {
 resourcesRouter.post('/processed_batch/:id/apply_template/:template_id', async function (req, res, next) {
   req.accepts('application/json');
   console.log("Params: ", req.params);
-  const url = process.env.REACT_APP_DATA_PROCESSING + '/processed_batch/' + req.params['id'] + '/apply_template/' + req.params['template_id'];
+  const url = process.env.REACT_APP_DATA_PROCESSING + '/processed_batch/' + req.params['id'] + '/apply_template/' + req.params['template_id'] + '?commit=true';
 
   const options = standardOptions(req.body);
 
@@ -232,6 +232,21 @@ resourcesRouter.post('/processed_batch/:id/apply_template/:template_id', async f
   }
 });
 
+resourcesRouter.post('/processed_batch/:id/match_template/:template_id', async function (req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.params);
+  const url = process.env.REACT_APP_DATA_PROCESSING + '/processed_batch/' + req.params['id'] + '/apply_template/' + req.params['template_id'];
+
+  const options = standardOptions(req.body);
+  console.log("Data: ", options);
+  try {
+    const data = await got.post(url, options).json();
+    res.status(200).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
 
 resourcesRouter.get('/qualifiers', function(req, res, next) {
   const url = process.env.REACT_APP_REST_SERVER + '/qualifiers';
