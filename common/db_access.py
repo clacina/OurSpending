@@ -572,6 +572,10 @@ class DBAccess:
         if qualifiers:
             logging.info(f"Adding qualifiers: {qualifiers}")
             for q in qualifiers:
+                if not q['id']:
+                    # See if this qualifier already exists
+                    fetch_qualifier()
+
                 sql = """INSERT INTO 
                             template_qualifiers (template_id, qualifier_id, data_column) 
                          VALUES (%(template_id)s, %(qualifier_id)s, %(data_column)s) 
@@ -906,6 +910,19 @@ class DBAccess:
             return row
         except Exception as e:
             logging.exception(f"Error fetching qualifier {qualifier_id}: {str(e)}")
+            raise e
+
+    def find_qualifier(self, value: str, institution_id: int):
+        """retrieve a single qualifier record by id"""
+        sql = "SELECT id, value, institution_id FROM qualifiers WHERE id=%(institution_id_id)s and value=%(value)s"
+        query_params = {"institution_id": institution_id, "value": value}
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql, query_params)
+            row = cur.fetchone()
+            return row
+        except Exception as e:
+            logging.exception(f"Error fetching qualifier {value}: {str(e)}")
             raise e
 
     def load_qualifiers(self):

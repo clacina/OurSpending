@@ -337,6 +337,79 @@ def match_templates_dup(self, batch_id: int, processed_batch_id: int):
         )
 
 
+class PR:
+    def __init__(self, record):
+        self.transaction_id = record[0]
+        self.template_id = record[3]
+        self.category_id = record[18]
+        self.institution_id = record[8]
+        self.transaction_data = record[9]
+        self.description = record[10]
+        self.category = ''  # need to pull in qualifier field
+        self.new_template_id = None
+
+    def __repr__(self):
+        return f"""\nXID: {self.transaction_id}\nOld tid: {self.template_id}\nNew tid: {self.new_template_id}\nraw: {self.transaction_data}"""
+
+
+def match_qualifiers(batch_id, qualifiers, institution_id):
+    logging.info( f"match_qualifiers: {qualifiers}")
+    # INFO     match_qualifiers: [{'id': None, 'value': 'SAFEWAY.COM', 'data_column': 'Description'}]   app.py:356
+    # Reformat input
+    matches_to = []
+    for q in qualifiers:
+        matches_to.append((q['value'], q['data_column']))
+    """
+    batch_id == the id of the ProcessedBatch
+    the processed_transaction_batch record will contain hte transaction_batch_id
+
+    processed_transaction_records
+    - processed_batch_id
+    - transaction_id
+    - template_id
+    - institution_id
+
+    Loop through the processed_transaction_records WHERE processed_batch_id = batch_id
+        AND institution_id=template.institution_id
+
+        - Check the specified transaction, if it has a category assigned, leave it (unless override_category is TRUE).
+        - Perform a template match on the transaction.
+            If it is different than the assigned template_id, add out our mod list
+    """
+    # Get our processed records
+    processed_records = db_utils.db_access.get_processed_transaction_records(batch_id, limit=10000)
+    logging.info(f"Processed Record: {processed_records[0]}")
+
+    entries = []
+    logging.info(f"Checking {len(processed_records)} transactions")
+    record_count = 0
+    for record in processed_records:
+        entry = PR(record)
+        if entry.institution_id == institution_id:
+            # assumes the parameter has a .description, a .category and .qualifiers (list of tuples)
+            # template.qualifiers is a list of tuples containing the qualifier value (string) and the field name
+            record_count += 1
+            found_match = match_template(qualifiers=matches_to, transaction=entry)
+            if found_match:
+                entries.append(entry)
+
+    results = {}
+    results['entries'] = list()
+    results['qualifiers'] = matches_to,
+    results['institution_id'] = institution_id
+
+    # result_entries = results['entries']
+    #         'transaction_id': e.transaction_id,
+    #         'current_template': e.template_id,
+    #         'current_category': e.category_id,
+    #         'transaction_data': e.transaction_data
+    #
+    # for e in entries:
+    #     result_entries.append({
+    #     })
+    return results
+
+
 def find_template_matches(batch_id, qualifiers, institution_id, template_id):
     """
     batch_id == the id of the ProcessedBatch
@@ -375,20 +448,6 @@ def find_template_matches(batch_id, qualifiers, institution_id, template_id):
        20                      21
      transaction_note_id, transaction_note  
     """
-
-    class PR:
-        def __init__(self, record):
-            self.transaction_id = record[0]
-            self.template_id = record[3]
-            self.category_id = record[18]
-            self.institution_id = record[8]
-            self.transaction_data = record[9]
-            self.description = record[10]
-            self.category = ''  # need to pull in qualifier field
-            self.new_template_id = None
-
-        def __repr__(self):
-            return f"""\nXID: {self.transaction_id}\nOld tid: {self.template_id}\nNew tid: {self.new_template_id}\nraw: {self.transaction_data}"""
 
     entries = []
     logging.info(f"Checking {len(processed_records)} transactions")
@@ -520,6 +579,39 @@ async def apply_template(batch_id: int, template_id: int):
     #         Then update template_id of that entry.
     #         """
     #         db_utils.db_access.update_processed_transaction(id=entry.transaction_id, template_id=entry.new_template_id)
+
+
+@app.post("/processed_batch/<batch_id>/match_qualifiers/")
+@app.doc(tags=['Actions'])
+async def find_qualifier_matches(batch_id: int):
+    """
+    Matches the qualifiers against the specified processed batch.
+    returns: JSON document containing changes that would be applied
+
+    const payload = {
+        "batch_id": transaction.processed_batch_id,
+        "hint": hintText,
+        "category_id": category,
+        "is_credit": isCredit,
+        "notes": notesText,
+        "institution_id": transaction.institution_id,
+        "qualifiers":
+            qualifiers.map((item) => {
+                return({"id": item.id, "value": item.value, "data_column": item.data_column})
+            }),
+        "tags": []
+    }
+
+    """
+    json_data = json.loads(request.get_data())
+    qualifiers = json_data['qualifiers']
+    institution_id = json_data['institution_id']
+    # assert json_data['batch_id'] == batch_id, f"Non-matching ids: {batch_id}, {json_data['batch_id']}"
+    assert qualifiers, "No qualifiers for template"
+
+    # Figure out changes
+    changed_transactions = match_qualifiers(batch_id, qualifiers, institution_id)
+    return changed_transactions
 
 
 if __name__ == '__main__':
