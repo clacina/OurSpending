@@ -9,6 +9,23 @@
     font-size: small;
 }
 
+#qualifiersTable {
+    width: 100%;
+}
+
+#qualifiersTable td:nth-child(3) {
+    width: 30px;
+}
+
+.deleteQualifier {
+    /*border: 2px solid blue;*/
+    width: 20px;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+
 #radio_line {
     border: 1px solid orange;
     display: flex;

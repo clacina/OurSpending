@@ -18,6 +18,10 @@ import {ExistingQualifierList, InstitutionName} from "./create.template.dialog.s
 import {StaticDataContext} from "../../../contexts/static_data.context";
 import {InstitutionsContext} from "../../../contexts/banks.context";
 import {QualifiersContext} from "../../../contexts/qualifiers.context";
+import {TemplatesContext} from "../../../contexts/templates.context";
+import {match} from "assert";
+import {ItemTable} from "../../processed-transactions/transaction_detail.component.styles";
+import TransactionList from "../transaction-list/transaction-list.component";
 
 /*
     Template Fields to capture:
@@ -44,6 +48,7 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     const {categoriesMap} = useContext(CategoriesContext);
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {createQualifier} = useContext(QualifiersContext);
+    const {getTemplateMatches} = useContext(TemplatesContext);
 
     const [isOpen, setIsOpen] = useState(true);
 
@@ -62,12 +67,14 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
     const [qualifierPhrase, setQualifierPhrase] = useState("");
     const [qualifierField, setQualifierField] = useState();
     const qualifierSelectionRef = useRef();
+    const [qualifierMatches, setQualifierMatches] = useState([]);
 
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
         if (transactionDataDefinitions.length > 0 && !isLoaded) {
             console.log("Loading...", transaction.institution_id);
+            console.log(', from batch: ', transaction);
 
             // set institution name
             const newName = institutionsMap.find((x) => {
@@ -140,10 +147,6 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
 
     const changeIsTaxDeductible = () => {
         setIsTaxDeductible(!isTaxDeductible);
-    }
-
-    const checkMatches = async () => {
-
     }
 
     const addQualifier = async () => {
@@ -230,6 +233,48 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
         }
     }
 
+    const removeQualifier = (event) => {
+        const updated_qualifiers = qualifiers.filter((item) => {
+            return item.value !== event.target.id;
+        });
+        setQualifiers(updated_qualifiers);
+    }
+
+    const checkMatches = async () => {
+        if(qualifiers.length === 0) {
+            confirmAlert({
+                title: "Error",
+                message: "Please specify at least one qualifier to match.",
+                closeOnEscape: false,
+                closeOnClickOutside: false,
+                buttons: [
+                    {
+                        label: 'Ok',
+                        onClick: () => alert('Click Yes'),
+                    }
+                ]
+            });
+            return;
+        }
+
+        const payload = {
+            "batch_id": transaction.processed_batch_id,
+            "hint": hintText,
+            "category_id": category,
+            "is_credit": isCredit,
+            "notes": notesText,
+            "institution_id": transaction.institution_id,
+            "qualifiers":
+                qualifiers.map((item) => {
+                    return({"id": item.id, "value": item.value, "data_column": item.data_column})
+                }),
+            "tags": []
+        }
+
+        getTemplateMatches(payload).then((res) => setQualifierMatches(res['entries']));
+    }
+
+
     const submitEdit = () => {
         if(hintText.length === 0) {
             confirmAlert({
@@ -255,7 +300,7 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
             "institution_id": transaction.institution_id,
             "qualifiers":
                 qualifiers.map((item) => {
-                    return({"id": item.id, "data_column": item.data_column})
+                    return({"id": item.id, "value": item.value, "data_column": item.data_column})
                 }),
             "tags": []
             }
@@ -300,7 +345,7 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                                         onChange={changeIsCredit}
                                     />
                                 </div>
-                                <label style={{'margin-top': '20px'}}>Notes</label>
+                                <label style={{'marginTop': '20px'}}>Notes</label>
                                 <input value={notesText} type="text" onChange={onChangeNotes}/>
                             </div>
                             <div id='template_qualifiers_div' className='col-md-6'>
@@ -308,22 +353,28 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                                 <p id='qualifier_instructions'>The software will attempt to match the following phase(s)
                                     against
                                     the field(s) specified when trying to assign a Category to the transaction.</p>
-                                <ExistingQualifierList>
+                                <ItemTable id='qualifiersTable'>
                                     <thead>
                                     <tr>
-                                        <th>Phrase</th>
-                                        <th>Data Field</th>
+                                        <td>Phrase</td>
+                                        <td>Data Field</td>
+                                        <td>&nbsp;</td>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     {qualifiers.map((item) => {
-                                        return (<tr>
+                                        return (<tr key={item.value}>
                                             <td>{item.value}</td>
                                             <td>{item.data_column}</td>
+                                            <td><button
+                                                    className={'deleteQualifier'}
+                                                    onClick={removeQualifier}
+                                                    id={item.value}>x</button>
+                                            </td>
                                         </tr>);
                                     })}
                                     </tbody>
-                                </ExistingQualifierList>
+                                </ItemTable>
                                 <div>
                                     <label>Field</label>
                                     <Select
@@ -345,8 +396,11 @@ const CreateTemplateDialogComponent = ({closeHandler, transaction}) => {
                             </div>
                             <hr/>
                             <div id='template_match_div' className='col-d-2'>
-                                <p>This is my results</p>
-
+                                <TransactionList
+                                    institution_id={transaction.institution_id}
+                                    transactions={qualifierMatches['entries']}
+                                    batch_id={transaction.processed_batch_id}
+                                />
                             </div>
                         </div>
                     </Modal.Body>

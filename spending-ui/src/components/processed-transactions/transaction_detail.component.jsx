@@ -102,7 +102,7 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
                 </thead>
                 <tbody>
                     {tableDef.map((item) => {
-                        return(<tr><td>{item.title}</td><td>{item.value}</td></tr>);
+                        return(<tr id={item.title}><td>{item.title}</td><td>{item.value}</td></tr>);
                     })}
                 </tbody>
             </ItemTable>

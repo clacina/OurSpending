@@ -37,5 +37,5 @@ export const ExistingQualifierList = styled.table`
   border-collapse: collapse;
   th, td {
     padding: 10px;
-  }
+  } 
 `;
