@@ -1019,3 +1019,35 @@ class DBAccess:
         except Exception as e:
             logging.exception(f"Error loading batch contents: {str(e)}")
             raise e
+
+    def load_cc_info(self):
+        sql = """SELECT 
+                    id, name, institution_id, interest_rate, interest_rate_cash, due_date
+                 FROM 
+                    credit_cards
+              """
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return rows
+        except Exception as e:
+            logging.exception(f"Error loading batch contents: {str(e)}")
+            raise e
+
+    def load_cc_data(self, return_most_recent=False):
+        sql = """SELECT 
+                    card_id, balance, balance_date, minimum_payment
+                 FROM 
+                    credit_card_data
+              """
+        if return_most_recent:
+            sql += ""
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return rows
+        except Exception as e:
+            logging.exception(f"Error loading credit card data: {str(e)}")
+            raise e

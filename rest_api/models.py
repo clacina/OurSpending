@@ -146,3 +146,19 @@ class BatchContentsModel(BaseModel):
     file_date: Optional[datetime.datetime]
     transaction_count: Optional[int]
     notes: Optional[str]
+
+
+class CreditCardModel(BaseModel):
+    id: Optional[int]
+    name: Optional[str]
+    institution_id: Optional[int]
+    interest_rate: Optional[float]
+    interest_rate_cash: Optional[float]
+    due_date: Optional[int]
+
+
+class CreditCardDataModel(BaseModel):
+    card_id: Optional[int]
+    balance: Optional[float]
+    balance_date: Optional[datetime.date]
+    minimum_payment: Optional[float]

@@ -1333,3 +1333,72 @@ async def get_contents_from_batch(batch_id: int):
         )
         content_list.append(sf)
     return content_list
+
+# Credit Card Data
+@router.get(
+    "/credit_cards",
+    summary="Get details for all credit cards",
+    response_model=List[models.CreditCardModel],
+    tags=["Credit Cards"]
+)
+async def get_cc_info():
+    contents = db_access.load_cc_info()
+    logging.info(f"Credit Info: {contents}")
+
+    content_list = []
+    for f in contents:
+        # id, name, institution_id, interest_rate, interest_rate_cash, due_date
+        sf = models.CreditCardModel(
+            id=f[0],
+            name=f[1],
+            institution_id=f[2],
+            interest_rate=f[3],
+            interest_rate_cash=f[4],
+            due_date=f[5]
+        )
+        content_list.append(sf)
+    return content_list
+
+
+@router.get(
+    "/credit_card_data",
+    summary="Get balance info for all cards",
+    response_model=List[models.CreditCardDataModel],
+    tags=["Credit Cards"]
+)
+async def get_cc_data():
+    contents = db_access.load_cc_data()
+    logging.info(f"Credit Data: {contents}")
+
+    content_list = []
+    for f in contents:
+        sf = models.CreditCardDataModel(
+            card_id=f[0],
+            balance=f[1],
+            balance_date=f[2],
+            minimum_payment=f[3]
+        )
+        content_list.append(sf)
+    return content_list
+
+
+@router.get(
+    "/credit_card_data/latest",
+    summary="Get latest balance info for all cards",
+    response_model=List[models.CreditCardDataModel],
+    tags=["Credit Cards"]
+)
+async def get_cc_data():
+    contents = db_access.load_cc_data()
+    logging.info(f"Credit Data: {contents}")
+
+    content_list = []
+    for f in contents:
+        sf = models.CreditCardDataModel(
+            card_id=f[0],
+            balance=f[1],
+            balance_date=f[2],
+            minimum_payment=f[3]
+        )
+        content_list.append(sf)
+    return content_list
