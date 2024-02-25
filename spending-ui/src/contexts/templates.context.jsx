@@ -63,14 +63,20 @@ export const TemplatesProvider = ({children}) => {
         console.log("getTemplateMatches: ", payload);
         if(payload !== undefined) {
             assert('batch_id' in payload);
-            assert('template_id' in payload);
+            // assert('template_id' in payload);
             const headers = {'Content-Type': 'application/json'}
-            const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + payload['batch_id'] + '/match_template/' + payload['template_id'];
+            let url = '';
+            if('template_id' in payload && payload['template_id']) {
+                url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + payload['batch_id'] + '/match_template/' + payload['template_id'];
+            } else if('qualifiers' in payload && payload['qualifiers'].length > 0) {
+                url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + payload['batch_id'] + '/match_qualifiers/';
+            } else {
+                return("Invalid payload");
+            }
             const method = 'POST'
             console.log("Sending update: ", payload);
             const response = await send(url, method, headers, payload);
             console.log("Response: ", response);
-            setUpdate(true);
             return (response);
         }
     }
