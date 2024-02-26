@@ -1,0 +1,11 @@
+#creditCardUIContainer {
+    margin: 20px;
+}
+
+p {
+    font-size: x-large;
+}
+
+#creditCardSummaryContainer {
+    border: 1px solid red;
+}
