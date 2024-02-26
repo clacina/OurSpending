@@ -258,6 +258,27 @@
         }
       }
     },
+    "/processed_batch/{id}/match_qualifiers": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
     "/qualifiers": {
       "get": {
         "description": "",
@@ -565,6 +586,26 @@
             "type": "string"
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/credit_cards/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/credit_card_data/": {
+      "get": {
+        "description": "",
         "responses": {
           "200": {
             "description": "OK"

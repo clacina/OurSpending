@@ -575,4 +575,24 @@ resourcesRouter.get('/batch_contents/:batch_id', function(req, res, next) {
 });
 
 
+resourcesRouter.get('/credit_cards/', function(req, res, next) {
+  const url = process.env.REACT_APP_REST_SERVER + '/credit_cards';
+
+  request(url, (error, response, body) => {
+    defaultReturn(body, error, req);
+    res.send(body);
+  });
+});
+
+
+resourcesRouter.get('/credit_card_data/', function(req, res, next) {
+  const url = process.env.REACT_APP_REST_SERVER + '/credit_card_data';
+
+  request(url, (error, response, body) => {
+    defaultReturn(body, error, req);
+    res.send(body);
+  });
+});
+
+
 export default resourcesRouter;
