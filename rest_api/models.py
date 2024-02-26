@@ -155,6 +155,7 @@ class CreditCardModel(BaseModel):
     interest_rate: Optional[float]
     interest_rate_cash: Optional[float]
     due_date: Optional[int]
+    credit_limit: Optional[float]
 
 
 class CreditCardDataModel(BaseModel):

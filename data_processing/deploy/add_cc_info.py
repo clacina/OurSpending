@@ -18,25 +18,27 @@ cur = conn.cursor()
 
 for cc in json_data:
     """
-    "name": "Wells fargo visa",
-    "Balance": 15129.38,
-    "Due Date": 8,
-    "Min Payment": 360.0,
-    "Rate": 16.24,
-    "RateCash": 29.24
+    "name": "Capital One Visa",
+    "Balance": 568.52,
+    "Limit": 9150.00,
+    "Due Date": 28,
+    "Min Payment": 22,
+    "Rate": 30.74,
+    "RateCash": 30.15
     """
     print(cc)
 
     sql_cc = """
-        INSERT INTO credit_cards (name, due_date, interest_rate, interest_rate_cash)
-        VALUES(%(name)s, %(due_date)s, %(interest_rate)s, %(interest_rate_cash)s)
+        INSERT INTO credit_cards (name, due_date, interest_rate, interest_rate_cash, credit_limit)
+        VALUES(%(name)s, %(due_date)s, %(interest_rate)s, %(interest_rate_cash)s, %(credit_limit)s)
         RETURNING id
     """
     query_params = {
         "name": cc['name'],
         "due_date": cc['Due Date'],
         "interest_rate": cc['Rate'],
-        "interest_rate_cash": cc['RateCash']
+        "interest_rate_cash": cc['RateCash'],
+        "credit_limit": cc['Limit']
     }
 
     try:

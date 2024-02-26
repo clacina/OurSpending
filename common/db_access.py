@@ -1022,7 +1022,7 @@ class DBAccess:
 
     def load_cc_info(self):
         sql = """SELECT 
-                    id, name, institution_id, interest_rate, interest_rate_cash, due_date
+                    id, name, institution_id, interest_rate, interest_rate_cash, due_date, credit_limit
                  FROM 
                     credit_cards
               """

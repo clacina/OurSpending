@@ -1354,7 +1354,8 @@ async def get_cc_info():
             institution_id=f[2],
             interest_rate=f[3],
             interest_rate_cash=f[4],
-            due_date=f[5]
+            due_date=f[5],
+            credit_limit=f[6]
         )
         content_list.append(sf)
     return content_list

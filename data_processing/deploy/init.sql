@@ -195,7 +195,8 @@ CREATE TABLE credit_cards
     institution_id  INTEGER DEFAULT NULL,
     due_date        INTEGER DEFAULT NULL,
     interest_rate   FLOAT DEFAULT NULL,
-    interest_rate_cash double precision
+    interest_rate_cash double precision,
+    credit_limit    double precision
 );
 
 
