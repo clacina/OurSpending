@@ -8,14 +8,15 @@ export const ActionsContext = createContext({
 
 export const ActionsProvider = ({children}) => {
     const processBatch = async (batch_id, notes) => {
+        console.log("In process batch...");
         const headers = {'Content-Type': 'application/json'}
         const url = `${process.env.REACT_APP_PROCESSOR}` + '/actions/batch/' + batch_id + '/process';
         const method = 'POST'
         const body = {
             "notes": notes
         }
-        console.log("Sending update: ", {body});
-        const request = await send({url}, {method}, {headers}, {body});
+        console.log("Sending update: ", body);
+        const request = await send(url, method, headers, body);
         console.log("Response: ", request);
     }
 

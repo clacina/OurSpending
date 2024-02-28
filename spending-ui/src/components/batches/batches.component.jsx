@@ -138,15 +138,14 @@ const BatchesComponent = () => {
         }
     }, [batches]);
 
-    const double_click_handler = (e, row, index) => {
-        console.log("Double click: ", row.id);
-        navigate('/transactions/' + row.id);
-    }
-
     const rowEvents = {
         onContextMenu: (e, row, index) => {
             e.stopPropagation();
             showContext(e, row);
+        },
+        onDoubleClick: (e, row, index) => {
+            console.log("Double click: ", row.id);
+            navigate('/transactions/' + row.id);
         }
     };
 
@@ -173,7 +172,6 @@ const BatchesComponent = () => {
                     data={batches}
                     rowEvents={rowEvents}
                     keyField='id'
-                    double_click_handler={double_click_handler}
                     />
                 <Menu id="context-menu" theme='dark'>
                     {activeRow && (

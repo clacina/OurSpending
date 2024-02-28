@@ -57,7 +57,9 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
 
         // Create column definitions for this institution
         const dataDefinition = transactionDataDefinitions.filter((x) => Number(x.institution_id) === Number(institution_id));
+        console.log("DD: ", dataDefinition);
         const cols = [];
+        console.log("Transactions: ", transactions);
 
         // Build in order - Date, Amount, Description
         var text_align = 'right';
@@ -68,6 +70,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
             return(item.is_transaction_date);
         });
         assert(dateColumn);
+        console.log("Date Column: ", dateColumn);
         cols.push({
             dataField: dateColumn.data_id,
             text: 'Date',
@@ -90,6 +93,7 @@ const TransactionList = ({institution_id, transactions, batch_id}) => {
             return(item.is_amount);
         })
         assert(amountColumn);
+        console.log("Amount Column: ", amountColumn);
 
         cols.push({
             dataField: amountColumn.data_id,
