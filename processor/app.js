@@ -6,9 +6,7 @@ import dns from 'node:dns';
 
 // Open API Support
 import bodyParser from 'body-parser';
-import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express'
-const swaggerFile = import('./public/swagger-output.json', {assert: {type: 'json'}});
 
 // Hack to use module type (newer)
 // https://stackoverflow.com/questions/8817423/why-is-dirname-not-defined-in-node-repl
@@ -38,7 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 import cors from 'cors';
 
-const whitelist = ["http://localhost:3000", "http://192.168.1.191:3000", "http://192.168.1.77:8880"]
+const whitelist = ["http://localhost:3000", "http://localhost:8000", "http://192.168.1.191:3000", "http://192.168.1.77:8880"]
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {

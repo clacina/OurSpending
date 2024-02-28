@@ -21,28 +21,7 @@
         }
       }
     },
-    "/batch/{id}/process": {
-      "post": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "422": {
-            "description": "Unprocessable Entity"
-          }
-        }
-      }
-    },
-    "/banks": {
+    "/users/": {
       "get": {
         "description": "",
         "responses": {
@@ -52,7 +31,17 @@
         }
       }
     },
-    "/bank/{id}": {
+    "/resources/banks": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/resources/bank/{id}": {
       "put": {
         "description": "",
         "parameters": [
@@ -73,7 +62,7 @@
         }
       }
     },
-    "/data_definitions": {
+    "/resources/data_definitions": {
       "get": {
         "description": "",
         "responses": {
@@ -83,28 +72,7 @@
         }
       }
     },
-    "/tags": {
-      "get": {
-        "description": "",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "post": {
-        "description": "",
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "422": {
-            "description": "Unprocessable Entity"
-          }
-        }
-      }
-    },
-    "/categories": {
+    "/resources/tags": {
       "get": {
         "description": "",
         "responses": {
@@ -125,7 +93,28 @@
         }
       }
     },
-    "/batches": {
+    "/resources/categories": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/resources/batches": {
       "get": {
         "description": "",
         "responses": {
@@ -135,7 +124,7 @@
         }
       }
     },
-    "/processed_batches": {
+    "/resources/processed_batches": {
       "get": {
         "description": "",
         "responses": {
@@ -145,7 +134,7 @@
         }
       }
     },
-    "/processed_batch/{id}": {
+    "/resources/processed_batch/{id}": {
       "post": {
         "description": "",
         "parameters": [
@@ -204,7 +193,7 @@
         }
       }
     },
-    "/processed_batch/{id}/apply_template/{template_id}": {
+    "/resources/processed_batch/{id}/apply_template/{template_id}": {
       "post": {
         "description": "",
         "parameters": [
@@ -231,7 +220,7 @@
         }
       }
     },
-    "/processed_batch/{id}/match_template/{template_id}": {
+    "/resources/processed_batch/{id}/match_template/{template_id}": {
       "post": {
         "description": "",
         "parameters": [
@@ -258,7 +247,7 @@
         }
       }
     },
-    "/processed_batch/{id}/match_qualifiers": {
+    "/resources/processed_batch/{id}/match_qualifiers": {
       "post": {
         "description": "",
         "parameters": [
@@ -279,7 +268,7 @@
         }
       }
     },
-    "/qualifiers": {
+    "/resources/qualifiers": {
       "get": {
         "description": "",
         "responses": {
@@ -300,7 +289,7 @@
         }
       }
     },
-    "/templates": {
+    "/resources/templates": {
       "get": {
         "description": "",
         "responses": {
@@ -321,7 +310,7 @@
         }
       }
     },
-    "/template/{id}": {
+    "/resources/template/{id}": {
       "put": {
         "description": "",
         "parameters": [
@@ -361,7 +350,7 @@
         }
       }
     },
-    "/template_qualifiers": {
+    "/resources/template_qualifiers": {
       "get": {
         "description": "",
         "responses": {
@@ -371,7 +360,7 @@
         }
       }
     },
-    "/transactions/{batch_id}": {
+    "/resources/transactions/{batch_id}": {
       "get": {
         "description": "",
         "parameters": [
@@ -389,7 +378,7 @@
         }
       }
     },
-    "/transactions/{batch_id}/{institution_id}": {
+    "/resources/transactions/{batch_id}/{institution_id}": {
       "get": {
         "description": "",
         "parameters": [
@@ -413,7 +402,7 @@
         }
       }
     },
-    "/processed_transactions/{batch_id}": {
+    "/resources/processed_transactions/{batch_id}": {
       "get": {
         "description": "",
         "parameters": [
@@ -431,7 +420,7 @@
         }
       }
     },
-    "/categories/{id}": {
+    "/resources/categories/{id}": {
       "put": {
         "description": "",
         "parameters": [
@@ -452,7 +441,7 @@
         }
       }
     },
-    "/tags/{id}": {
+    "/resources/tags/{id}": {
       "put": {
         "description": "",
         "parameters": [
@@ -473,7 +462,7 @@
         }
       }
     },
-    "/transaction/{id}/tags": {
+    "/resources/transaction/{id}/tags": {
       "put": {
         "description": "",
         "parameters": [
@@ -494,7 +483,7 @@
         }
       }
     },
-    "/transaction/{id}/notes": {
+    "/resources/transaction/{id}/notes": {
       "post": {
         "description": "",
         "parameters": [
@@ -534,7 +523,7 @@
         }
       }
     },
-    "/transaction/{id}/category": {
+    "/resources/transaction/{id}/category": {
       "put": {
         "description": "",
         "parameters": [
@@ -555,7 +544,7 @@
         }
       }
     },
-    "/saved_filters": {
+    "/resources/saved_filters": {
       "get": {
         "description": "",
         "responses": {
@@ -565,7 +554,7 @@
         }
       }
     },
-    "/batch_contents": {
+    "/resources/batch_contents": {
       "get": {
         "description": "",
         "responses": {
@@ -575,7 +564,7 @@
         }
       }
     },
-    "/batch_contents/{batch_id}": {
+    "/resources/batch_contents/{batch_id}": {
       "get": {
         "description": "",
         "parameters": [
@@ -593,7 +582,7 @@
         }
       }
     },
-    "/credit_cards/": {
+    "/resources/credit_cards/": {
       "get": {
         "description": "",
         "responses": {
@@ -603,7 +592,48 @@
         }
       }
     },
-    "/credit_card_data/": {
+    "/resources/credit_card_data/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/actions/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/actions/batch/{id}/process": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "422": {
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/reports/": {
       "get": {
         "description": "",
         "responses": {
