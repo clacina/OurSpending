@@ -390,6 +390,12 @@ class SoundVisa(SoundChecking):
         super().__init__(datafile, config, self.name)
 
 
+class SoundVisaChrista(SoundChecking):
+    def __init__(self, datafile: str, config=None):
+        self.name = "Sound Visa Christa"
+        super().__init__(datafile, config, self.name)
+
+
 class SoundSavings(SoundChecking):
     def __init__(self, datafile: str, config=None):
         self.name = "Sound Savings"
@@ -575,6 +581,7 @@ institution_file_mapping = [
     InstitutionNaming(['sound', 'checking', 'house'], 'SoundChecking'),
     InstitutionNaming(['sound', 'checking', 'christa'], 'SoundCheckingChrista'),
     InstitutionNaming(['sound', 'Savings'], 'SoundSavings'),
+    InstitutionNaming(['sound', 'visa', 'christa'], 'SoundVisaChrista'),
     InstitutionNaming(['sound', 'visa'], 'SoundVisa'),
     InstitutionNaming(['wells', 'fargo', 'visa'], 'WellsfargoVisa'),
     InstitutionNaming(['wells', 'fargo', 'checking'], 'WellsfargoChecking'),

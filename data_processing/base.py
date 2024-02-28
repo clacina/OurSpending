@@ -15,12 +15,12 @@ import time
 import data_processing.db_utils
 
 
-def match_template(qualifiers, transaction):
+def match_template(template, transaction):
     # template.qualifiers is a list of tuples containing the qualifier value (string) and the field name
     found_count = 0
     # match_all should come from template somewhere
-    logging.info(f"Checking qualifiers: {qualifiers} against: {transaction}")
-    for q in qualifiers:
+    # logging.info(f"Checking qualifiers: {template.qualifiers} against: {transaction}")
+    for q in template.qualifiers:
         if q[1] == 'Description':
             if q[0].upper() in transaction.description.upper():
                 found_count += 1
@@ -35,9 +35,9 @@ def match_template(qualifiers, transaction):
     elif found_count > 0:
         print(f"Found partial match {found_count} of {len(be.qualifiers)}")
     """
-    if found_count >= len(qualifiers):
+    if found_count >= len(template.qualifiers):
         logging.info("---match")
-    return found_count >= len(qualifiers)
+    return found_count >= len(template.qualifiers)
 
 
 class ProcessorBase(metaclass=abc.ABCMeta):
@@ -131,7 +131,8 @@ class ProcessorBase(metaclass=abc.ABCMeta):
             print("Found Category")
 
         for be in self.config.templates:
-            match_template(be, transaction)
+            if match_template(be, transaction):
+                return be
 
         return None
 
