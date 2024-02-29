@@ -256,7 +256,7 @@ def query_tags(conn, template_id):
 
 def load_template_qualifiers():
     qualifiers = []
-    sql = "SELECT * FROM template_qualifiers"
+    sql = """SELECT template_id, qualifier_id, data_column FROM template_qualifiers"""
     conn = db_access.connect_to_db()
     assert conn
     cur = conn.cursor()
@@ -279,7 +279,7 @@ def load_template_tags(template_id: Optional[int] = None):
     assert conn
     tags = []
     query_params = {}
-    sql = "SELECT * FROM template_tags"
+    sql = "SELECT template_id, tag_id FROM template_tags"
     if template_id:
         sql += " WHERE template_id = %(template_id)s"
         query_params = {"template_id": template_id}

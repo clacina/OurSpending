@@ -204,12 +204,12 @@ def process_a_transaction_batch(json_data):
             processor_class=processor_info[0],
             institution_id=processor_info[1][0]
         )
-
+        logging.info(f"cp: {processor_info}")
         cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
 
     resp = json_data
     resp["processed_batch_id"] = processed_batch_id
-    logging.info(f"Returning response: {jsonify(resp)}")
+    logging.info(f"Returning response: {json_data}")
     return jsonify(resp)
 
 

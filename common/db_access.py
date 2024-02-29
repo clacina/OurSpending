@@ -673,7 +673,7 @@ class DBAccess:
             cur.execute(sql, query_params)
             rows = cur.fetchall()
             # logging.info(f"Returned {len(rows)} matching records.")
-            # logging.info(f"Rows: {rows}")
+            logging.info(f"Rows: {rows}")
             return rows
         except Exception as e:
             logging.exception(f"Error loading Template with institution {institution_id}: {str(e)}")

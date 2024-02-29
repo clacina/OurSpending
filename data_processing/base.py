@@ -20,6 +20,9 @@ def match_template(template, transaction):
     found_count = 0
     # match_all should come from template somewhere
     # logging.info(f"Checking qualifiers: {template.qualifiers} against: {transaction}")
+    # q[0] = text value
+    # q[1] = data_column (index)
+    # q[2] = column name
     for q in template.qualifiers:
         if q[1] == 'Description':
             if q[0].upper() in transaction.description.upper():
@@ -27,6 +30,11 @@ def match_template(template, transaction):
         elif q[1] == 'Category':
             if q[0].upper() in transaction.category.upper():
                 found_count += 1
+        else:
+            # Try description by default
+            if q[0].upper() in transaction.description.upper():
+                found_count += 1
+            # logging.error(f"No section: {q}")
 
     """
     # -- For when we use the match_all flag
@@ -35,8 +43,6 @@ def match_template(template, transaction):
     elif found_count > 0:
         print(f"Found partial match {found_count} of {len(be.qualifiers)}")
     """
-    if found_count >= len(template.qualifiers):
-        logging.info("---match")
     return found_count >= len(template.qualifiers)
 
 
@@ -202,6 +208,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         self.transactions = self.parse_raw_data(raw_data)
 
         # Loop through all transactions in the dataset
+        logging.debug(f"matching {len(self.transactions)} transactions")
         for transaction in self.transactions:
             # loop through our templates and qualifiers to find a match
             found_match = self.find_banking_template(transaction=transaction)
