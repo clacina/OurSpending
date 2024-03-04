@@ -76,4 +76,16 @@ export const SidebarData = [
         icon: <FaIcons.FaRegCreditCard  />,
         cName: "nav-text",
     },
+    {
+        title: "Faire",
+        path: "/faire",
+        icon: <FaIcons.FaRegCreditCard  />,
+        cName: "nav-text",
+    },
+    {
+        title: "Events",
+        path: "/events",
+        icon: <FaIcons.FaRegCreditCard  />,
+        cName: "nav-text",
+    },
 ];
