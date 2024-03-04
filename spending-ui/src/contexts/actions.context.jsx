@@ -16,8 +16,9 @@ export const ActionsProvider = ({children}) => {
             "notes": notes
         }
         console.log("Sending update: ", body);
-        const request = await send(url, method, headers, body);
-        console.log("Response: ", request);
+        const response = await send(url, method, headers, body);
+        console.log("Response: ", response);
+        return(response);
     }
 
     const value = {processBatch};

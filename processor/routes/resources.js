@@ -86,7 +86,11 @@ const defaultReturn = (body, error, req=null) => {
 
   if(!exclude) {
     console.log("Req: ", req.url);
-    console.debug("Sending back: ", body.length);
+    if(body) {
+      console.debug("Sending back: ", body.length);
+    } else {
+      console.debug("No body returned");
+    }
   }
 
   if(error) {

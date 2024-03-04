@@ -158,9 +158,11 @@ const BatchesComponent = () => {
         });
     };
 
-    const initiateProcessing = () => {
+    const initiateProcessing = async () => {
         console.log("Process batch for id: ", activeRow.id);
-        processBatch(activeRow.id, "UI Initiated");
+        const result = await processBatch(activeRow.id, "UI Initiated");
+        console.log("-result is ", result);
+        navigate('/processed_transactions/' + result['processed_batch_id']);
     }
 
     if(isLoaded) {
