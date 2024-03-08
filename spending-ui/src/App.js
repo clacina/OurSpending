@@ -6,14 +6,16 @@ import MenuBar from "./routes/navigation/navigation.component";
 import BanksComponent from "./components/banks/banks.component";
 import BatchesComponent from "./components/batches/batches.component";
 import CategoriesComponent from "./components/categories/categories.component";
+import Faire from "./components/faire/faire.component";
 import Home from "./routes/home/home.component";
 import ProcessedBatches from "./components/processed-batches/processed-batches.component";
 import ProcessedTransactions from "./components/processed-transactions/processed-transactions.component";
-import Reports from "./components/reports/reports.component.jsx";
+import Reports from "./components/reports/reports.component";
 import TagsComponent from "./components/tags/tags.component";
 import TemplateList from "./components/templates/template-list.component";
-import TransactionsList from "./components/transaction/transactions-list.component.jsx";
+import TransactionsList from "./components/transaction/transactions-list.component";
 import CreditCards from "./components/credit-cards/credit.card.component";
+import Events from "./components/events/events.component";
 
 // Setup Logger
 // import jsLogger from './utils/jslogger.js';
@@ -44,6 +46,8 @@ function App() {
                 <Route path='processed_transactions/:batch_id' element={<ProcessedTransactions/>}/>
                 <Route path='reports/*' element={<Reports/>}/>
                 <Route path='cards/*' element={<CreditCards/>}/>
+                <Route path='faire/*' element={<Faire/>}/>
+                <Route path='events/*' element={<Events/>}/>
                 <Route path='*' element={<PageNotFound />}/>
             </Routes>
         </Fragment>

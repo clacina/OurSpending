@@ -3,6 +3,11 @@ import React from "react";
 import * as FaIcons from "react-icons/fa";
 import * as AiIcons from "react-icons/ai";
 // import * as IoIcons from "react-icons/io";
+import { GiChart } from "react-icons/gi";
+import { TbReportMoney, TbReportSearch } from "react-icons/tb";
+import { GrCloudComputer } from "react-icons/gr";
+import { GiComputerFan } from "react-icons/gi";
+
 
 export const SidebarData = [
     {
@@ -18,27 +23,27 @@ export const SidebarData = [
         cName: "nav-text"
     },
     {
+        title: "Transaction Batches",
+        path: "/batches",
+        icon: <FaIcons.FaList />,
+        cName: "nav-text"
+    },
+    {
         title: "Templates",
         path: "/templates",
         icon: <FaIcons.FaAddressCard />,
         cName: "nav-text"
     },
     {
-        title: "Batches",
-        path: "/batches",
-        icon: <FaIcons.FaList />,
+        title: "Categories",
+        path: "/categories",
+        icon: <FaIcons.FaObjectGroup />,
         cName: "nav-text"
     },
     {
         title: "Processed Batches",
         path: "/processed_batches",
-        icon: <FaIcons.FaDesktop />,
-        cName: "nav-text"
-    },
-    {
-        title: "Categories",
-        path: "/categories",
-        icon: <FaIcons.FaObjectGroup />,
+        icon: <GiComputerFan   />,
         cName: "nav-text"
     },
     {
@@ -50,25 +55,37 @@ export const SidebarData = [
     {
         title: "Template Report",
         path: "/reports/template",
-        icon: <FaIcons.FaBook />,
+        icon: <TbReportSearch />,
         cName: "nav-text",
     },
     {
         title: "Category Report",
         path: "/reports/category",
-        icon: <FaIcons.FaBook />,
+        icon: <TbReportMoney />,
         cName: "nav-text",
     },
     {
         title: "Spending Chart",
         path: "/reports",
-        icon: <FaIcons.FaBook />,
+        icon: <GiChart  />,
         cName: "nav-text",
     },
     {
         title: "Credit Cards",
         path: "/cards",
-        icon: <FaIcons.FaAddressCard />,
+        icon: <FaIcons.FaRegCreditCard  />,
+        cName: "nav-text",
+    },
+    {
+        title: "Faire",
+        path: "/faire",
+        icon: <FaIcons.FaRegCreditCard  />,
+        cName: "nav-text",
+    },
+    {
+        title: "Events",
+        path: "/events",
+        icon: <FaIcons.FaRegCreditCard  />,
         cName: "nav-text",
     },
 ];

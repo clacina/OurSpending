@@ -18,7 +18,9 @@ const CategoryTitleComponent = ({category}) => {
 
     return(
         <div>
-            <TitleSpacer>{title}</TitleSpacer><TotalSpacer>${categoryTotal.toLocaleString('en-US', {maximumFractionDigits:2})}</TotalSpacer>
+            <TitleSpacer>{title}</TitleSpacer>
+            <TotalSpacer>${categoryTotal.toLocaleString('en-US', {maximumFractionDigits:2})} ({category.length} transactions)
+            </TotalSpacer>
         </div>
     )
 }

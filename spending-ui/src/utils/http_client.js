@@ -13,11 +13,15 @@ const send = async (url, method, headers, body) => {
 
     console.log("Sending to URL: ", url);
     console.log("Sending Data: ", requestOptions);
-    const response = await fetch(url, requestOptions);
-    console.log("Resp: ", response);
-    const str = await response.json();
-    console.log("HttpClient-Response: ", str);
-    return str;
+    try {
+        const response = await fetch(url, requestOptions);
+        console.log("Resp: ", response);
+        const str = await response.json();
+        console.log("HttpClient-Response: ", str);
+        return str;
+    } catch (error) {
+        console.error("ERROR: ", error);
+    }
 }
 
 export default send;

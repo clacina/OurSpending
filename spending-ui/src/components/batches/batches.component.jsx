@@ -8,12 +8,17 @@ import {StaticDataContext} from "../../contexts/static_data.context";
 import './batches.component.styles.css';
 import {BatchesContext} from "../../contexts/batches.context";
 import {BatchContentsContext} from "../../contexts/batch_contents.context";
+import {contextMenu, Item, Menu, Separator} from "react-contexify";
+import BootstrapTable from "react-bootstrap-table-next";
+import {ActionsContext} from "../../contexts/actions.context";
 
 const BatchesComponent = () => {
     const {setSectionTitle} = useContext(StaticDataContext);
     const {batches} = useContext(BatchesContext);
     const {batchContentsMap} = useContext(BatchContentsContext);
+    const {processBatch} = useContext(ActionsContext);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [activeRow, setActiveRow] = useState(0);
     const navigate = useNavigate();
     setSectionTitle('Transaction Batches');
 
@@ -133,20 +138,52 @@ const BatchesComponent = () => {
         }
     }, [batches]);
 
-    const double_click_handler = (e, row, index) => {
-        console.log("Double click: ", row.id);
-        navigate('/transactions/' + row.id);
+    const rowEvents = {
+        onContextMenu: (e, row, index) => {
+            e.stopPropagation();
+            showContext(e, row);
+        },
+        onDoubleClick: (e, row, index) => {
+            console.log("Double click: ", row.id);
+            navigate('/transactions/' + row.id);
+        }
+    };
+
+    const showContext = (event, row) => {
+        setActiveRow(row);
+        event.preventDefault();
+        contextMenu.show({
+            id: "context-menu",
+            event: event
+        });
+    };
+
+    const initiateProcessing = async () => {
+        console.log("Process batch for id: ", activeRow.id);
+        const result = await processBatch(activeRow.id, "UI Initiated");
+        console.log("-result is ", result);
+        navigate('/processed_transactions/' + result['processed_batch_id']);
     }
 
     if(isLoaded) {
         return (
             <div id='batches_container'>
                 <p>Double click a batch below to see the related transactions.</p>
-                <TableBaseComponent columns={columns}
-                                    data={batches}
-                                    keyField='id'
-                                    double_click_handler={double_click_handler}
-                                    />
+                <BootstrapTable
+                    columns={columns}
+                    data={batches}
+                    rowEvents={rowEvents}
+                    keyField='id'
+                    />
+                <Menu id="context-menu" theme='dark'>
+                    {activeRow && (
+                        <>
+                            <Item className="text-center">Transaction Batch ID: {activeRow.id}</Item>
+                            <Separator/>
+                            <Item onClick={initiateProcessing}>Process Batch</Item>
+                        </>
+                    )}
+                </Menu>
             </div>
         )
     } else {

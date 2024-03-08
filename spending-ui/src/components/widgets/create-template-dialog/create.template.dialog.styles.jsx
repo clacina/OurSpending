@@ -33,8 +33,9 @@ export const ExistingQualifierList = styled.table`
   table-layout: fixed;
   width: 100%;
   border: 1px solid black;
+  margin-bottom: 10px;  
   border-collapse: collapse;
   th, td {
     padding: 10px;
-  }
+  } 
 `;
