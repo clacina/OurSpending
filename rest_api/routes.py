@@ -229,6 +229,29 @@ async def query_template_qualifiers():
     return response
 
 
+@router.get(
+    "/template_qualifier_details",
+    summary="Get list of template qualifiers with associated details.",
+    response_model=List[models.TemplateQualifierDetailModel],
+    tags=["Templates"]
+)
+async def query_template_qualifier_details():
+    query_result = db_access.query_template_qualifier_details()
+    """
+    template_id, qualifier_id, data_column, q.id, q.value, q.institution_id
+    """
+    response = []
+    for row in query_result:
+        entry = models.TemplateQualifierDetailModel(
+            id=row[3],
+            template_id=row[0],
+            qualifier_id=row[1],
+            data_column=row[2],
+            institution_id=row[5],
+            value=row[4])
+        response.append(entry)
+    return response
+
 """ ---------- Batches ---------------------------------------------------------------------------"""
 
 

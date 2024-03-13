@@ -1,40 +1,37 @@
 """
-    processors.py
+    data_processing/base.py
 
-    Routines to process activity files for various financial institutions.
+    Includes base class for all institutions as well as a couple of utility functions
 
-    Each institution is derived from AccountBase.
+    Each institution is derived from ProcessorBase.
 
 """
 import abc
-import logging
+import json
 import os.path
 import time
-
-# import csv
+from flask import current_app as app
 import data_processing.db_utils
 
 
-def match_template(template, transaction):
+def match_template_qualifiers(qualifiers, transaction):
     # template.qualifiers is a list of tuples containing the qualifier value (string) and the field name
     found_count = 0
     # match_all should come from template somewhere
-    # logging.info(f"Checking qualifiers: {template.qualifiers} against: {transaction}")
+    # app.logger.info(f"Checking qualifiers: {qualifiers} against: {transaction.description}")
     # q[0] = text value
-    # q[1] = data_column (index)
-    # q[2] = column name
-    for q in template.qualifiers:
-        if q[1] == 'Description':
+    # q[1] = column name
+    for q in qualifiers:
+        if q[1].lower() == 'description':
             if q[0].upper() in transaction.description.upper():
                 found_count += 1
-        elif q[1] == 'Category':
+        elif q[1].lower() == 'category':
             if q[0].upper() in transaction.category.upper():
                 found_count += 1
         else:
             # Try description by default
             if q[0].upper() in transaction.description.upper():
                 found_count += 1
-            # logging.error(f"No section: {q}")
 
     """
     # -- For when we use the match_all flag
@@ -43,7 +40,33 @@ def match_template(template, transaction):
     elif found_count > 0:
         print(f"Found partial match {found_count} of {len(be.qualifiers)}")
     """
-    return found_count >= len(template.qualifiers)
+    # app.logger.debug(f"Returning: {found_count >= len(qualifiers)}")
+    return found_count >= len(qualifiers)
+
+
+def match_template(template, transaction):
+    # template.qualifiers is a list of tuples containing the qualifier value (string) and the field name
+    # match_all should come from template somewhere
+    app.logger.info(f"Checking qualifiers: {template.qualifiers} against: {transaction.description}")
+    match_found = match_template_qualifiers(qualifiers=template.qualifiers, transaction=transaction)
+    if match_found:
+        app.logger.info(json.dumps({
+            "message": "Found template match",
+            "template_id": template.id,
+            "qualifiers": template.qualifiers,
+            "description": transaction.description
+        }))
+    return match_found
+
+
+def update_category_breakdown(template, transaction):
+    """
+    Update our internal category breakdown dictionary
+    :param template:
+    :param transaction:
+    :return: None
+    """
+    transaction.template_id = template.id
 
 
 class ProcessorBase(metaclass=abc.ABCMeta):
@@ -55,6 +78,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
 
         self.datafile = datafile
         self.config = config
+        self.column_definitions = {}
 
         self.skip_data_rows = 1
         if skip_data_rows:
@@ -89,41 +113,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         """parse from processed_transaction_records"""
         pass
 
-    """ -------------------- Template Matching Algorithm  -----------------"""
-
-    def match_templates_dup(self, batch_id: int, processed_batch_id: int):
-        """
-        This loads the given transaction_batch from the database and then analyzes each
-        transaction:
-            First it finds a matching template for the transaction
-            if successful:
-                Updates the Spending Dictionary as well as the
-                Category Breakdown Dictionary
-            otherwise it adds the transaction to the 'Extras' list
-        :param batch_id: batch to process
-               processed_batch_id:
-        :return: None
-        """
-        # Load data to process
-        raw_data = data_processing.db_utils.fetch_transactions_from_batch(
-            batch_id=batch_id, institution_id=self.config.institution_id
-        )
-        self.transactions = self.parse_raw_data(raw_data)
-
-        # Loop through all transactions in the dataset
-        for transaction in self.transactions:
-            # loop through our templates and qualifiers to find a match
-            found_match = self.find_banking_template(transaction=transaction)
-            template_id_match = None
-            if found_match:
-                template_id_match = found_match.id
-
-            data_processing.db_utils.add_processed_transaction(
-                transaction_id=transaction.transaction_id,
-                template_id=template_id_match,
-                processed_batch_id=processed_batch_id,
-                institution_id=self.config.institution_id,
-            )
+    """ -------------------- Template Matching Algorithms  -----------------"""
 
     def find_banking_template(self, transaction):
         """
@@ -131,11 +121,6 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         :param transaction:
         :return: matching template or None if not found
         """
-        if "Deposit Home Banking Transfer From Sha" in transaction.description:
-            print("Found Description")
-        if "Deposit Home Banking Transfer From Sha" in transaction.category:
-            print("Found Category")
-
         for be in self.config.templates:
             if match_template(be, transaction):
                 return be
@@ -155,23 +140,6 @@ class ProcessorBase(metaclass=abc.ABCMeta):
                 "transactions": list(),
             }
         self.spending[template.id]["transactions"].append(transaction)
-
-    def update_category_breakdown(self, template, transaction):
-        """
-        Update our internal category breakdown dictionary
-        :param template:
-        :param transaction:
-        :return: None
-        """
-        transaction.template_id = template.id
-
-    # def normalize_transactions(self):
-    #     for transaction in self.transactions:
-    #         transaction.normalize_data()
-    #         transaction.institution_id = self.config.institution_id
-    #         assert (
-    #             transaction.description and len(transaction.description) > 1
-    #         ), f"Invalid entry {transaction}"
 
     def process_transactions(self, batch_id):
         """
@@ -208,7 +176,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
         self.transactions = self.parse_raw_data(raw_data)
 
         # Loop through all transactions in the dataset
-        logging.debug(f"matching {len(self.transactions)} transactions")
+        app.logger.debug(f"matching {len(self.transactions)} transactions")
         for transaction in self.transactions:
             # loop through our templates and qualifiers to find a match
             found_match = self.find_banking_template(transaction=transaction)
@@ -258,7 +226,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
                     x for x in self.config.templates if x.id == transaction.template_id
                 ][0]
                 self.add_spending_transaction(template, transaction)
-                self.update_category_breakdown(template, transaction)
+                update_category_breakdown(template, transaction)
             else:
                 self.unrecognized_transactions.append(transaction)
 

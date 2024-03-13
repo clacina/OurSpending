@@ -45,6 +45,10 @@ class TemplateQualifierModel(BaseModel):
     data_column: Optional[str]
 
 
+class TemplateQualifierDetailModel(TemplateQualifierModel, QualifierModel):
+    pass
+
+
 class TemplateTagModel(BaseModel):
     template_id: int
     tag_id: int

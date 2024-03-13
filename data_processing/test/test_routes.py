@@ -1,8 +1,12 @@
-import json
 import random
+import sys
+
+# append the path of the
+# parent directory
+sys.path.append("..")
 
 from starlette.testclient import TestClient
-from app.app import app
+from app import app
 
 client = TestClient(app)
 

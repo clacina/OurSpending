@@ -47,7 +47,7 @@ for cc in json_data:
         row = cur.fetchone()
         card_id = row[0]
     except Exception as e:
-        logging.exception(f"Error adding card {sql_cc}: {str(e)}")
+        app.logger.exception(f"Error adding card {sql_cc}: {str(e)}")
         raise e
 
     sql_balance = """
@@ -65,5 +65,5 @@ for cc in json_data:
         cur.execute(sql_balance, query_params)
         conn.commit()
     except Exception as e:
-        logging.exception(f"Error adding card balance info {sql_balance}: {str(e)}")
+        app.logger.exception(f"Error adding card balance info {sql_balance}: {str(e)}")
         raise e

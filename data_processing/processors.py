@@ -33,9 +33,9 @@ def parse_processed_data(self, dataset: list):
 
 
 """
+from flask import current_app
+
 import csv
-import logging
-import sys
 
 import data_processing.transaction_models as models
 import data_processing.base as base
@@ -73,7 +73,7 @@ class CapitalOne(base.ProcessorBase):
             data.transaction_id = row[0]
             data.institution_id = row[1]
             data.normalize_data()
-            logging.info(f"Adding transaction {row}")
+            # app.logger.info(f"Adding transaction {row}")
             raw_transactions.append(data)
 
         return raw_transactions

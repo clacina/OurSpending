@@ -354,12 +354,18 @@ class DBAccess:
             logging.exception({"message": f"Error deleting processed batch {batch_id}: {str(e)}"})
             raise e
 
-    def get_processed_transaction_records(self, batch_id, offset=0, limit=10):
+    def get_processed_transaction_records(self, batch_id, institution_id=None, offset=0, limit=10):
         sql = f"{ProcessedTransactionSQL} WHERE BID=%(batch_id)s"
-        sql += " LIMIT %(limit)s OFFSET %(offset)s"
         query_params = {"batch_id": batch_id, "offset": offset, "limit": limit}
+
+        if institution_id:
+            sql += " AND BANK_ID=%(institution_id)s"
+            query_params['institution_id'] = institution_id
+
+        sql += " LIMIT %(limit)s OFFSET %(offset)s"
         cur = self.get_db_cursor()
         try:
+            logging.info(f"query: {sql}")
             cur.execute(sql, query_params)
             result = cur.fetchall()
             return result
@@ -744,6 +750,22 @@ class DBAccess:
 
     def query_templates_qualifiers(self):
         sql = "SELECT template_id, qualifier_id, data_column FROM template_qualifiers"
+        cur = self.get_db_cursor()
+        try:
+            cur.execute(sql)
+            result = cur.fetchall()
+            return result
+        except Exception as e:
+            logging.exception(f"Error: {str(e)}")
+            raise e
+
+    def query_template_qualifier_details(self):
+        sql = """
+                SELECT 
+                    template_id, qualifier_id, data_column, q.id, q.value, q.institution_id 
+                FROM template_qualifiers 
+                 JOIN qualifiers q on q.id = qualifier_id
+              """
         cur = self.get_db_cursor()
         try:
             cur.execute(sql)

@@ -1,21 +1,41 @@
-import logging
-
-from flask import Flask, request, json, jsonify
+from apiflask import APIFlask
+from flask import request, json, jsonify
+from .rich import rich
 
 from data_processing.backend import *
-from data_processing.logger import setup_rich_logger
 from data_processing.processors import select_processors_from_batch
-from data_processing.base import match_template
+from data_processing.match_qualifiers import find_template_matches, match_qualifiers
+from data_processing.schemas import LoadSchema, ProcessSchema
 
-from apiflask import APIFlask, Schema, abort
-from apiflask.fields import Integer, String
-from apiflask.validators import Length, OneOf
+import logging
+from rich.logging import RichHandler
+from rich.json import JSON
 
-setup_rich_logger()
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="NOTSET", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+)
+
+log = logging.getLogger("rich")
+log.info("Hello, World!")
+log.info(JSON.from_data({
+            "message": "Found template match",
+            "template_id": 1,
+            "qualifiers": [],
+            "description": "transaction.description"
+        }).text)
+# --------------------------------------------------------------
+
+
+class RichConfig:
+    RICH_LOGGING = True
+
 
 # set openapi.info.title and openapi.info.version
 app = APIFlask(__name__, title='Data Processing', version='1.0')
-
+app.logger.handlers.clear()
+app.config.from_object(RichConfig())
+rich.init_app(app)
 # All the OpenAPI field config can be set with the corresponding attributes of the app instance:
 # app.description = '...'
 
@@ -140,17 +160,6 @@ tags_metadata = [
 
 # ---------------------------------- Command Line Interface Handling (CLI) ------------------------------------
 
-class LoadSchema(Schema):
-    source = String(metadata={'title': 'Source Folder', 'description': 'Folder to load.'})
-    fileentry = String(metadata={'title': 'File Source', 'description': 'Single file to load.'})
-    override = Integer(metadata={'title': 'Batch Override', 'description': 'Replace contents of specified batch.'})
-    notes = String(metadata={'title': 'Notes', 'description': 'Optional notes for this batch.'})
-
-
-class ProcessSchema(Schema):
-    batch_id = Integer()
-    notes = String()
-
 
 @app.post('/import')
 @app.input(LoadSchema, location='json')
@@ -159,7 +168,7 @@ def load_datafiles(payload):
     """Load activity reports for processing."""
     # logging.info(f"Loading data files...{request.json}")
     # payload = request.json
-    logging.info(f"Loading data files...{payload}")
+    app.logger.info(f"Loading data files...{payload}")
 
     source = payload.get('source', None)
     fileentry = payload.get('file', None)
@@ -183,14 +192,14 @@ def load_datafiles(payload):
 @app.doc(tags=['Batches'])
 @app.input(ProcessSchema, location='json')
 def process_a_transaction_batch(json_data):
-    logging.info(f"Process payload - 'process_a_transaction_batch' : {json_data}")
+    app.logger.info(f"Process payload - 'process_a_transaction_batch' : {json_data}")
     payload = json_data
 
     batch_id = payload.get('batch_id', None)
     notes = payload.get('notes', None)
 
     processed_batch_id = db_utils.create_process_batch(transaction_batch_id=batch_id, notes=notes)
-    logging.info(
+    app.logger.info(
         f"Running transaction batch: {batch_id} into processing batch: {processed_batch_id}"
     )
 
@@ -204,12 +213,12 @@ def process_a_transaction_batch(json_data):
             processor_class=processor_info[0],
             institution_id=processor_info[1][0]
         )
-        logging.info(f"cp: {processor_info}")
+        app.logger.info(f"cp: {processor_info}")
         cp.match_templates(batch_id=batch_id, processed_batch_id=processed_batch_id)
 
     resp = json_data
     resp["processed_batch_id"] = processed_batch_id
-    logging.info(f"Returning response: {json_data}")
+    app.logger.info(f"Returning response: {json_data}")
     return jsonify(resp)
 
 
@@ -302,220 +311,6 @@ async def rereun_processed_batch(batch_id: int):
 #     return jsonify(resp)
 
 
-def match_templates_dup(self, batch_id: int, processed_batch_id: int):
-    """
-    This loads the given transaction_batch from the database and then analyzes each
-    transaction:
-        First it finds a matching template for the transaction
-        if successful:
-            Updates the Spending Dictionary as well as the
-            Category Breakdown Dictionary
-        otherwise it adds the transaction to the 'Extras' list
-    :param batch_id: batch to process
-           processed_batch_id:
-    :return: None
-    """
-    # Load data to process
-    raw_data = db_utils.fetch_transactions_from_batch(
-        batch_id=batch_id, institution_id=self.config.institution_id
-    )
-    self.transactions = self.parse_raw_data(raw_data)
-
-    # Loop through all transactions in the dataset
-    for transaction in self.transactions:
-        # loop through our templates and qualifiers to find a match
-        found_match = self.find_banking_template(transaction=transaction)
-        template_id_match = None
-        if found_match:
-            template_id_match = found_match.id
-
-        db_utils.add_processed_transaction(
-            transaction_id=transaction.transaction_id,
-            template_id=template_id_match,
-            processed_batch_id=processed_batch_id,
-            institution_id=self.config.institution_id,
-        )
-
-
-class PR:
-    def __init__(self, record):
-        self.transaction_id = record[0]
-        self.template_id = record[3]
-        self.category_id = record[18]
-        self.institution_id = record[8]
-        self.transaction_data = record[9]
-        self.description = record[10]
-        self.category = ''  # need to pull in qualifier field
-        self.new_template_id = None
-
-    def __repr__(self):
-        return f"""\nXID: {self.transaction_id}\nOld tid: {self.template_id}\nNew tid: {self.new_template_id}\nraw: {self.transaction_data}"""
-
-
-def match_qualifiers(batch_id, qualifiers, institution_id):
-    logging.info( f"match_qualifiers: {qualifiers}")
-    # INFO     match_qualifiers: [{'id': None, 'value': 'SAFEWAY.COM', 'data_column': 'Description'}]   app.py:356
-    # Reformat input
-    matches_to = []
-    for q in qualifiers:
-        matches_to.append((q['value'], q['data_column']))
-    """
-    batch_id == the id of the ProcessedBatch
-    the processed_transaction_batch record will contain hte transaction_batch_id
-
-    processed_transaction_records
-    - processed_batch_id
-    - transaction_id
-    - template_id
-    - institution_id
-
-    Loop through the processed_transaction_records WHERE processed_batch_id = batch_id
-        AND institution_id=template.institution_id
-
-        - Check the specified transaction, if it has a category assigned, leave it (unless override_category is TRUE).
-        - Perform a template match on the transaction.
-            If it is different than the assigned template_id, add out our mod list
-    """
-    # Get our processed records
-    processed_records = db_utils.db_access.get_processed_transaction_records(batch_id, limit=10000)
-    logging.info(f"Processed Record: {processed_records[0]}")
-
-    entries = []
-    logging.info(f"Checking {len(processed_records)} transactions")
-    record_count = 0
-    for record in processed_records:
-        entry = PR(record)
-        if entry.institution_id == institution_id:
-            # assumes the parameter has a .description, a .category and .qualifiers (list of tuples)
-            # template.qualifiers is a list of tuples containing the qualifier value (string) and the field name
-            record_count += 1
-            found_match = match_template(qualifiers=matches_to, transaction=entry)
-            if found_match:
-                entries.append(entry)
-
-    results = {}
-    results['entries'] = list()
-    results['qualifiers'] = matches_to,
-    results['institution_id'] = institution_id
-
-    # result_entries = results['entries']
-    #         'transaction_id': e.transaction_id,
-    #         'current_template': e.template_id,
-    #         'current_category': e.category_id,
-    #         'transaction_data': e.transaction_data
-    #
-    # for e in entries:
-    #     result_entries.append({
-    #     })
-    return results
-
-
-def find_template_matches(batch_id, qualifiers, institution_id, template_id):
-    """
-    batch_id == the id of the ProcessedBatch
-    the processed_transaction_batch record will contain hte transaction_batch_id
-
-    processed_transaction_records
-    - processed_batch_id
-    - transaction_id
-    - template_id
-    - institution_id
-
-    Loop through the processed_transaction_records WHERE processed_batch_id = batch_id
-        AND institution_id=template.institution_id
-
-        - Check the specified transaction, if it has a category assigned, leave it (unless override_category is TRUE).
-        - Perform a template match on the transaction.
-            If it is different than the assigned template_id, add out our mod list
-    """
-    # Get our processed records
-    processed_records = db_utils.db_access.get_processed_transaction_records(batch_id, limit=10000)
-    logging.info(f"Processed Record: {processed_records[0]}")
-    """
-       0     1   2    3    4    5   6              7                8
-    (21734, 522, 1, None, 433, 433, 3, datetime.date(2023, 12, 29), 1,
-                                        9
-     ['12/29/2023', '-23.34', '*', '', 'PURCHASE AUTHORIZED ON 12/28 BRH INTERNATIONAL
-     213-3256928 NV S383362670157115 CARD 0094'],
-                                        10 
-     'PURCHASE AUTHORIZED ON 12/28 BRH INTERNATIONAL 213-3256928 NV S383362670157115 CARD 0094',
-                11                  12                13 
-     Decimal('-23.3400'), 'Wells Fargo Checking', 'WLS_CHK',
-       14       15            16              17 
-     tag_id, tag_value, transaction_id, transaction_tag_id
-       18            19
-     category_id, category_value
-       20                      21
-     transaction_note_id, transaction_note  
-    """
-
-    entries = []
-    logging.info(f"Checking {len(processed_records)} transactions")
-    record_count = 0
-    for record in processed_records:
-        entry = PR(record)
-        if entry.institution_id == institution_id:
-            # assumes the parameter has a .description, a .category and .qualifiers (list of strings)
-            record_count += 1
-            found_match = match_template(qualifiers=qualifiers, transaction=entry)
-            if found_match:
-                entry.new_template_id = template_id
-                entries.append(entry)
-
-    current_template = db_utils.db_access.fetch_template(template_id)
-    logging.info(f"Existing Template: {current_template}")
-    """
-    0         1              2           3       4            5
-    id, institution_id, category_id,  credit,  hint,        notes 
-    (7243, 2,              2017,      False, 'Pills', 'Delivery Pills')
-    """
-    logging.info(f"Found matching bank records: {record_count}")
-    logging.info(f"Found matching entries: {len(entries)}")
-    logging.info(entries)
-    results = []
-    found_templates = {}
-    found_categories = {}
-    if current_template[2]:  # has existing category
-        """
-        id, value, is_tax_deductible, notes
-        """
-        found_categories[current_template[2]] = db_utils.db_access.get_category(current_template[2])
-
-    for e in entries:
-        if e.new_template_id not in found_templates:
-            found_templates[e.new_template_id] = db_utils.db_access.fetch_template(e.new_template_id)
-            nt = found_templates[e.new_template_id]  # new template record
-            tc = nt[2]  # template category
-            if tc and tc not in found_categories:
-                found_categories[tc] = db_utils.db_access.get_category(tc)
-
-        new_template = found_templates[e.new_template_id]
-        assert new_template, "Coulnt find template"
-
-        new_category = found_categories[new_template[2]]
-        assert new_category, f"Couldnt find category for {new_template}"
-
-        results.append({
-            'transaction_id': e.transaction_id,
-            'current_template': {
-                'category': found_categories[current_template[2]][1],
-                'template_id': e.template_id,
-                'template_hint': current_template[4],
-                'template_notes': current_template[5],
-                'template_credit': current_template[3],
-            },
-            'proposed_template': {
-                'category': new_category[1],
-                'template_id': e.new_template_id,
-                'template_hint': new_template[4],
-                'template_notes': new_template[5],
-                'template_credit': new_template[3],
-            },
-            'transaction_data': e.transaction_data
-        })
-    return results
-
-
 @app.post("/processed_batch/<batch_id>/apply_template/<template_id>")
 @app.doc(tags=['Actions'])
 async def apply_template(batch_id: int, template_id: int):
@@ -535,11 +330,11 @@ async def apply_template(batch_id: int, template_id: int):
     # check for commit flag
     apply_template = request.args.get('commit', False)
     override_existing = request.args.get('override_category', False)
-    logging.info(f"got commit value of {apply_template} and override category of {override_existing}")
+    app.logger.info(f"got commit value of {apply_template} and override category of {override_existing}")
 
     # Get institution id from template
     template = db_utils.db_access.query_templates_by_id(template_id)[0]
-    logging.info(f"Template: {template}")
+    app.logger.info(f"Template: {template}")
     """
       0                                       5                                       9
     (7242, 'Temu', False, 'Temu', 1, 'Wells Fargo Checking', 'WLS_CHK', None, None, None,
@@ -556,7 +351,7 @@ async def apply_template(batch_id: int, template_id: int):
 
     assert qualifiers, "No qualifiers for template"
     institution_id = template[4]
-    logging.info(f"bank id: {institution_id}")
+    app.logger.info(f"bank id: {institution_id}")
 
     # Figure out changes
     changed_transactions = find_template_matches(batch_id, qualifiers, institution_id, template_id)
@@ -597,21 +392,27 @@ async def find_qualifier_matches(batch_id: int):
         "institution_id": transaction.institution_id,
         "qualifiers":
             qualifiers.map((item) => {
-                return({"id": item.id, "value": item.value, "data_column": item.data_column})
+                return({"value": item.value, "data_column": item.data_column})
             }),
         "tags": []
     }
-
     """
-    json_data = json.loads(request.get_data())
+    json_data = request.json
     qualifiers = json_data['qualifiers']
     institution_id = json_data['institution_id']
-    # assert json_data['batch_id'] == batch_id, f"Non-matching ids: {batch_id}, {json_data['batch_id']}"
+
+    assert json_data['batch_id'] == int(batch_id), f"Non-matching ids: {type(batch_id)}, {type(json_data['batch_id'])}"
     assert qualifiers, "No qualifiers for template"
 
     # Figure out changes
     changed_transactions = match_qualifiers(batch_id, qualifiers, institution_id)
-    return changed_transactions
+    app.logger.info(f"Responding with: {changed_transactions}")
+    try:
+        response = json.dumps(changed_transactions)
+        return response
+    except Exception as e:
+        app.logger.exception(e)
+        raise e
 
 
 if __name__ == '__main__':

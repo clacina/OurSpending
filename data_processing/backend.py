@@ -1,3 +1,4 @@
+from flask import current_app
 import os
 import sys
 
@@ -16,6 +17,7 @@ def build_config_for_institution(config, institution_id):
     """
     new_config = ConfigurationData()
     new_config.institution_id = institution_id
+    new_config.data_descriptions = config.data_descriptions
     for e in config.templates:
         if e.institution_id == institution_id:
             new_config.templates.append(e)
@@ -33,6 +35,7 @@ def configure_processor(datafile, processor_class, institution_id):
     :institution_id: Id from institutions table matching the processor type
     :return: a derived object from ProcessorBase and the processor type passed
     """
+    current_app.logger.info(f"ConfigProc: {processor_class}")
     class_ = getattr(sys.modules['data_processing.processors'], processor_class, None)
     processor = class_(datafile)
 
