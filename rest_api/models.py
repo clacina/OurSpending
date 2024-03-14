@@ -36,6 +36,7 @@ class InstitutionsModel(BaseModel):
     id: int
     key: str
     name: str
+    class_name: Optional[str]
     notes: Optional[str]
 
 

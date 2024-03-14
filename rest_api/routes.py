@@ -394,7 +394,7 @@ async def get_institutions():
     query_result = db_access.load_institutions()
     response = []
     for q in query_result:
-        inst = models.InstitutionsModel(id=q[0], key=q[1], name=q[2], notes=q[3])
+        inst = models.InstitutionsModel(id=q[0], key=q[1], name=q[2], notes=q[3], class_name=q[4])
         response.append(inst)
 
     return response
@@ -410,8 +410,8 @@ async def get_institutions():
 async def create_institution(info: Request = None):
     data = await info.json()
 
-    new_id = db_access.create_institution(data["key"], data["name"], data.get('notes', None))
-    inst = models.InstitutionsModel(id=new_id, key=data["key"], name=data["name"])
+    new_id = db_access.create_institution(data["key"], data["name"], data.get('notes', None), data.get('class', None))
+    inst = models.InstitutionsModel(id=new_id, key=data["key"], name=data["name"], class_name=data[4])
     return inst
 
 
@@ -424,7 +424,7 @@ async def create_institution(info: Request = None):
 async def get_institution(institution_id: int):
     query_result = db_access.fetch_institution(institution_id)
     response = models.InstitutionsModel(
-        id=query_result[0], key=query_result[1], name=query_result[2]
+        id=query_result[0], key=query_result[1], name=query_result[2], notes=query_result[3], class_name=query_result[4]
     )
     return response
 
@@ -439,13 +439,13 @@ async def update_institution(institution_id: int, info: Request = None):
     data = await info.json()
     try:
         db_access.update_institution(institution_id=institution_id, name=data["name"], key=data["key"],
-                                     notes=data["notes"])
+                                     notes=data["notes"], class_name=data["class"])
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Unable to update specified institution.",
         )
-    return models.InstitutionsModel(id=institution_id, name=data["name"], key=data["key"], notes=data["notes"])
+    return models.InstitutionsModel(id=institution_id, name=data["name"], key=data["key"], notes=data["notes"], class_name=data["class"])
 
 
 """ ---------- Qualifiers  ------------------------------------------------------------------------"""

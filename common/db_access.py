@@ -1,123 +1,181 @@
 import psycopg2
 from psycopg2.errors import UniqueViolation
-from typing import List
 import logging
-
-TemplateSQl = """
-WITH tlist AS(
-SELECT   templates.id AS TID, templates.hint, templates.credit, templates.notes, templates.institution_id as BANK_ID
-         , bank.name as bank_name, bank.key
-         , t.id as tag_id, t.value as tag_value, t.notes as tag_notes, t.color as tag_color 
-         , tt.template_id, tt.tag_id
-         , c.id as category_id, c.value as category_value, c.notes as category_notes 
-         , q.id AS qualifier_id, q.value as qualifier_value
-         , tq.data_column
-         FROM templates
-         JOIN institutions bank on templates.institution_id = bank.id
-         full outer JOIN template_tags tt on tt.template_id = templates.id
-         full OUTER JOIN tags t on t.id = tt.tag_id
-         full outer JOIN categories c on templates.category_id = c.id
-         full outer JOIN template_qualifiers tq on templates.id = tq.template_id
-         full outer JOIN qualifiers q on tq.qualifier_id = q.id
-) 
-SELECT * FROM tlist
-"""
-
-TransactionSQl = """
-WITH tlist AS(
-SELECT   transaction_records.id AS TID, transaction_records.batch_id AS BID, 
-         transaction_records.transaction_date, 
-         transaction_records.institution_id as BANK_ID,
-         transaction_records.transaction_data,
-         transaction_records.description,
-         transaction_records.amount
-         , bank.name as bank_name, bank.key
-         , t.id as tag_id, t.value as tag_value 
-         , tt.transaction_id, tt.tag_id
-         , c.id as category_id, c.value as category_value 
-         , tn.id, tn.note
-         FROM transaction_records
-         JOIN institutions bank on transaction_records.institution_id = bank.id
-         full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
-         full OUTER JOIN tags t on t.id = tt.tag_id
-         full outer JOIN categories c on transaction_records.category_id = c.id
-         full outer JOIN transaction_notes tn on transaction_records.id = tn.transaction_id
-) 
-SELECT * FROM tlist
-"""
-
-ProcessedTransactionSQL = """
-WITH tlist AS(
-SELECT   transaction_records.id AS TID, transaction_records.batch_id, 
-         transaction_records.transaction_date, 
-         transaction_records.institution_id as BANK_ID,
-         transaction_records.transaction_data,
-         transaction_records.description,
-         transaction_records.amount
-         , bank.name as bank_name, bank.key
-         , t.id as tag_id, t.value as tag_value 
-         , tt.transaction_id, tt.tag_id
-         , c.id as category_id, c.value as category_value 
-         , tn.id, tn.note
-         FROM transaction_records
-         JOIN institutions bank on transaction_records.institution_id = bank.id
-         full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
-         full OUTER JOIN tags t on t.id = tt.tag_id
-         full outer JOIN categories c on transaction_records.category_id = c.id
-         full outer JOIN transaction_notes tn on transaction_records.id = tn.transaction_id
-),
+from common.queries import TemplateSQl, TransactionSQl, ProcessedTransactionSQL, ProcessedTransactionSQLwTemplate
 
 
-plist AS (
-SELECT   processed_transaction_records.id as PID,
-         processed_transaction_records.processed_batch_id as BID, 
-         processed_transaction_records.institution_id,
-         processed_transaction_records.template_id, processed_transaction_records.transaction_id,
-         tr.*         
-FROM 
-         processed_transaction_records
-JOIN 
-         tlist tr on processed_transaction_records.transaction_id = tr.TID
-)
-SELECT * FROM plist
-"""
+class DBResource:
+    def __init__(self, conn):
+        self.table = None
+        self.query = ""
+        self.conn = conn
+        self.cursor = conn.cursor()
+
+    def load_all(self, order_by=None):
+        sql = f"SELECT {self.query} FROM {self.table}"
+        if order_by:
+            sql += f" ORDER BY {order_by}"
+
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        except Exception as e:
+            logging.exception(f"Error: {str(e)}")
+            raise e
+
+    def load_single(self, id):
+        sql = f"SELECT {self.query} FROM {self.table} WHERE id=%(id)s"
+        query_params = {
+            "id": id
+        }
+        try:
+            self.cursor.execute(sql, query_params)
+            result = self.cursor.fetchone()
+            return result
+        except Exception as e:
+            logging.exception(f"Error: {str(e)}")
+            raise e
+
+    def load_query(self, query, query_params=None, order_by=None):
+        try:
+            self.cursor.execute(query, query_params)
+            result = self.cursor.fetchall()
+            return result
+        except Exception as e:
+            logging.exception(f"Error: {str(e)}")
+            raise e
+
+    def update_entry(self, id, data):
+        pass
+
+    def delete_entry(self, id):
+        query = "DELETE from {self.table} WHERE id=%(id)s"
+        query_params = {"id": id}
+        try:
+            self.cursor.execute(query, query_params)
+            self.conn.commit()
+        except Exception as e:
+            logging.exception(f"Error: {str(e)}")
+            raise e
+
+    def insert_entry(self, data):
+        pass
 
 
-ProcessedTransactionSQLwTemplate = """
-WITH tlist AS(
-SELECT   transaction_records.id AS TID, transaction_records.batch_id, 
-         transaction_records.transaction_date, 
-         transaction_records.institution_id as BANK_ID,
-         transaction_records.transaction_data,
-         transaction_records.description,
-         transaction_records.amount
-         , bank.name as bank_name, bank.key
-         , t.id as tag_id, t.value as tag_value 
-         , tt.transaction_id, tt.tag_id
-         , c.id as category_id, c.value as category_value 
-         , tn.id, tn.note
-         , tmp.id, tmp.category_id, tmp.hint, tmp.credit, tmp.notes
-         FROM transaction_records
-         JOIN institutions bank on transaction_records.institution_id = bank.id
-         full outer JOIN transaction_tags tt on tt.transaction_id = transaction_records.id
-         full OUTER JOIN tags t on t.id = tt.tag_id
-         full outer JOIN categories c on transaction_records.category_id = c.id
-         full outer JOIN transaction_notes tn on transaction_records.id = tn.transaction_id
-),
+class CategoryResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'categories'
+        self.query = 'id, value, is_tax_deductible, notes'
 
-plist AS (
-SELECT   processed_transaction_records.id as PID,
-         processed_transaction_records.processed_batch_id as BID, 
-         processed_transaction_records.institution_id,
-         processed_transaction_records.template_id, processed_transaction_records.transaction_id,
-         tr.*         
-FROM 
-         processed_transaction_records
-JOIN 
-         tlist tr on processed_transaction_records.transaction_id = tr.TID
-)
-SELECT * FROM plist
-"""
+    def insert_entry(self, data):
+        """
+            Expected data format:
+            {
+                "value": New category value
+                "notes": New category notes [Optional]
+            }
+        """
+        if not self.load_query(query='value=%(value)s', query_params={'value': data['value']}):
+            query_params = {"value": data['value'], "notes": data.get('notes', None)}
+
+            sql = "INSERT INTO categories (value, notes) VALUES (%(value)s, %(notes)s) RETURNING id"
+            try:
+                self.cursor.execute(sql, query_params)
+                row = self.cursor.fetchone()
+                self.conn.commit()
+                return row[0], data['value']
+            except Exception as e:
+                logging.exception(f"Error creating category: {str(e)}")
+                raise e
+
+    def update_entry(self, id, data):
+        """
+        Expected data format:
+        {
+            "value": New category value,
+            "notes": New category notes [Optional]
+            "is_tax_deductible": Optional
+        }
+        """
+        sql = f"""UPDATE 
+                    {self.table} 
+                  SET 
+                    value=%(value)s, 
+                    notes=%(notes)s, 
+                    is_tax_deductible=%(is_tax_deductible)s 
+                  WHERE 
+                    id=%(category_id)s"""
+        query_params = {
+            "category_id": id,
+            "value": data['value'],
+            "notes": data['notes'],
+            "is_tax_deductible": data['is_tax_deductible']}
+        try:
+            self.cursor.execute(sql, query_params)
+            self.conn.commit()
+        except Exception as e:
+            logging.exception(f"Category specified already exists: {str(e)}")
+            raise e
+
+
+class InstitutionResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'institutions'
+        self.query = 'id, key, name, notes, class'
+
+    def insert_entry(self, data):
+        sql = f"""
+            INSERT INTO
+                {self.table} (key, name, notes, class) VALUES (
+                    %(key)s, %(name)s, %(notes)s, %(class)s
+                )
+            RETURNING id
+        """
+        query_params = {
+            "key": data['key'],
+            "name": data['name'],
+            "class": data['class'],
+            "notes": data['notes']}
+
+        with self.cursor() as cursor:
+            try:
+                cursor.execute(sql, query_params)
+                new_id = cursor.fetchone()[0]
+                self.conn.commit()
+                return new_id
+            except Exception as e:
+                logging.exception(f"Error: {str(e)}")
+                raise e
+
+    def update_entry(self, id, data):
+        """
+            institution_id, name, key, notes, class
+        """
+        sql = f"""
+            UPDATE 
+                {self.table}
+            SET 
+                key=%(key)s, name=%(name)s, notes=%(notes)s, class=%(class)s
+            WHERE 
+                id=%(id)s
+        """
+        query_params = {
+            "id": id,
+            "key": data['key'],
+            "name": data['name'],
+            "class": data['class'],
+            "notes": data['notes']}
+
+        with self.conn.cursor() as cursor:
+            try:
+                cursor.execute(sql, query_params)
+                self.conn.commit()
+            except Exception as e:
+                logging.exception(f"Error: {str(e)}")
+                raise e
 
 
 class DBAccess:
@@ -396,136 +454,53 @@ class DBAccess:
 
     """ Institutions """
 
-    def create_institution(self, key, name, notes):
-        conn = self.connect_to_db()
-        assert conn
-
-        sql = """
-            INSERT INTO
-                institutions (key, name, notes) VALUES (
-                    %(key)s, %(name)s, %(notes)s
-                )
-            RETURNING id
-        """
-        query_params = {"key": key, "name": name, "notes": notes}
-
-        with conn.cursor() as cursor:
-            try:
-                cursor.execute(sql, query_params)
-                new_id = cursor.fetchone()[0]
-                print(f"Got new institution id of {new_id}")
-                conn.commit()
-                return new_id
-            except Exception as e:
-                logging.exception(f"Error: {str(e)}")
-                raise e
+    def create_institution(self, key, name, notes, class_name=None):
+        ir = InstitutionResource(conn=self.connect_to_db())
+        return ir.insert_entry({
+            "key": key,
+            "name": name,
+            "notes": notes,
+            "class": class_name
+        })
 
     def fetch_institution(self, institution_id: int):
-        sql = "SELECT id, key, name, notes FROM institutions WHERE id=%(institution_id)s"
-        query_params = {"institution_id": institution_id}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            result = cur.fetchone()
-            return result
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
+        ir = InstitutionResource(conn=self.connect_to_db())
+        return ir.load_single(institution_id)
 
     def load_institutions(self):
-        sql = "SELECT id, key, name, notes FROM institutions order by name"
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error listing institutions: {str(e)}")
-            raise e
+        ir = InstitutionResource(conn=self.connect_to_db())
+        return ir.load_all('name')
 
-    def update_institution(self, institution_id, name, key, notes):
-        conn = self.connect_to_db()
-        assert conn
-        logging.info(f"Params: {name}, {key}, {notes}")
-        sql = """
-            UPDATE institutions
-            SET name=%(name)s, key=%(key)s, notes=%(notes)s
-            WHERE id=%(institution_id)s
-        """
-        query_params = {"institution_id": institution_id, "key": key, "name": name, "notes": notes}
-
-        with conn.cursor() as cursor:
-            try:
-                cursor.execute(sql, query_params)
-                conn.commit()
-            except Exception as e:
-                logging.exception(f"Error: {str(e)}")
-                raise e
+    def update_institution(self, institution_id, name, key, notes, class_name=None):
+        ir = InstitutionResource(conn=self.connect_to_db())
+        ir.update_entry(id=institution_id, data={
+            "name": name,
+            "key": key,
+            "notes": notes,
+            "class": class_name
+        })
 
     """ Categories """
 
     def load_categories(self):
-        sql = "SELECT id, value, is_tax_deductible, notes FROM categories order by value"
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error listing categories: {str(e)}")
-            raise e
+        cr = CategoryResource(self.connect_to_db())
+        return cr.load_all(order_by='value')
 
     def get_category(self, category_id):
-        sql = "SELECT id, value, is_tax_deductible, notes FROM categories WHERE id=%(category_id)s"
-        query_params = {"category_id": category_id}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            return row
-        except Exception as e:
-            logging.exception(f"Error fetching category:{category_id}: {str(e)}")
-            raise e
+        cr = CategoryResource(self.connect_to_db())
+        return cr.load_single(category_id)
 
     def create_category(self, value: str, notes: str = None):
-        conn = self.connect_to_db()
-        assert conn
-
-        sql = "SELECT id FROM categories WHERE value=%(value)s"
-        query_params = {"value": value, "notes": notes}
-        cur = conn.cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            if row:
-                return None
-        except Exception as e:
-            logging.exception(f"Error searching for category: {str(e)}")
-            raise e
-
-        sql = "INSERT INTO categories (value, notes) VALUES (%(value)s, %(notes)s) RETURNING id"
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            conn.commit()
-            return row[0], value
-        except Exception as e:
-            logging.exception(f"Error creating category: {str(e)}")
-            raise e
+        """
+            returns: tuple new id, input value
+        """
+        cr = CategoryResource(conn=self.connect_to_db())
+        return cr.insert_entry({"value": value, "notes": notes})
 
     def update_category(self, category_id: int, value: str, is_tax_deductible: bool, notes: str):
-        conn = self.connect_to_db()
-        assert conn
+        cr = CategoryResource(conn=self.connect_to_db())
+        cr.update_entry(category_id, {"value": value, "notes": notes, "is_tax_deductible": is_tax_deductible})
 
-        sql = 'UPDATE categories SET value=%(value)s, notes=%(notes)s, is_tax_deductible=%(is_tax_deductible)s WHERE id=%(category_id)s'
-        query_params = {"category_id": category_id, "value": value, "notes": notes, "is_tax_deductible": is_tax_deductible}
-        cur = conn.cursor()
-        try:
-            cur.execute(sql, query_params)
-            conn.commit()
-        except Exception as e:
-            logging.exception(f"Category specified already exists: {str(e)}")
-            raise e
 
     """ Templates """
 

@@ -7,6 +7,7 @@ from data_processing.processors import select_processors_from_batch
 from data_processing.match_qualifiers import find_template_matches, match_qualifiers
 from data_processing.schemas import LoadSchema, ProcessSchema
 
+"""
 import logging
 from rich.logging import RichHandler
 from rich.json import JSON
@@ -24,6 +25,7 @@ log.info(JSON.from_data({
             "qualifiers": [],
             "description": "transaction.description"
         }).text)
+"""
 # --------------------------------------------------------------
 
 
