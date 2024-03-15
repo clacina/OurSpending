@@ -8,11 +8,12 @@ class DBResource:
     def __init__(self, conn):
         self.table = None
         self.query = ""
+        self.extra = None
         self.conn = conn
         self.cursor = conn.cursor()
 
     def load_all(self, order_by=None):
-        sql = f"SELECT {self.query} FROM {self.table}"
+        sql = f"SELECT {self.query} FROM {self.table} {self.extra}"
         if order_by:
             sql += f" ORDER BY {order_by}"
 
@@ -25,7 +26,7 @@ class DBResource:
             raise e
 
     def load_single(self, id):
-        sql = f"SELECT {self.query} FROM {self.table} WHERE id=%(id)s"
+        sql = f"SELECT {self.query} FROM {self.table}  {self.extra} WHERE id=%(id)s"
         query_params = {
             "id": id
         }
@@ -61,6 +62,13 @@ class DBResource:
 
     def insert_entry(self, data):
         pass
+
+
+class BatchContentsResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'transaction_batch_contents'
+        self.query = 'id, filename, institution_id, batch_id, added_date, file_date, transaction_count, notes'
 
 
 class CategoryResource(DBResource):
@@ -120,6 +128,20 @@ class CategoryResource(DBResource):
             raise e
 
 
+class CreditCardResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'credit_cards'
+        self.query = 'id, name, institution_id, interest_rate, interest_rate_cash, due_date, credit_limit'
+
+
+class CreditCardDataResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'credit_card_data'
+        self.query = 'card_id, balance, balance_date, minimum_payment'
+
+
 class InstitutionResource(DBResource):
     def __init__(self, conn):
         super().__init__(conn)
@@ -176,6 +198,85 @@ class InstitutionResource(DBResource):
             except Exception as e:
                 logging.exception(f"Error: {str(e)}")
                 raise e
+
+
+class ProcessedTransactionBatchResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = "processed_transaction_batch"
+        self.query = """id, run_date, notes, transaction_batch_id, COALESCE(tr.cnt, 0) as tr_cnt """
+        self.extra = """ left join (select batch_id, count(batch_id) as cnt from transaction_records group by batch_id) tr
+                ON transaction_batch_id = tr.batch_id"""
+
+
+class QualifierResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'qualifiers'
+        self.query = 'id, value, institution_id'
+
+
+class SavedFiltersResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'saved_filters'
+        self.query = 'id, name, created, institutions, categories, credit, tags, match_all_tags, start_date, end_date, search_string'
+
+
+class TagsResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'tags'
+        self.query = 'id, value, notes, color'
+
+    def insert_entry(self, data):
+        """
+            Expected data format:
+            {
+                "value": New category value
+                "notes": New category notes [Optional]
+                "color": Color string
+            }
+        """
+        if not self.load_query(query='value=%(value)s', query_params={'value': data['value']}):
+            query_params = {"value": data['value'], "notes": data.get('notes', None), "color": data.get('color', None)}
+            sql = f"INSERT INTO {self.table} (value, notes, color) VALUES (%(value)s, %(notes)s, %(color)s) RETURNING id"
+            try:
+                self.cursor.execute(sql, query_params)
+                row = self.cursor.fetchone()
+                self.conn.commit()
+                return row[0], data['value']
+            except Exception as e:
+                logging.exception(f"Error creating tag: {str(e)}")
+                raise e
+
+
+class TemplateResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'templates'
+        self.query = 'id, institution_id, category_id, credit, hint, notes'
+
+
+class TemplateQualifierResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'template_qualifiers'
+        self.query = 'template_id, qualifier_id, data_column'
+
+
+class TransactionBatchResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'transaction_batch'
+        self.query = 'id, run_date, notes'
+
+
+class TransactionDataDescriptionResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'transaction_data_description'
+        self.query = 'id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id, is_transaction_date'
 
 
 class DBAccess:
@@ -317,73 +418,26 @@ class DBAccess:
     """ Transaction Batches """
 
     def list_batches(self):
-        sql = "SELECT id, run_date, notes FROM transaction_batch"
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            result = cur.fetchall()
-            return result
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
+        cr = TransactionBatchResource(self.connect_to_db())
+        return cr.load_all()
 
     def delete_batch(self, batch_id):
-        conn = self.connect_to_db()
-        assert conn
-        sql = "DELETE FROM transaction_batch WHERE id=%(batch_id)s"
-        query_params = {"batch_id": batch_id}
-        cur = conn.cursor()
-        try:
-            cur.execute(sql, query_params)
-            conn.commit()
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
+        cr = TransactionBatchResource(self.connect_to_db())
+        return cr.delete_entry(batch_id)
 
     def fetch_batch(self, batch_id: int):
-        sql = "SELECT id, run_date, notes FROM transaction_batch WHERE id=%(batch_id)s"
-        query_params = {"batch_id": batch_id}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            result = cur.fetchone()
-            return result
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
+        cr = TransactionBatchResource(self.connect_to_db())
+        return cr.load_single(batch_id)
 
     """ Processed Batches """
 
     def list_processed_batches(self):
-        sql = """SELECT id, run_date, notes, transaction_batch_id, COALESCE(tr.cnt, 0) as tr_cnt FROM processed_transaction_batch
-                left join (select batch_id, count(batch_id) as cnt from transaction_records group by batch_id) tr
-                ON transaction_batch_id = tr.batch_id
-              """
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            result = cur.fetchall()
-            return result
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
+        cr = ProcessedTransactionBatchResource(self.connect_to_db())
+        return cr.load_all()
 
     def fetch_processed_batch(self, batch_id: int):
-        sql = """SELECT id, run_date, notes, transaction_batch_id, COALESCE(tr.cnt, 0) as tr_cnt FROM processed_transaction_batch
-                left join (select batch_id, count(batch_id) as cnt from transaction_records group by batch_id) tr
-                ON transaction_batch_id = tr.batch_id
-                WHERE id=%(batch_id)s
-              """
-
-        query_params = {"batch_id": batch_id}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            result = cur.fetchone()
-            return result
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
+        cr = ProcessedTransactionBatchResource(self.connect_to_db())
+        return cr.load_single(batch_id)
 
     def update_processed_batch_note(self, batch_id, notes):
         sql = """UPDATE processed_transaction_batch SET notes=%(notes)s WHERE id=%(batch_id)s"""
@@ -399,18 +453,8 @@ class DBAccess:
             raise e
 
     def delete_processed_batch(self, batch_id):
-        sql = "DELETE FROM processed_transaction_batch WHERE id=%(batch_id)s"
-        query_params = {"batch_id": batch_id}
-
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
-        try:
-            cur.execute(sql, query_params)
-            conn.commit()
-        except Exception as e:
-            logging.exception({"message": f"Error deleting processed batch {batch_id}: {str(e)}"})
-            raise e
+        cr = ProcessedTransactionBatchResource(self.connect_to_db())
+        cr.delete_entry(batch_id)
 
     def get_processed_transaction_records(self, batch_id, institution_id=None, offset=0, limit=10):
         sql = f"{ProcessedTransactionSQL} WHERE BID=%(batch_id)s"
@@ -500,7 +544,6 @@ class DBAccess:
     def update_category(self, category_id: int, value: str, is_tax_deductible: bool, notes: str):
         cr = CategoryResource(conn=self.connect_to_db())
         cr.update_entry(category_id, {"value": value, "notes": notes, "is_tax_deductible": is_tax_deductible})
-
 
     """ Templates """
 
@@ -594,16 +637,8 @@ class DBAccess:
         return new_id
 
     def fetch_template(self, template_id: int):
-        sql = "SELECT id, institution_id, category_id, credit, hint, notes FROM templates WHERE id=%(template_id)s"
-        query_params = {"template_id": template_id}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            return row
-        except Exception as e:
-            logging.exception(f"Error fetching template {template_id}: {str(e)}")
-            raise e
+        cr = TemplateResource(self.connect_to_db())
+        return cr.load_single(template_id)
 
     # -- template.id -> template_tags.template_id
     # -- template.id -> template_qualifiers.template_id
@@ -724,15 +759,8 @@ class DBAccess:
         # TODO Qualifiers
 
     def query_templates_qualifiers(self):
-        sql = "SELECT template_id, qualifier_id, data_column FROM template_qualifiers"
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            result = cur.fetchall()
-            return result
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
+        cr = TemplateQualifierResource(self.connect_to_db())
+        return cr.load_all()
 
     def query_template_qualifier_details(self):
         sql = """
@@ -767,39 +795,16 @@ class DBAccess:
             raise e
 
     def load_tags(self):
-        sql = "SELECT id, value, notes, color FROM tags"
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error listing tags: {str(e)}")
-            raise e
+        tr = TagsResource(self.connect_to_db())
+        return tr.load_all()
 
     def fetch_tag(self, tag_id: int):
-        sql = "SELECT id, value, notes, color FROM tags WHERE id=%(tag_id)s"
-        query_params = {"tag_id": tag_id}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            return row
-        except Exception as e:
-            logging.exception(f"Error fetching tag {tag_id}: {str(e)}")
-            raise e
+        tr = TagsResource(self.connect_to_db())
+        return tr.load_single(tag_id)
 
     def fetch_tag_by_value(self, value: str):
-        sql = "SELECT id, value, notes, color FROM tags WHERE value=%(value)s"
-        query_params = {"value": value}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            return row
-        except Exception as e:
-            logging.exception(f"Error fetching tag {value}: {str(e)}")
-            raise e
+        tr = TagsResource(self.connect_to_db())
+        return tr.load_query('value=%(value)s', {"value": value})
 
     def add_tag_to_transaction(self, transaction_id, tag_id):
         sql = "INSERT INTO transaction_tags (transaction_id, tag_id) VALUES (%(transaction_id)s, %(tag_id)s)"
@@ -815,60 +820,12 @@ class DBAccess:
             raise e
 
     def create_tag(self, value: str, notes: str, color: str):
-        conn = self.connect_to_db()
-        assert conn
-
-        sql = "SELECT id FROM tags WHERE value=%(value)s"
-        query_params = {"value": value}
-        cur = conn.cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            if row:
-                return None
-        except Exception as e:
-            logging.exception(f"Error searching for tag: {str(e)}")
-            raise e
-
-        sql = "INSERT INTO tags (value, notes, color) VALUES (%(value)s, %(notes)s, %(color)s) RETURNING id"
-        query_params['notes'] = notes
-        query_params['color'] = color
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            conn.commit()
-            return row[0], value, notes, color
-        except Exception as e:
-            logging.exception(f"Error creating tag: {str(e)}")
-            raise e
+        tr = TagsResource(self.connect_to_db())
+        return tr.insert_entry({"value": value, "notes": notes, "color": color})
 
     def update_tag(self, tag_id: int, value: str, notes: str, color: str):
-        conn = self.connect_to_db()
-        assert conn
-
-        sql = "SELECT id FROM tags WHERE id=%(id)s"
-        query_params = {"id": tag_id}
-        cur = conn.cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            if not row:
-                return None
-        except Exception as e:
-            logging.exception(f"Error searching for tag: {str(e)}")
-            raise e
-
-        sql = """UPDATE tags SET value=%(value)s, notes=%(notes)s, color=%(color)s WHERE id=%(id)s"""
-        query_params['notes'] = notes
-        query_params['value'] = value
-        query_params['color'] = color
-        try:
-            cur.execute(sql, query_params)
-            conn.commit()
-            return tag_id, value, notes, color
-        except Exception as e:
-            logging.exception(f"Error creating tag: {str(e)}")
-            raise e
+        tr = TagsResource(self.connect_to_db())
+        return tr.update_entry(tag_id, {"value": value, "notes": notes, "color": color})
 
     """ Qualifiers """
 
@@ -897,42 +854,27 @@ class DBAccess:
             raise e
 
     def fetch_qualifier(self, qualifier_id: int):
-        """retrieve a single qualifier record by id"""
-        sql = "SELECT id, value, institution_id FROM qualifiers WHERE id=%(qualifier_id)s"
-        query_params = {"qualifier_id": qualifier_id}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            return row
-        except Exception as e:
-            logging.exception(f"Error fetching qualifier {qualifier_id}: {str(e)}")
-            raise e
+        qr = QualifierResource(self.connect_to_db())
+        return qr.load_single(qualifier_id)
 
     def find_qualifier(self, value: str, institution_id: int):
-        """retrieve a single qualifier record by id"""
-        sql = "SELECT id, value, institution_id FROM qualifiers WHERE id=%(institution_id_id)s and value=%(value)s"
-        query_params = {"institution_id": institution_id, "value": value}
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            row = cur.fetchone()
-            return row
-        except Exception as e:
-            logging.exception(f"Error fetching qualifier {value}: {str(e)}")
-            raise e
+        qr = QualifierResource(self.connect_to_db())
+        return qr.load_query('id=%(institution_id_id)s and value=%(value)s', {"institution_id": institution_id, "value": value})
+        # """retrieve a single qualifier record by id"""
+        # sql = "SELECT id, value, institution_id FROM qualifiers WHERE id=%(institution_id_id)s and value=%(value)s"
+        # query_params = {"institution_id": institution_id, "value": value}
+        # cur = self.get_db_cursor()
+        # try:
+        #     cur.execute(sql, query_params)
+        #     row = cur.fetchone()
+        #     return row
+        # except Exception as e:
+        #     logging.exception(f"Error fetching qualifier {value}: {str(e)}")
+        #     raise e
 
     def load_qualifiers(self):
-        """load all qualifier records"""
-        sql = "SELECT id, value, institution_id FROM qualifiers"
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error listing qualifiers: {str(e)}")
-            raise e
+        qr = QualifierResource(self.connect_to_db())
+        return qr.load_all()
 
     def create_qualifer_from_transaction(self, conn, transaction_id):
         # get transaction and pull description
@@ -959,92 +901,25 @@ class DBAccess:
         return qid
 
     def load_transaction_data_descriptions(self):
-        sql = "SELECT id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id, is_transaction_date from transaction_data_description"
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error listing transaction_data_description records: {str(e)}")
-            raise e
+        dd = TransactionDataDescriptionResource(self.connect_to_db())
+        return dd.load_all()
 
     def load_saved_filters(self):
-        sql = """SELECT 
-                    id, name, created, institutions, categories, credit, tags, match_all_tags, start_date, end_date, search_string
-                 FROM saved_filters
-              """
-
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error load saved filters: {str(e)}")
-            raise e
+        sf = SavedFiltersResource(self.connect_to_db())
+        return sf.load_all()
 
     def load_batch_contents(self):
-        sql = """SELECT 
-                    id, filename, institution_id, batch_id, added_date, file_date, transaction_count, notes
-                 FROM transaction_batch_contents
-              """
-
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error loading batch contents: {str(e)}")
-            raise e
+        bc = BatchContentsResource(self.connect_to_db())
+        return bc.load_all()
 
     def load_contents_from_batch(self, batch_id):
-        sql = """SELECT 
-                    id, filename, institution_id, batch_id, added_date, file_date, transaction_count, notes
-                 FROM transaction_batch_contents
-                 WHERE batch_id=%(batch_id)s
-              """
-        query_params = {
-            "batch_id": batch_id
-        }
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql, query_params)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error loading batch contents: {str(e)}")
-            raise e
+        bc = BatchContentsResource(self.connect_to_db())
+        return bc.load_query('batch_id=%(batch_id)s', {'batch_id': batch_id})
 
     def load_cc_info(self):
-        sql = """SELECT 
-                    id, name, institution_id, interest_rate, interest_rate_cash, due_date, credit_limit
-                 FROM 
-                    credit_cards
-              """
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error loading batch contents: {str(e)}")
-            raise e
+        cc = CreditCardResource(self.connect_to_db())
+        return cc.load_all()
 
     def load_cc_data(self, return_most_recent=False):
-        sql = """SELECT 
-                    card_id, balance, balance_date, minimum_payment
-                 FROM 
-                    credit_card_data
-              """
-        if return_most_recent:
-            sql += ""
-        cur = self.get_db_cursor()
-        try:
-            cur.execute(sql)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error loading credit card data: {str(e)}")
-            raise e
+        ccd = CreditCardDataResource(self.connect_to_db())
+        return ccd.load_all()

@@ -1,6 +1,6 @@
 from apiflask import APIFlask
 from flask import request, json, jsonify
-from .rich import rich
+from data_processing.rich import OurRich
 
 from data_processing.backend import *
 from data_processing.processors import select_processors_from_batch
@@ -37,7 +37,7 @@ class RichConfig:
 app = APIFlask(__name__, title='Data Processing', version='1.0')
 app.logger.handlers.clear()
 app.config.from_object(RichConfig())
-rich.init_app(app)
+OurRich.init_app(app)
 # All the OpenAPI field config can be set with the corresponding attributes of the app instance:
 # app.description = '...'
 
