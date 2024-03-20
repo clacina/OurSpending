@@ -1,192 +1,91 @@
-import random
 import sys
 
 # append the path of the
 # parent directory
 sys.path.append("..")
 
-from starlette.testclient import TestClient
-from app import app
-
-client = TestClient(app)
-
+from data_processing.app import app
 
 # @pytest.mark.parametrize("num, output",[(1,11),(2,22),(3,35),(4,44)])
 # def test_multiplication_11(num, output):
 
 
-def test_ping():
-    response = client.get("/ping")
+def test_root():
+    response = app.test_client().get("/")
     assert response.status_code == 200
-    assert response.json() == {"ping": "pong!"}
+    assert response.text == 'Hello World'
 
 
-def test_get_batch():
-    response = client.get("/batch/2")
-    assert response.status_code == 200
-    entry = response.json()
-    assert "id" in entry
-    assert "run_date" in entry
-    assert "notes" in entry
+def test_import():
+    """
+    @app.post('/import')
+    @app.input(LoadSchema, location='json')
+    @app.doc(tags=['Batches'])
+    def load_datafiles(payload):
+    """
+    response = app.test_client().post('/import', data={"batch_id": 8})
+    assert response.status_code == 200, response.text
 
 
-def test_get_bad_batch():
-    response = client.get("/batch/99")
-    assert response.status_code == 404
+def test_process():
+    """
+    @app.route('/process', methods=['POST'])
+    @app.doc(tags=['Batches'])
+    @app.input(ProcessSchema, location='json')
+    def process_a_transaction_batch(json_data):
+    """
+    response = app.test_client().post('/process', json={"batch_id": 8, "notes": "From test"})
+    assert response.status_code == 200, response.text
 
 
-def test_get_batches():
-    response = client.get("/batches")
-    assert response.status_code == 200
-    assert len(response.json()) >= 1, f"Empty payload: {response.json()}"
-    entry = response.json()[0]
-    assert "id" in entry
-    assert "run_date" in entry
-    assert "notes" in entry
+def test_template_report():
+    """
+    @app.route('/templatereport/<batch_id>')
+    @app.doc(tags=['Reports'])
+    def template_report(batch_id: int):
+        return f"Creating template report for batch {batch_id}"
+    """
+    response = app.test_client().get('/templatereport')
+    assert response.status_code == 200, response.text
 
 
-def test_get_category():
-    response = client.get("/category/5")
-    assert response.status_code == 200
-    entry = response.json()
-    assert "id" in entry
-    assert 'value' in entry
+def test_category_report():
+    """
+    @app.route('/categoryreport/<batch_id>')
+    @app.doc(tags=['Reports'])
+    def category_report(batch_id: int):
+        return f"Creating a category report for processed batch: {batch_id}"
+    """
+    response = app.test_client().get('/categoryreport')
+    assert response.status_code == 200, response.text
 
 
-def test_get_bad_category():
-    response = client.get("/category/-5")
-    assert response.status_code == 404
+def test_rerun_processed_batch():
+    """
+    @app.post("/processed_batch/<batch_id>/rerun")
+    @app.doc(tags=['Actions'])
+    async def rereun_processed_batch(batch_id: int):
+        return f"Rerunning batch {batch_id}"
+    """
+    response = app.test_client().get('/processed_batch/<batch_id>/rerun')
+    assert response.status_code == 200, response.text
 
 
-def test_get_categories():
-    response = client.get("/categories")
-    assert response.status_code == 200
-    assert len(response.json()) > 1, f"Empty payload: {response.json()}"
-    entry = response.json()[0]
-    assert "id" in entry
+def test_apply_template():
+    """
+    @app.post("/processed_batch/<batch_id>/apply_template/<template_id>")
+    @app.doc(tags=['Actions'])
+    async def apply_template(batch_id: int, template_id: int):
+    """
+    response = app.test_client().post('/processed_batch/<batch_id>/apply_template/<template_id>')
+    assert response.status_code == 200, response.text
 
 
-def test_create_category():
-    test_category = f'Stuff for Nolia {random.randint(0, 100)}'
-    print(f"Creating {test_category}")
-    response = client.post("/categories",
-                           json=test_category,
-                           headers={"Content-Type": "application/json"})
-    assert response.status_code == 201
-
-    # try again with same value, should get a 422
-    # response = client.post("/categories", json="{'Value': test_category}")
-    # assert response.status_code == 422
-
-
-# def test_update_category():
-#     test_category = f'Stuff for Nolia {random.randint(0, 100)}'
-#     print(f"Updating to {test_category}")
-#     response = client.put("/category/1", data={'value': test_category})
-#     assert response.status_code == 200
-#
-#     response = client.get("/category/1")
-#     assert response.status_code == 200
-#     entry = response.json()
-#     assert "id" in entry
-#     assert 'value' in entry
-#     assert entry['value'] == test_category
-
-
-def test_get_institution():
-    response = client.get("/institution/4")
-    assert response.status_code == 200
-    entry = response.json()
-    assert "id" in entry
-
-
-def test_get_institutions():
-    response = client.get("/institutions")
-    assert response.status_code == 200
-    assert len(response.json()) > 1, f"Empty payload: {response.json()}"
-    entry = response.json()[0]
-    assert "id" in entry
-
-
-def test_get_qualifier():
-    response = client.get("/qualifier/34")
-    assert response.status_code == 200
-    entry = response.json()
-    assert "id" in entry
-    assert "value" in entry
-    assert "institution_id" in entry
-
-
-def test_get_qualifiers():
-    response = client.get("/qualifiers")
-    assert response.status_code == 200
-    assert len(response.json()) > 1, f"Empty payload: {response.json()}"
-    entry = response.json()[0]
-    assert "id" in entry
-    assert "value" in entry
-    assert "institution_id" in entry
-
-
-def test_get_tag():
-    response = client.get("/tag/2")
-    assert response.status_code == 200
-    entry = response.json()
-    assert "id" in entry
-
-
-def test_get_tags():
-    response = client.get("/tags")
-    assert response.status_code == 200
-    assert len(response.json()) > 1, f"Empty payload: {response.json()}"
-    entry = response.json()[0]
-    assert "id" in entry
-
-
-def test_get_template():
-    response = client.get("/template/23")
-    assert response.status_code == 200
-    entry = response.json()
-    assert "template_id" in entry
-    assert "institution_id" in entry
-    assert "category" in entry
-    assert "credit" in entry
-    assert "tags" in entry
-    assert "qualifiers" in entry
-    assert "hint" in entry
-    assert "notes" in entry
-    assert isinstance(entry["tags"], list)
-    assert isinstance(entry["qualifiers"], list)
-
-
-def test_get_templates():
-    response = client.get("/templates")
-    assert response.status_code == 200
-    assert len(response.json()) > 1, f"Empty payload: {response.json()}"
-    entry = response.json()[0]
-    assert "template_id" in entry
-    assert "institution_id" in entry
-    assert "category" in entry
-    assert "credit" in entry
-    assert "tags" in entry
-    assert "qualifiers" in entry
-    assert "hint" in entry
-    assert "notes" in entry
-    assert isinstance(entry["tags"], list)
-    assert isinstance(entry["qualifiers"], list)
-
-
-def test_get_transaction():
-    response = client.get("/transaction/43")
-    assert response.status_code == 200
-    entry = response.json()
-    assert "id" in entry
-
-
-def test_get_transactions_from_batch():
-    response = client.get("/transactions?batch_id=3&limit=12")
-    assert response.status_code == 200
-    assert len(response.json()) >= 1, f"Empty payload: {response.json()}"
-    assert len(response.json()) == 12, f"Wrong size payload returned: {response.json()}"
-    entry = response.json()[0]
-    assert "id" in entry
-
+def test_match_qualifiers():
+    """
+    @app.post("/processed_batch/<batch_id>/match_qualifiers/")
+    @app.doc(tags=['Actions'])
+    async def find_qualifier_matches(batch_id: int):
+    """
+    response = app.test_client().post('/processed_batch/<batch_id>/match_qualifiers')
+    assert response.status_code == 200, response.text

@@ -17,6 +17,7 @@ def test_db_resource():
     resource_list.append(TemplateResource(DBAccess().connect_to_db()))
     resource_list.append(TransactionBatchResource(DBAccess().connect_to_db()))
     resource_list.append(TransactionDataDescriptionResource(DBAccess().connect_to_db()))
+    resource_list.append(TransactionNotesResource(DBAccess().connect_to_db()))
 
     for r in resource_list:
         print(r.load_all())

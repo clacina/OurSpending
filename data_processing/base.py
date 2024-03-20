@@ -7,7 +7,6 @@
 
 """
 import abc
-import json
 import os.path
 import time
 from flask import current_app as app
@@ -18,19 +17,25 @@ def match_template_qualifiers(qualifiers, transaction):
     # template.qualifiers is a list of tuples containing the qualifier value (string) and the field name
     found_count = 0
     # match_all should come from template somewhere
-    # app.logger.info(f"Checking qualifiers: {qualifiers} against: {transaction.description}")
-    # q[0] = text value
-    # q[1] = column name
+    app.logger.info(f"Matching template qualifiers: {qualifiers} against: {transaction.description}")
+    #                                    qid -    qualifier -      iid - data column name
+    # Matching template qualifiers: [[(5013, 'Amazon web services', 3, 'description')]] against: FRED-MEYER #0615
     for q in qualifiers:
-        if q[1].lower() == 'description':
-            if q[0].upper() in transaction.description.upper():
+        assert len(q) == 4, f"Invalid qualifier? : {q}"
+        column_name = q[3].lower()
+        qualifier_value = q[1]
+        if column_name == 'description':
+            if qualifier_value.upper() in transaction.description.upper():
+                app.logger.debug(f"description match: {qualifier_value.upper()}, {transaction.description.upper()}")
                 found_count += 1
-        elif q[1].lower() == 'category':
-            if q[0].upper() in transaction.category.upper():
+        elif column_name == 'category':
+            if qualifier_value.upper() in transaction.category.upper():
+                app.logger.debug(f"description match: {qualifier_value.upper()}, {transaction.description.upper()}")
                 found_count += 1
         else:
             # Try description by default
-            if q[0].upper() in transaction.description.upper():
+            if qualifier_value.upper() in transaction.description.upper():
+                app.logger.debug(f"no column match {column_name}: {qualifier_value.upper()}, {transaction.description.upper()}")
                 found_count += 1
 
     """
@@ -40,7 +45,7 @@ def match_template_qualifiers(qualifiers, transaction):
     elif found_count > 0:
         print(f"Found partial match {found_count} of {len(be.qualifiers)}")
     """
-    # app.logger.debug(f"Returning: {found_count >= len(qualifiers)}")
+    app.logger.info(f"Returning: {found_count} == {len(qualifiers)} == {found_count >= len(qualifiers)}")
     return found_count >= len(qualifiers)
 
 
@@ -49,13 +54,13 @@ def match_template(template, transaction):
     # match_all should come from template somewhere
     app.logger.info(f"Checking qualifiers: {template.qualifiers} against: {transaction.description}")
     match_found = match_template_qualifiers(qualifiers=template.qualifiers, transaction=transaction)
-    if match_found:
-        app.logger.info(json.dumps({
-            "message": "Found template match",
-            "template_id": template.id,
-            "qualifiers": template.qualifiers,
-            "description": transaction.description
-        }))
+    # if match_found:
+    #     app.logger.info(json.dumps({
+    #         "message": "Found template match",
+    #         "template_id": template.id,
+    #         "qualifiers": template.qualifiers,
+    #         "description": transaction.description
+    #     }))
     return match_found
 
 
@@ -174,6 +179,7 @@ class ProcessorBase(metaclass=abc.ABCMeta):
             batch_id=batch_id, institution_id=self.config.institution_id
         )
         self.transactions = self.parse_raw_data(raw_data)
+        app.logger.debug(f"Templates: {self.config.templates}")
 
         # Loop through all transactions in the dataset
         app.logger.debug(f"matching {len(self.transactions)} transactions")

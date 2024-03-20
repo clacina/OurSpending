@@ -1,8 +1,9 @@
 """
-settings.py - Code for confguring data structures for analysis.
+settings.py - Code for configuring data structures for analysis.
 """
 from flask import current_app
 import data_processing.db_utils as db_utils
+from rich import print as rprint
 """ -------------------------- Entry Point ----------------------------- """
 
 
@@ -23,7 +24,7 @@ class DataManager:
         # Lookup Tables
         self.categories = db_utils.db_access.load_categories()
         self.tags = db_utils.db_access.load_tags()
-        self.qualifiers = db_utils.db_access.load_qualifiers()
+        self.qualifiers = db_utils.db_access.load_qualifiers_with_details()
         self.data_descriptions = db_utils.load_column_descriptions()
 
         # Data
@@ -37,31 +38,38 @@ class DataManager:
     def populate_entities(self):
         """ Very inefficient - total brute force method """
         log_once = True
-        for entry in self.templates:
-            eid = entry.id
-            for eq in self.entity_qualifiers:
+        for template in self.templates:
+            for template_qualifier in self.entity_qualifiers:
                 if log_once:
-                    # current_app.logger.info(f"qualifier: {eq}")
+                    # current_app.logger.info(f"qualifier: {template_qualifier}")
                     log_once = False
 
-                if eq.template_id == eid:
+                if template_qualifier.template_id == template.id:
                     # found a qualifier for this entity
                     try:
                         eq_text = [
-                            x[1] for x in self.qualifiers if x[0] == eq.qualifier_id
+                            x[1] for x in self.qualifiers if x[0] == template_qualifier.qualifier_id
                         ][0]
-                        entry.qualifiers.append(eq_text)
+                        # template.qualifiers.append(eq_text)
+                        # template.qualifiers.append(template_qualifier)
+                        qualifier = [
+                            x for x in self.qualifiers if x[0] == template_qualifier.qualifier_id
+                        ][0]
+                        # id, text, institution_id
+                        rprint(f"Found qualifier: {qualifier}")
+                        template.qualifiers.append(qualifier)
                     except Exception as e:
-                        print(f"Error matching qualifier {eq.qualifier_id}")
+                        rprint(f"Error matching qualifier {template_qualifier.qualifier_id}")
                         raise e
 
-            for et in self.entity_tags:
-                if et.template_id == eid:
+            for template_tag in self.entity_tags:
+                if template_tag.template_id == template.id:
                     try:
-                        et_text = [x[1] for x in self.tags if x[0] == et.tag_id][0]
-                        entry.tags.append(et_text)
+                        et_text = [x[1] for x in self.tags if x[0] == template_tag.tag_id][0]
+                        # should be entire tag, not just text
+                        template.tags.append(et_text)
                     except Exception as e:
-                        print(f"Error matching tag {et.tag_id}")
+                        rprint(f"Error matching tag {template_tag.tag_id}")
                         raise e
 
 
@@ -127,7 +135,7 @@ def configure_processor(institution_name, datafile, processor, config):
     try:
         inst_id = [x[0] for x in config.institutions if x[2] == institution_name][0]
     except Exception as e:
-        print(f"Failed to find institution: {institution_name}")
+        rprint(f"Failed to find institution: {institution_name}")
         raise e
     inst_config = build_config_for_institution(config, inst_id)
     inst_proc = processor(datafile, inst_config)

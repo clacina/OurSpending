@@ -5,6 +5,9 @@ from common.queries import TemplateSQl, TransactionSQl, ProcessedTransactionSQL,
 
 
 class DBResource:
+    """
+    Wrapper for typical db table access / maniuplation
+    """
     def __init__(self, conn):
         self.table = None
         self.query = ""
@@ -12,40 +15,40 @@ class DBResource:
         self.conn = conn
         self.cursor = conn.cursor()
 
-    def load_all(self, order_by=None):
-        sql = f"SELECT {self.query} FROM {self.table} {self.extra}"
-        if order_by:
-            sql += f" ORDER BY {order_by}"
-
+    def _execute_query_single(self, query, params=None):
         try:
-            self.cursor.execute(sql)
-            result = self.cursor.fetchall()
-            return result
-        except Exception as e:
-            logging.exception(f"Error: {str(e)}")
-            raise e
-
-    def load_single(self, id):
-        sql = f"SELECT {self.query} FROM {self.table}  {self.extra} WHERE id=%(id)s"
-        query_params = {
-            "id": id
-        }
-        try:
-            self.cursor.execute(sql, query_params)
+            self.cursor.execute(query, params)
             result = self.cursor.fetchone()
             return result
         except Exception as e:
             logging.exception(f"Error: {str(e)}")
             raise e
 
-    def load_query(self, query, query_params=None, order_by=None):
+    def _execute_query_multi(self, query, params=None):
         try:
-            self.cursor.execute(query, query_params)
+            self.cursor.execute(query)
             result = self.cursor.fetchall()
             return result
         except Exception as e:
             logging.exception(f"Error: {str(e)}")
             raise e
+
+    def load_all(self, order_by=None):
+        sql = f"SELECT {self.query} FROM {self.table} {self.extra}"
+        if order_by:
+            sql += f" ORDER BY {order_by}"
+
+        return self._execute_query_multi(sql)
+
+    def load_single(self, id):
+        sql = f"SELECT {self.query} FROM {self.table}  {self.extra} WHERE id=%(id)s"
+        query_params = {
+            "id": id
+        }
+        return self._execute_query_single(sql, query_params)
+
+    def load_query(self, query, query_params=None, order_by=None):
+        return self._execute_query_multi(query, query_params)
 
     def update_entry(self, id, data):
         pass
@@ -209,6 +212,15 @@ class ProcessedTransactionBatchResource(DBResource):
                 ON transaction_batch_id = tr.batch_id"""
 
 
+class QualifierDetailResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'qualifiers'
+        self.query = 'id, value, institution_id, tq.data_column'
+        self.extra = """ left join template_qualifiers tq
+                ON qualifiers.id = tq.qualifier_id"""
+
+
 class QualifierResource(DBResource):
     def __init__(self, conn):
         super().__init__(conn)
@@ -279,6 +291,30 @@ class TransactionDataDescriptionResource(DBResource):
         self.query = 'id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id, is_transaction_date'
 
 
+class TransactionNotesResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'transaction_notes'
+        self.query = 'id, transaction_id, note'
+
+    def insert_entry(self, data):
+        """
+        {
+            'transaction_id': transaction_id,
+            'note': note
+        }
+        """
+        sql = f"INSERT INTO {self.table} (transaction_id, note) VALUES (%(transaction_id)s, %(note)s)"
+        try:
+            self.cursor.execute(sql, data)
+            row = self.cursor.fetchone()
+            self.conn.commit()
+            return row[0], data['note']
+        except Exception as e:
+            logging.exception(f"Error creating tag: {str(e)}")
+            raise e
+
+
 class DBAccess:
     def __init__(self):
         # self.host = 'localhost'  # Local Server
@@ -307,25 +343,8 @@ class DBAccess:
     """ Transactions """
 
     def query_notes_for_transaction(self, transaction_id):
-        sql = """
-            SELECT
-                   id, note
-            FROM
-                transaction_notes
-            WHERE
-                transaction_id=%(transaction_id)s
-    
-        """
-        query_params = {"transaction_id": transaction_id}
-        cur = self.get_db_cursor()
-
-        try:
-            cur.execute(sql, query_params)
-            rows = cur.fetchall()
-            return rows
-        except Exception as e:
-            logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
-            raise e
+        cr = TransactionNotesResource(self.get_db_cursor())
+        return cr.load_query('transaction_id=%(transaction_id)s', {"transaction_id": transaction_id})
 
     def clear_transaction_notes(self, transaction_id):
         sql = """
@@ -344,24 +363,29 @@ class DBAccess:
             raise e
 
     def add_note_to_transaction(self, transaction_id, note):
-        sql = """
-            INSERT INTO transaction_notes (transaction_id, note)
-            VALUES (%(transaction_id)s, %(note)s)           
-        """
-        query_params = {
+        cr = TransactionNotesResource(self.get_db_cursor())
+        cr.insert_entry({
             'transaction_id': transaction_id,
             'note': note
-        }
-        conn = self.connect_to_db()
-        assert conn
-        cur = conn.cursor()
-
-        try:
-            cur.execute(sql, query_params)
-            conn.commit()
-        except Exception as e:
-            logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
-            raise e
+        })
+        # sql = """
+        #     INSERT INTO transaction_notes (transaction_id, note)
+        #     VALUES (%(transaction_id)s, %(note)s)
+        # """
+        # query_params = {
+        #     'transaction_id': transaction_id,
+        #     'note': note
+        # }
+        # conn = self.connect_to_db()
+        # assert conn
+        # cur = conn.cursor()
+        #
+        # try:
+        #     cur.execute(sql, query_params)
+        #     conn.commit()
+        # except Exception as e:
+        #     logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
+        #     raise e
 
     def assign_category_to_transaction(self, transaction_id, category_id):
         sql = "UPDATE transaction_records SET category_id = %(category_id)s WHERE id=%(transaction_id)s"
@@ -876,29 +900,9 @@ class DBAccess:
         qr = QualifierResource(self.connect_to_db())
         return qr.load_all()
 
-    def create_qualifer_from_transaction(self, conn, transaction_id):
-        # get transaction and pull description
-        transaction = self.fetch_transaction(transaction_id)
-        assert transaction
-        """ Transaction -- 
-        ------------------+--------
-         id               | integer
-         batch_id         | integer
-         institution_id   | integer
-         transaction_date | date   
-         transaction_data | jsonb  
-         notes            | text       
-         (44, 1, 4, datetime.date(2023, 1, 25),
-         ['01/25/2023', '01/25/2023', 'ALEXA SKILLS*DY07F7BL3 AM', 'Shopping', 'Sale', '-0.88', ''], 'Manual Entry')
-        """
-        desc = transaction[4][2]
-        logging.info(
-            {"message": "Creating Qualifier", "data": transaction, "new qualifier": desc}
-        )
-
-        qid = self.create_qualifer(desc)
-        logging.info(f"New qualifier: {qid}")
-        return qid
+    def load_qualifiers_with_details(self):
+        qr = QualifierDetailResource(self.connect_to_db())
+        return qr.load_all()
 
     def load_transaction_data_descriptions(self):
         dd = TransactionDataDescriptionResource(self.connect_to_db())
