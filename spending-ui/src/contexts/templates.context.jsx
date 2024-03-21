@@ -1,5 +1,6 @@
 import {createContext, useEffect, useState} from "react";
 import send from "../utils/http_client";
+import assert from "assert";
 
 export const TemplatesContext = createContext({
     templates: [],
@@ -44,7 +45,41 @@ export const TemplatesProvider = ({children}) => {
         });
     }
 
+    const createTemplate = async (payload) => {
+        console.log("Create Template");
+        if(payload !== undefined) {
+            const headers = {'Content-Type': 'application/json'}
+            const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates';
+            const method = 'POST'
+            console.log("Sending update: ", payload);
+            const response = await send(url, method, headers, payload);
+            console.log("Response: ", response);
+            setUpdate(true);
+            return (response);
+        }
+    }
 
+    const getTemplateMatches = async (payload) => {
+        console.log("getTemplateMatches: ", payload);
+        if(payload !== undefined) {
+            assert('batch_id' in payload);
+            // assert('template_id' in payload);
+            const headers = {'Content-Type': 'application/json'}
+            let url = '';
+            if('template_id' in payload && payload['template_id']) {
+                url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + payload['batch_id'] + '/match_template/' + payload['template_id'];
+            } else if('qualifiers' in payload && payload['qualifiers'].length > 0) {
+                url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + payload['batch_id'] + '/match_qualifiers/';
+            } else {
+                return("Invalid payload");
+            }
+            const method = 'POST'
+            console.log("Sending update: ", payload);
+            const response = await send(url, method, headers, payload);
+            console.log("Response: ", response);
+            return (response);
+        }
+    }
 
     useEffect(() => {
         try {
@@ -62,6 +97,14 @@ export const TemplatesProvider = ({children}) => {
         }
     }, [updateQualifiers===true]);
 
-    const value = {templatesMap, setTemplatesMap, setUpdate, updateTemplate, getTemplateQualifiers};
+    const value = {
+        templatesMap,
+        setTemplatesMap,
+        setUpdate,
+        updateTemplate,
+        getTemplateQualifiers,
+        createTemplate,
+        getTemplateMatches
+    };
     return <TemplatesContext.Provider value={value}>{children}</TemplatesContext.Provider>
 };

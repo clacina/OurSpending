@@ -23,7 +23,7 @@ export const InstitutionsProvider = ({children}) => {
         const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/bank/' + bank_id;
         const method = 'PUT'
         console.log("Sending update: ", body);
-        const request = await send({url}, {method}, {headers}, {body});
+        const request = await send(url, method, headers, body);
         console.log("Response: ", request);
         setUpdate(true);
     }

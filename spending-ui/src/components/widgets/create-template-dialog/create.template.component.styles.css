@@ -1,20 +1,72 @@
 #templateCategorySelection {
     z-index: 1000;
+    display: inline;
+    width: 340px;
+    margin-right: 10px;
 }
 
 #qualifier_instructions {
     font-size: small;
 }
 
-#radio_line {
-    display: flex;
+#qualifiersTable {
+    width: 100%;
 }
 
-#checkIsTaxDeductible {
-    padding-left: 10px;
+#qualifiersTable td:nth-child(3) {
+    width: 30px;
+}
+
+.deleteQualifier {
+    /*border: 2px solid blue;*/
+    width: 20px;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+
+#radio_line {
+    border: 1px solid orange;
+    display: flex;
+    width: 100%;
+}
+
+#checkIsCredit {
+    display: inline;
+}
+
+#qualifierPhraseDiv {
+    margin-top: 10px;
 }
 
 .react-confirm-alert-overlay {
     z-index: 3000!important;
     background: rgba(255, 255, 255, 0)!important;
+}
+
+/* Page Layout Blocks */
+#template_edit_container {
+    display: flex;
+    width: 100%;
+    border: 1px solid yellow;;
+}
+
+#template_data_div {
+    flex: 1;
+    width: 40%;
+    border: 1px solid blue;
+    margin: 10px;
+}
+
+#template_qualifiers_div {
+    flex: 1;
+    width: 40%;
+    border: 1px solid red;
+    margin: 10px;
+    /*margin-right: 20px;*/
+}
+
+#template_match_div {
+    border: 1px solid green;
 }

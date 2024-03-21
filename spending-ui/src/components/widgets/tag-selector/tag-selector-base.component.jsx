@@ -68,11 +68,13 @@ export const BuildOptions = (tagsMap, entity) => {
     });
 
     var assigned = []
-    entity.tags.forEach((tag) => {
-        assigned.push(tagColourOptions.find((item) => {
-            return (item['value'] === tag.id)
-        }))
-    })
+    if(entity.tags) {
+        entity.tags.forEach((tag) => {
+            assigned.push(tagColourOptions.find((item) => {
+                return (item['value'] === tag.id)
+            }))
+        })
+    }
     if(assigned.length === 0) {
         assigned = null;
     }

@@ -8,10 +8,12 @@ import CreateTemplateDialogComponent from "../widgets/create-template-dialog/cre
 import {ItemTable, SubContent, TransactionDetailContainer} from './transaction_detail.component.styles.jsx';
 import 'react-dropdown/style.css';
 import Button from "react-bootstrap/Button";
+import {TemplatesContext} from "../../contexts/templates.context";
 
 const TransactionDetailComponent = ({row, eventHandler}) => {
     const {transactionDataDefinitions} = useContext(StaticDataContext);
     const {categoriesMap} = useContext(CategoriesContext);
+    const {createTemplate} = useContext(TemplatesContext);
     const [openCategories, setOpenCategories] = useState(false);
     const [openNotes, setOpenNotes] = useState(false);
     const [openTemplateEditor, setOpenTemplateEditor] = useState(false);
@@ -36,8 +38,16 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
         setOpenTemplateEditor(true);
     }
 
+    const returnFromCreate = (response) => {
+        console.log("--resp: ", response);
+    }
+
     const closeCreateTemplate = (payload) => {
-        console.log("Got Payload: ", payload);
+        console.log("closeCreateTemplate::Got Payload: ", payload);
+        if(payload !== undefined) {
+            createTemplate(payload).then((res) => returnFromCreate(res));
+        }
+
         setOpenTemplateEditor(false);
     }
 
@@ -92,7 +102,7 @@ const TransactionDetailComponent = ({row, eventHandler}) => {
                 </thead>
                 <tbody>
                     {tableDef.map((item) => {
-                        return(<tr><td>{item.title}</td><td>{item.value}</td></tr>);
+                        return(<tr id={item.title}><td>{item.title}</td><td>{item.value}</td></tr>);
                     })}
                 </tbody>
             </ItemTable>
