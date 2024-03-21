@@ -34,7 +34,7 @@ def test_process():
     @app.input(ProcessSchema, location='json')
     def process_a_transaction_batch(json_data):
     """
-    response = app.test_client().post('/process', json={"batch_id": 8, "notes": "From test"})
+    response = app.test_client().post('/process', json={"batch_id": 11, "notes": "Transaction Batch 11"})
     assert response.status_code == 200, response.text
 
 
