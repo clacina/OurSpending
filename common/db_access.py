@@ -203,6 +203,13 @@ class InstitutionResource(DBResource):
                 raise e
 
 
+class LoanDataResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'loans'
+        self.query = 'id, name, term, term_length, term_rate, balance, payment, due_date, loan_type, notes'
+
+
 class ProcessedTransactionBatchResource(DBResource):
     def __init__(self, conn):
         super().__init__(conn)
@@ -233,6 +240,13 @@ class SavedFiltersResource(DBResource):
         super().__init__(conn)
         self.table = 'saved_filters'
         self.query = 'id, name, created, institutions, categories, credit, tags, match_all_tags, start_date, end_date, search_string'
+
+
+class ServicesDataResource(DBResource):
+    def __init__(self, conn):
+        super().__init__(conn)
+        self.table = 'services'
+        self.query = 'id, name, amount, due_date, notes, term_length'
 
 
 class TagsResource(DBResource):
@@ -927,3 +941,36 @@ class DBAccess:
     def load_cc_data(self, return_most_recent=False):
         ccd = CreditCardDataResource(self.connect_to_db())
         return ccd.load_all()
+
+    def load_loans(self):
+        ld = LoanDataResource(self.connect_to_db())
+        return ld.load_all()
+
+    def load_services(self):
+        ls = ServicesDataResource(self.connect_to_db())
+        return ls.load_all()
+
+"""
+Annual vs monthly charges
+- prime
+- Amazon music
+- AWS
+- godaddy
+- ionos
+- hostwind
+- Xbox
+- netflix
+- kindle
+- ring
+- Disney
+- xfinity
+- trash
+- electric
+- water
+- Verizon
+- zmodo
+- AA newsletter 
+- Cricut
+
+
+"""

@@ -1426,3 +1426,54 @@ async def get_cc_data():
         )
         content_list.append(sf)
     return content_list
+
+
+@router.get(
+    "/loans",
+    summary="Get latest balance info for all loans",
+    response_model=List[models.LoanDataModel],
+    tags=["Credit Cards"]
+)
+async def get_loans():
+    contents = db_access.load_loans()
+    logging.info(f"Loans: {contents}")
+
+    content_list = []
+    for f in contents:
+        sf = models.LoanDataModel(
+            id=f[0],
+            name=f[1],
+            term=f[2],
+            term_length=f[3],
+            term_rate=f[4],
+            balance=f[5],
+            payment=f[6],
+            due_date=f[7],
+            loan_type=f[8],
+            notes=f[9]
+        )
+        content_list.append(sf)
+    return content_list
+
+
+@router.get(
+    "/services",
+    summary="Get latest balance info for all home services",
+    response_model=List[models.ServiceDataModel],
+    tags=["Credit Cards"]
+)
+async def get_services():
+    contents = db_access.load_services()
+
+    content_list = []
+    for f in contents:
+        sf = models.ServiceDataModel(
+            id=f[0],
+            name=f[1],
+            amount=f[2],
+            due_date=f[3],
+            notes=f[4],
+            term_length=f[5]
+        )
+        content_list.append(sf)
+    return content_list

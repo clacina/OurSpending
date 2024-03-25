@@ -168,3 +168,25 @@ class CreditCardDataModel(BaseModel):
     balance: Optional[float]
     balance_date: Optional[datetime.date]
     minimum_payment: Optional[float]
+
+
+class LoanDataModel(BaseModel):
+    id: Optional[int]
+    name: Optional[str]
+    term: Optional[float]
+    term_length: Optional[int]
+    term_rate: Optional[float]
+    balance: Optional[float]
+    payment: Optional[float]
+    due_date: Optional[int]
+    loan_type: Optional[str]
+    notes: Optional[str]
+
+
+class ServiceDataModel(BaseModel):
+    id: Optional[int]
+    name: Optional[str]
+    amount: Optional[float]
+    due_date: Optional[int]
+    notes: Optional[str]
+    term_length: Optional[str]
