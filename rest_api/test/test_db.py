@@ -1,15 +1,54 @@
 import random
 
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, ForeignKey
+from sqlalchemy.engine import URL
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from datetime import datetime
+
 from common.db_access import DBAccess
 from rest_api.test import helpers
 import pytest
+from rest_api.test import models
+
+url = URL.create(
+    drivername="postgresql",
+    username="lacinaslair",
+    host="192.168.1.89",
+    database="lacinaslair"
+)
+
+engine = create_engine(url)
+Session = sessionmaker(bind=engine)
+
+
+@pytest.fixture(scope="module")
+def db_session():
+    models.Base.metadata.create_all(engine)
+    session = Session()
+    yield session
+    session.rollback()
+    session.close()
+
+
+# @pytest.fixture(scope="module")
+# def valid_author():
+#     valid_author = Author(
+#         firstname="Ezzeddin",
+#         lastname="Aybak",
+#         email="aybak_email@gmail.com"
+#     )
+#     return valid_author
 
 
 db_access = DBAccess()
 
-def test_fetch_transaction():
-    tids = helpers.get_transaction_ids()
-    transaction_id = random.choice(tids)
+
+def test_fetch_transaction(db_session):
+    transactions_list = db_session.query(models.TransactionRecords).all()
+    transaction_id = random.choice(transactions_list).id
+
+    # tids = helpers.get_transaction_ids()
+    # transaction_id = random.choice(tids)
     transaction = db_access.fetch_transaction(
         transaction_id=transaction_id
     )
@@ -57,14 +96,14 @@ def test_load_categories():
     result = helpers.load_categories()
     assert result
     assert len(result) > 0
-    assert len(result[0]) == 3
+    assert len(result[0]) == 4  # num fields
 
 
 def test_load_institutions():
     result = helpers.load_institutions()
     assert result
     assert len(result) > 0
-    assert len(result[0]) == 4
+    assert len(result[0]) == 5
 
 
 def test_load_tags():
@@ -91,51 +130,75 @@ def test_list_processed_batches():
     result = db_access.list_processed_batches()
     assert result
     assert len(result) > 0
-    assert len(result[0]) == 4
+    assert len(result[0]) == 5
+
+
+"""  New tests - 3/26/2024 """
+
+
+def test_query_notes_for_transaction():
+    data = helpers.find_transaction_with_notes()
+    # [(8000, 4900, 'Testing Note actions'), (8001, 4901, 'Note Test')]
+    assert data
+    result = db_access.query_notes_for_transaction(data[0][1])
+    # print(f"Result: {result}")
+    # [(8000, 4900, 'Testing Note actions'), (8001, 4901, 'Note Test')]
+    assert len(result) > 0
+    assert result[0][1] == data[0][1]
+
 
 """
     ---------  db_access.py methods  ----------------
-X   def list_batches():
-X   def fetch_batch(batch_id: int):
-X   def delete_batch(batch_id):
 
-    def query_notes_for_transaction(transaction_id):
-    def query_transactions_from_batch(batch_id, offset=0, limit=10):
-    def add_tag_to_transaction(transaction_id, tag_id):
+    def query_notes_for_transaction(self, transaction_id):
+    def clear_transaction_notes(self, transaction_id):
+    def add_note_to_transaction(self, transaction_id, note):
+    def assign_category_to_transaction(self, transaction_id, category_id):
+    def query_transactions_from_batch(self, batch_id, institution_id=None, offset=0, limit=10):
+    def fetch_transaction(self, transaction_id):
+    def list_batches(self):
+    def delete_batch(self, batch_id):
+    def fetch_batch(self, batch_id: int):
+    def list_processed_batches(self):
+    def fetch_processed_batch(self, batch_id: int):
+    def update_processed_batch_note(self, batch_id, notes):
+    def delete_processed_batch(self, batch_id):
+    def get_processed_transaction_records(self, batch_id, institution_id=None, offset=0, limit=10):
+    def update_processed_transaction(self, transaction_id, template_id):
+    def create_institution(self, key, name, notes, class_name=None):
+    def fetch_institution(self, institution_id: int):
+    def load_institutions(self):
+    def update_institution(self, institution_id, name, key, notes, class_name=None):
+    def load_categories(self):
+    def get_category(self, category_id):
+    def create_category(self, value: str, notes: str = None):
+    def update_category(self, category_id: int, value: str, is_tax_deductible: bool, notes: str):
+    def create_template(self, hint, institution_id, category_id=None, is_credit=False, notes=None, qualifiers=None, tags=None:
+    def fetch_template(self, template_id: int):
+    def query_templates_by_id(self, template_id):
+    def query_templates_by_institution(self, institution_id):
+    def update_template(self, new_template):
+    def query_templates_qualifiers(self):
+    def query_template_qualifier_details(self):
+    def query_tags_for_transaction(self, transaction_id: int):
+    def load_tags(self):
+    def fetch_tag(self, tag_id: int):
+    def fetch_tag_by_value(self, value: str):
+    def add_tag_to_transaction(self, transaction_id, tag_id):
+    def create_tag(self, value: str, notes: str, color: str):
+    def update_tag(self, tag_id: int, value: str, notes: str, color: str):
+    def create_qualifier(self, value: str, institution_id: int):
+    def fetch_qualifier(self, qualifier_id: int):
+    def find_qualifier(self, value: str, institution_id: int):
+    def load_qualifiers(self):
+    def load_qualifiers_with_details(self):
+    def load_transaction_data_descriptions(self):
+    def load_saved_filters(self):
+    def load_batch_contents(self):
+    def load_contents_from_batch(self, batch_id):
+    def load_cc_info(self):
+    def load_cc_data(self, return_most_recent=False):
+    def load_loans(self):
+    def load_services(self):
 
-X   def load_categories():
-    def create_category(value: str, notes: str = None):
-    def get_category(category_id):
-    def update_category(category_id: int, value: str, notes: str):
-
-X   def load_institutions():
-    def create_institution(key, name):
-    def fetch_institution(institution_id: int):
-
-X   def load_qualifiers():
-    def create_qualifer(value: str, institution_id: int):
-    def create_qualifer_from_transaction(conn, transaction_id):
-    def fetch_qualifier(qualifier_id: int):
-
-X   def load_tags():
-    def create_tag(value: str, notes: str, color: str):
-    def fetch_tag(tag_id: int):
-    def fetch_tag_by_value(value: str):
-    def update_tag(tag_id: int, value: str, notes: str, color: str):
-
-    def create_template(
-    def fetch_template(template_id: int):
-    def query_templates_by_id(template_id):
-    def query_templates_by_institution(institution_id):
-
-X   def load_transaction_data_descriptions():
-
-X   def fetch_transaction(transaction_id)
-
-X   def list_processed_batches():
-    def fetch_processed_batch(batch_id: int):
-
-    def get_processed_transaction_records(batch_id, offset=0, limit=10):
-
-    def query_tags_for_transaction(transaction_id: int):
 """

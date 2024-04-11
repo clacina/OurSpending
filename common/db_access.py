@@ -26,7 +26,7 @@ class DBResource:
 
     def _execute_query_multi(self, query, params=None):
         try:
-            self.cursor.execute(query)
+            self.cursor.execute(query, params)
             result = self.cursor.fetchall()
             return result
         except Exception as e:
@@ -48,7 +48,12 @@ class DBResource:
         return self._execute_query_single(sql, query_params)
 
     def load_query(self, query, query_params=None, order_by=None):
-        return self._execute_query_multi(query, query_params)
+        """
+        this takes the 'where' clause and uses the other lookup
+        routines formatting
+        """
+        sql = f"SELECT {self.query} FROM {self.table} WHERE {query}"
+        return self._execute_query_multi(sql, query_params)
 
     def update_entry(self, id, data):
         pass
@@ -357,7 +362,7 @@ class DBAccess:
     """ Transactions """
 
     def query_notes_for_transaction(self, transaction_id):
-        cr = TransactionNotesResource(self.get_db_cursor())
+        cr = TransactionNotesResource(self.connect_to_db())
         return cr.load_query('transaction_id=%(transaction_id)s', {"transaction_id": transaction_id})
 
     def clear_transaction_notes(self, transaction_id):
@@ -377,29 +382,11 @@ class DBAccess:
             raise e
 
     def add_note_to_transaction(self, transaction_id, note):
-        cr = TransactionNotesResource(self.get_db_cursor())
+        cr = TransactionNotesResource(self.connect_to_db())
         cr.insert_entry({
             'transaction_id': transaction_id,
             'note': note
         })
-        # sql = """
-        #     INSERT INTO transaction_notes (transaction_id, note)
-        #     VALUES (%(transaction_id)s, %(note)s)
-        # """
-        # query_params = {
-        #     'transaction_id': transaction_id,
-        #     'note': note
-        # }
-        # conn = self.connect_to_db()
-        # assert conn
-        # cur = conn.cursor()
-        #
-        # try:
-        #     cur.execute(sql, query_params)
-        #     conn.commit()
-        # except Exception as e:
-        #     logging.exception(f"Error loading transaction notes {transaction_id}: {str(e)}")
-        #     raise e
 
     def assign_category_to_transaction(self, transaction_id, category_id):
         sql = "UPDATE transaction_records SET category_id = %(category_id)s WHERE id=%(transaction_id)s"
@@ -513,12 +500,12 @@ class DBAccess:
             logging.exception({"message": f"Error in transaction query: {str(e)}"})
             raise e
 
-    def update_processed_transaction(self, id, template_id):
+    def update_processed_transaction(self, transaction_id, template_id):
         sql = """
                 UPDATE 
                     processed_transaction_records 
                 SET 
-                    template_id=%(template_id)s WHERE id=%(id)s
+                    template_id=%(template_id)s WHERE id=%(transaction_id)s
             """
         query_params = {
             "template_id": template_id,
@@ -867,7 +854,7 @@ class DBAccess:
 
     """ Qualifiers """
 
-    def create_qualifer(self, value: str, institution_id: int):
+    def create_qualifier(self, value: str, institution_id: int):
         """Create a new entry in the qualifiers table and return the new id"""
         sql = """
             INSERT INTO 
