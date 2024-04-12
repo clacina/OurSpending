@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, event
 from common.db_access import DBAccess
 from .models import Base
 from .db import Session
+import sys
 
 db_access = DBAccess()
 
@@ -23,20 +24,15 @@ test_models.py::TestCategoryFactory::test_1
 @pytest.fixture(scope="session")
 def connection(request):
     print("In Connection")
-    # Modify this URL according to your database backend
-    engine = create_engine(f"{DB_SERVER}/{MAIN_DB_NAME}")
+
+    engine = create_engine(f"{DB_SERVER}")
     conn = engine.connect()
     conn.execution_options(isolation_level="AUTOCOMMIT")
 
-    # try:
-    #     conn.execute(f"DROP DATABASE {TEST_DB_NAME}")
-    # except Exception as e:
-    #     print(f"Drop Exception: {str(e)}")
-    #
-    # try:
-    #     conn.execute(f"CREATE DATABASE {TEST_DB_NAME} ENCODING 'UTF8'")
-    # except Exception as e:
-    #     print(f"Create Exception: {str(e)}")
+    try:
+        conn.execute(f"""CREATE DATABASE {TEST_DB_NAME} ENCODING 'UTF8' """)
+    except Exception as e:
+        print(f"Create Exception: {str(e)}")
 
     # Create a new engine/connection that will actually connect
     # to the test database we just created. This will be the
@@ -48,13 +44,15 @@ def connection(request):
     Base.metadata.create_all(test_engine)
 
     def teardown():
-        print("In Teardown")
-        # try:
-        #     test_connection.execute(f"DROP DATABASE {TEST_DB_NAME}")
-        # except Exception as e:
-        #     print(f"Teardown exception: {str(e)}")
+        print("In Connection Teardown")
+        try:
+            conn.execute(f"DROP DATABASE {TEST_DB_NAME} WITH (FORCE)")
+        except Exception as e:
+            print(f"Teardown exception: {str(e)}")
 
         test_connection.close()
+        conn.close()
+        print("ctd done")
 
     request.addfinalizer(teardown)
     return test_connection
@@ -74,8 +72,11 @@ def session(connection, request):
             session.begin_nested()
 
     def teardown():
+        print("Session Teardown")
         Session.remove()
+        print("st2")
         transaction.rollback()
+        print("st3")
 
     request.addfinalizer(teardown)
     return session
