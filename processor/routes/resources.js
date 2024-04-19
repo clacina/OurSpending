@@ -599,4 +599,24 @@ resourcesRouter.get('/credit_card_data/', function(req, res, next) {
 });
 
 
+resourcesRouter.get('/loans/', function(req, res, next) {
+  const url = process.env.REACT_APP_REST_SERVER + '/loans';
+
+  request(url, (error, response, body) => {
+    defaultReturn(body, error, req);
+    res.send(body);
+  });
+});
+
+
+resourcesRouter.get('/services/', function(req, res, next) {
+  const url = process.env.REACT_APP_REST_SERVER + '/services';
+
+  request(url, (error, response, body) => {
+    defaultReturn(body, error, req);
+    res.send(body);
+  });
+});
+
+
 export default resourcesRouter;

@@ -3,9 +3,60 @@
 }
 
 p {
-    font-size: x-large;
+    font-size: large;
 }
 
-#creditCardSummaryContainer {
-    border: 1px solid red;
+.cardCurrentInfo {
+    display: flex;
+    /*border: 1px solid yellow;*/
+    width: 100%;
 }
+
+.cardInfo {
+    padding: 10px;
+    /*border: solid 1px red;*/
+    display: flex;
+    width: 100%;
+}
+
+.cardInfoLabel {
+    display: flex;
+    /*border: 1px solid blue;*/
+    margin-right: 10px;
+}
+
+.cardInfoData {
+    display: flex;
+    margin-right: 30px;
+    /*border: 1px solid green;*/
+}
+
+
+#creditCardSummaryContainer {
+    /*border: 1px solid red;*/
+}
+
+#header_with_update {
+    /*width: 100%;*/
+    display: flex;
+}
+
+#header_with_update span {
+    padding: 0 20px;
+}
+
+.cardEntryLine {
+    /*border: 1px solid red;*/
+}
+
+#entry_line {
+    display: flex;
+}
+
+.update_form_entry {
+    /*border: 1px solid green;*/
+    margin-right: 40px;
+    margin-top: 5px;
+    width: 200px;
+}
+
