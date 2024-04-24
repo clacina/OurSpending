@@ -33,8 +33,9 @@ def parse_processed_data(self, dataset: list):
 
 
 """
+from flask import current_app
+
 import csv
-import sys
 
 import data_processing.transaction_models as models
 import data_processing.base as base
@@ -72,6 +73,7 @@ class CapitalOne(base.ProcessorBase):
             data.transaction_id = row[0]
             data.institution_id = row[1]
             data.normalize_data()
+            # app.logger.info(f"Adding transaction {row}")
             raw_transactions.append(data)
 
         return raw_transactions
@@ -390,6 +392,12 @@ class SoundVisa(SoundChecking):
         super().__init__(datafile, config, self.name)
 
 
+class SoundVisaChrista(SoundChecking):
+    def __init__(self, datafile: str, config=None):
+        self.name = "Sound Visa Christa"
+        super().__init__(datafile, config, self.name)
+
+
 class SoundSavings(SoundChecking):
     def __init__(self, datafile: str, config=None):
         self.name = "Sound Savings"
@@ -575,6 +583,7 @@ institution_file_mapping = [
     InstitutionNaming(['sound', 'checking', 'house'], 'SoundChecking'),
     InstitutionNaming(['sound', 'checking', 'christa'], 'SoundCheckingChrista'),
     InstitutionNaming(['sound', 'Savings'], 'SoundSavings'),
+    InstitutionNaming(['sound', 'visa', 'christa'], 'SoundVisaChrista'),
     InstitutionNaming(['sound', 'visa'], 'SoundVisa'),
     InstitutionNaming(['wells', 'fargo', 'visa'], 'WellsfargoVisa'),
     InstitutionNaming(['wells', 'fargo', 'checking'], 'WellsfargoChecking'),

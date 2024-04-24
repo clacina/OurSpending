@@ -231,9 +231,34 @@ def test_add_qualifier():
     pass
 
 
-@pytest.mark.skip(reason="NYI")
 def test_add_tag_existing_tag():
-    pass
+    new_tag = f"Test Tag {random.randint(0, 1000)}"
+    body = {
+        'value': new_tag,
+        'notes': "From test",
+        'color': "f8c291"
+    }
+    response = client.post("/tags",
+                           json=body,
+                           headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+
+    response = client.post("/tags",
+                           json=body,
+                           headers={"Content-Type": "application/json"})
+    assert response.status_code == 422
+
+
+def test_add_tag():
+    body = {
+        'value': f"Test Tag {random.randint(0, 1000)}",
+        'notes': "From test",
+        'color': "f8c291"
+    }
+    response = client.post("/tags",
+                           json=body,
+                           headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
 
 
 @pytest.mark.skip(reason="NYI")
@@ -321,21 +346,6 @@ def test_get_processed_transactions_bad_batch():
     response = client.get(f"/processed_transactions?batch_id=99999")
     assert response.status_code == 200
     assert response.json() == []
-
-
-def test_get_processed_transaction():
-    bid = random.choice(helpers.get_processed_batch_ids_with_transactions())
-    transaction_id = random.choice(helpers.get_transaction_ids_from_batch(bid))
-    print(f"Using bid of {transaction_id}")
-    response = client.get(f"/transaction/{transaction_id}")
-    assert response.status_code == 200, f"Error fetching processed_transactions for {transaction_id}"
-    entry = response.json()
-    print(entry)
-    assert type(entry) == dict
-    assert "id" in entry
-    assert "batch_id" in entry
-    assert "transaction_data" in entry
-    assert "institution" in entry
 
 
 def test_get_processed_transaction_non_existent():

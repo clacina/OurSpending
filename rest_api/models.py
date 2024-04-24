@@ -36,6 +36,7 @@ class InstitutionsModel(BaseModel):
     id: int
     key: str
     name: str
+    class_name: Optional[str]
     notes: Optional[str]
 
 
@@ -43,6 +44,10 @@ class TemplateQualifierModel(BaseModel):
     template_id: int
     qualifier_id: int
     data_column: Optional[str]
+
+
+class TemplateQualifierDetailModel(TemplateQualifierModel, QualifierModel):
+    pass
 
 
 class TemplateTagModel(BaseModel):
@@ -53,7 +58,7 @@ class TemplateTagModel(BaseModel):
 class TransactionBatchModel(BaseModel):
     id: int
     run_date: datetime.datetime
-    notes: str
+    notes: Optional[str]
 
 
 class ProcessedTransactionBatchModel(TransactionBatchModel):
@@ -146,3 +151,42 @@ class BatchContentsModel(BaseModel):
     file_date: Optional[datetime.datetime]
     transaction_count: Optional[int]
     notes: Optional[str]
+
+
+class CreditCardModel(BaseModel):
+    id: Optional[int]
+    name: Optional[str]
+    institution_id: Optional[int]
+    interest_rate: Optional[float]
+    interest_rate_cash: Optional[float]
+    due_date: Optional[int]
+    credit_limit: Optional[float]
+
+
+class CreditCardDataModel(BaseModel):
+    card_id: Optional[int]
+    balance: Optional[float]
+    balance_date: Optional[datetime.date]
+    minimum_payment: Optional[float]
+
+
+class LoanDataModel(BaseModel):
+    id: Optional[int]
+    name: Optional[str]
+    term: Optional[float]
+    term_length: Optional[int]
+    term_rate: Optional[float]
+    balance: Optional[float]
+    payment: Optional[float]
+    due_date: Optional[int]
+    loan_type: Optional[str]
+    notes: Optional[str]
+
+
+class ServiceDataModel(BaseModel):
+    id: Optional[int]
+    name: Optional[str]
+    amount: Optional[float]
+    due_date: Optional[int]
+    notes: Optional[str]
+    term_length: Optional[str]
