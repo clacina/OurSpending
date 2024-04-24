@@ -598,6 +598,22 @@ resourcesRouter.get('/credit_card_data/', function(req, res, next) {
   });
 });
 
+resourcesRouter.post('/credit_card_data', async function(req, res, next) {
+  req.accepts('application/json');
+  console.log("Params: ", req.body);
+  const url = process.env.REACT_APP_REST_SERVER + '/credit_card_data';
+  const options = standardOptions(req.body);
+
+  console.log("Data: ", options);
+  try {
+    const data = await got.post(url, options).json();
+    res.status(201).send(data);
+  } catch (e) {
+    console.log("Got Error: ", e);
+    res.status(422).send("Invalid Parameters");
+  }
+});
+
 
 resourcesRouter.get('/loans/', function(req, res, next) {
   const url = process.env.REACT_APP_REST_SERVER + '/loans';
