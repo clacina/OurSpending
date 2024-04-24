@@ -71,7 +71,7 @@ export const SidebarData = [
         cName: "nav-text",
     },
     {
-        title: "Credit Cards",
+        title: "Debt",
         path: "/cards",
         icon: <FaIcons.FaRegCreditCard  />,
         cName: "nav-text",

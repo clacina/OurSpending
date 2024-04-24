@@ -16,7 +16,7 @@ const TagSelectorForCategories = ({tagsMap, entity, onChange, canCreate=false}) 
         onChange(entity.id, event);
     }
 
-    const handleCreate = (inputValue: string) => {
+    const handleCreate = (inputValue) => {
         console.log("In HandleCreate: ", inputValue);
         onChange(entity.id, inputValue);
 

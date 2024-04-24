@@ -2,11 +2,10 @@ import {createContext, useEffect, useState} from "react";
 
 export const StaticDataContext = createContext({
     transactionDataDefinitions: [],
-    setTransactionDataDefinitions: () => null,
     creditCardInfo: [],
-    setCreditCardInfo: () => null,
     creditCardData: [],
-    setCreditCardData: () => null,
+    loanInfo: [],
+    servicesInfo: [],
     sectionTitle: 'Section Title',
     setSectionTitle: () => null,
 });
@@ -16,6 +15,8 @@ export const StaticDataProvider = ({children}) => {
     const [sectionTitle, setSectionTitle] = useState('Opening Section');
     const [creditCardInfo, setCreditCardInfo] = useState([]);
     const [creditCardData, setCreditCardData] = useState([]);
+    const [loanInfo, setLoanInfo] = useState([]);
+    const [servicesInfo, setServicesInfo] = useState([]);
 
     const getTransactionDefinitions = async () => {
         const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/data_definitions'
@@ -38,22 +39,40 @@ export const StaticDataProvider = ({children}) => {
         return(str);
     }
 
+    const getLoanInfo = async () => {
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/loans'
+        const data = await fetch(url, { method: 'GET' })
+        var str = await data.json();
+        return(str);
+    }
+
+    const getServicesInfo = async () => {
+        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/services'
+        const data = await fetch(url, { method: 'GET' })
+        var str = await data.json();
+        return(str);
+    }
+
     useEffect(() => {
         try {
             getTransactionDefinitions().then((res) => setTransactionDataDefinitions(res));
             getCreditCardInfo().then((res) => setCreditCardInfo(res));
             getCreditCardData().then((res) => setCreditCardData(res));
+            getLoanInfo().then((res) => setLoanInfo(res));
+            getServicesInfo().then((res) => setServicesInfo(res));
         } catch (e) {
             console.log("Error fetching database content: ", e);
         }
     }, []);
 
-    const value = {
+    const routines = {
         transactionDataDefinitions,
         sectionTitle,
         setSectionTitle,
         creditCardData,
-        creditCardInfo
+        creditCardInfo,
+        loanInfo,
+        servicesInfo
     };
-    return <StaticDataContext.Provider value={value}>{children}</StaticDataContext.Provider>
+    return <StaticDataContext.Provider value={routines}>{children}</StaticDataContext.Provider>
 };
