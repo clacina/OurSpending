@@ -17,13 +17,15 @@ class TemplateQualifier:
     def __init__(self):
         self.template_id = None
         self.qualifier_id = None
+        self.data_column = None
 
     def parse(self, data: tuple):
         self.template_id = data[0]
         self.qualifier_id = data[1]
+        self.data_column = data[2]
 
     def __repr__(self):
-        return f"{self.template_id} - {self.qualifier_id}"
+        return f"{self.template_id} - {self.qualifier_id} - {self.data_column}"
 
 
 class Entity:

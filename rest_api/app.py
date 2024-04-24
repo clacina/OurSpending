@@ -11,8 +11,10 @@ from pydantic import BaseConfig
 from rest_api import user_model
 from rest_api.deps import get_current_user
 from rest_api.logger import setup_rich_logger
+
 # import our router / routes
-from rest_api.routes import router
+from rest_api.routes import router, tags_metadata
+from rest_api.routers import templates, transactions, financial
 from rest_api.schemas import UserOut, UserAuth, TokenSchema, SystemUser
 from rest_api.utils import (
     create_access_token,
@@ -20,14 +22,40 @@ from rest_api.utils import (
     verify_password,
 )
 
+
 # Allow pydantic models more freedom in validation
 BaseConfig.arbitrary_types_allowed = True
 
 
 def get_app() -> FastAPI:
-    app = FastAPI()
+    # Create our App
+    app = FastAPI(
+        title="Our Spending",
+        description="Description",
+        summary="Summary text",
+        version="0.0.1",
+        terms_of_service="Terms",
+        contact={
+            "name": "Chris Lacina",
+            "url": "http://chrislacina.com",
+            "email": "clacina@gmail.com"
+        },
+        license_info={
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+        },
+        openapi_tags=tags_metadata
+    )
+
+    # Setup Logging
     setup_rich_logger()
+
+    # Add routers
     app.include_router(router)
+    app.include_router(templates.router)
+    app.include_router(transactions.router)
+    app.include_router(financial.router)
+
     return app
 
 

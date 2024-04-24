@@ -3,7 +3,7 @@ import sys
 # append the path of the
 # parent directory
 sys.path.append("..")
-import logging
+from flask import current_app
 
 from common.db_access import DBAccess
 from data_processing.data_models import *
@@ -169,10 +169,34 @@ def find_class_from_institution(processor_id):
     try:
         cur.execute(sql, query_params)
         row = cur.fetchone()
+        current_app.logger.info(f"Returned row: {row} for processor_id: {processor_id}")
         return row[0]
     except Exception as e:
         print(f"Error: {str(e)}")
         raise e
+
+
+def load_column_descriptions(institution_id=None):
+    conn = db_access.connect_to_db()
+    assert conn
+    sql = """SELECT 
+                id, institution_id, column_number, column_name, column_type, is_description, is_amount, data_id, is_transaction_date 
+             FROM 
+                transaction_data_description 
+          """
+    if institution_id:
+        sql += "  WHERE institution_id=%(institution_id)s"
+
+    query_params = {
+        'institution_id': institution_id
+    }
+    cur = conn.cursor()
+    try:
+        cur.execute(sql, query_params)
+        result = cur.fetchone()
+        return result
+    except Exception as e:
+        print(f"Error: {str(e)}")
 
 
 def fetch_transactions_from_batch(batch_id: int, institution_id: Optional[int] = None):
@@ -198,7 +222,7 @@ def fetch_transactions_from_batch(batch_id: int, institution_id: Optional[int] =
 
 
 def add_transaction(conn, transaction, batch_id):
-    logging.info(f"Transaction: {transaction}")
+    current_app.logger.info(f"Transaction: {transaction}")
     sql = """
         INSERT INTO
             transaction_records (
@@ -255,7 +279,7 @@ def query_tags(conn, template_id):
 
 def load_template_qualifiers():
     qualifiers = []
-    sql = "SELECT * FROM template_qualifiers"
+    sql = """SELECT template_id, qualifier_id, data_column FROM template_qualifiers"""
     conn = db_access.connect_to_db()
     assert conn
     cur = conn.cursor()
@@ -278,7 +302,7 @@ def load_template_tags(template_id: Optional[int] = None):
     assert conn
     tags = []
     query_params = {}
-    sql = "SELECT * FROM template_tags"
+    sql = "SELECT template_id, tag_id FROM template_tags"
     if template_id:
         sql += " WHERE template_id = %(template_id)s"
         query_params = {"template_id": template_id}
@@ -298,7 +322,7 @@ def load_template_tags(template_id: Optional[int] = None):
     return tags
 
 
-def create_process_batch(transaction_batch_id: int, notes: Optional[str]):
+def create_process_batch(transaction_batch_id: int, notes: str):
     conn = db_access.connect_to_db()
     assert conn
     sql = """

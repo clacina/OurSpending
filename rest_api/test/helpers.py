@@ -39,13 +39,16 @@ def get_processed_batch_ids():
 
 def get_processed_batch_ids_with_transactions():
     """
-                   0      1        2              3
-    sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch"
+    Returns a list of ids from processed_transaction_batch.  Each of those batches contain
+    a transaction_batch_id that corresponds to the transaction_records table 'batch_id' column
     """
     result = db_access.list_processed_batches()
     id_list = []
 
     for r in result:
+        """            0      1        2              3
+        sql = "SELECT id, run_date, notes, transaction_batch_id FROM processed_transaction_batch"
+        """
         tx_list = db_access.query_transactions_from_batch(r[3])
         if tx_list and len(tx_list) > 0:
             id_list.append(r[0])
@@ -88,3 +91,17 @@ def load_qualifiers():
 
 def load_transaction_data_descriptions():
     return db_access.load_transaction_data_descriptions()
+
+
+def find_transaction_with_notes():
+    sql = "SELECT id, transaction_id, note FROM transaction_notes"
+    conn = db_access.connect_to_db()
+    assert conn
+    cur = conn.cursor()
+
+    try:
+        cur.execute(sql)
+        return cur.fetchall()
+    except Exception as e:
+        logging.exception(f"Error loading transactions with notes : {str(e)}")
+        raise e

@@ -17,7 +17,7 @@ CREATE TABLE qualifiers
     id             SERIAL PRIMARY KEY,
     value          TEXT,
     institution_id INTEGER REFERENCES institutions (id) ON DELETE CASCADE NOT NULL,
-    unique (value)
+    unique (value, institution_id)
 );
 ALTER SEQUENCE qualifiers_id_seq RESTART WITH 5000;
 
@@ -193,8 +193,10 @@ CREATE TABLE credit_cards
     id              SERIAL PRIMARY KEY,
     name            TEXT NOT NULL UNIQUE,
     institution_id  INTEGER DEFAULT NULL,
-    due_date        DATE DEFAULT NULL,
-    interest_rate   FLOAT DEFAULT NULL
+    due_date        INTEGER DEFAULT NULL,
+    interest_rate   FLOAT DEFAULT NULL,
+    interest_rate_cash double precision,
+    credit_limit    double precision
 );
 
 
@@ -203,7 +205,8 @@ CREATE TABLE credit_card_data
 (
     card_id         INT REFERENCES credit_cards (id),
     balance         FLOAT,
-    balance_date    DATE DEFAULT NULL
+    balance_date    DATE DEFAULT NULL,
+    minimum_payment double precision
 );
 
 -- Data
@@ -664,15 +667,3 @@ VALUES
     (14, 28, 'Balance Impact', 'String', false, false, false, NULL)
 ;
 
-/*------------------------ Credit Card Info --------------------------*/
-INSERT INTO
-    credit_cards (name)
-VALUES
-    ('Wells Fargo Visa'),
-    ('Sound Visa'),
-    ('Care Credit'),
-    ('Capital One'),
-    ('Chase Visa (Amazon)'),
-    ('Home Depot'),
-    ('Lowes')
-;
