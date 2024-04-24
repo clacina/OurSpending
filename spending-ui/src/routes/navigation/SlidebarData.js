@@ -5,7 +5,7 @@ import * as AiIcons from "react-icons/ai";
 // import * as IoIcons from "react-icons/io";
 import { GiChart } from "react-icons/gi";
 import { TbReportMoney, TbReportSearch } from "react-icons/tb";
-import { GrCloudComputer } from "react-icons/gr";
+// import { GrCloudComputer } from "react-icons/gr";
 import { GiComputerFan } from "react-icons/gi";
 
 

@@ -10,7 +10,7 @@ export const CategoriesProvider = ({children}) => {
     const [update, setUpdate] = useState(true);
 
     const getCategories = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/categories'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/categories`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         setUpdate(false);
@@ -27,9 +27,9 @@ export const CategoriesProvider = ({children}) => {
             })
         };
 
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/categories';
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/categories`;
         const response = await fetch(url, requestOptions);
-        const str = await response.json();
+        await response.json();
         setUpdate(true);
     }
 
@@ -43,9 +43,9 @@ export const CategoriesProvider = ({children}) => {
                 "is_tax_deductible": is_tax_deductible
             })
         };
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/categories/' + id;
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/categories/` + id;
         const response = await fetch(url, requestOptions);
-        const str = await response.json();
+        await response.json();
         setUpdate(true);
     }
 

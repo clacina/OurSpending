@@ -15,7 +15,7 @@ export const TransactionsProvider = ({children}) => {
 
     const getTransactions = async (batch_id) => {
         setCurrentBatchId(batch_id);
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/transactions/' + batch_id
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/transactions/` + batch_id
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
@@ -31,7 +31,7 @@ export const TransactionsProvider = ({children}) => {
                 "color": color
             })
         };
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/transaction/' + id;
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/transaction/` + id;
         const response = await fetch(url, requestOptions);
         const str = await response.json();
         console.log("Response: ", str);
@@ -51,9 +51,9 @@ export const TransactionsProvider = ({children}) => {
             })
         }
         const headers = {'Content-Type': 'application/json'}
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/transaction/' + transaction_id + '/tags';
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/transaction/` + transaction_id + '/tags';
         const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
+        await send({url}, {method}, {headers}, {body});
         setUpdate(true);
     }
 
@@ -74,9 +74,9 @@ export const TransactionsProvider = ({children}) => {
         }
 
         const headers = {'Content-Type': 'application/json'}
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/transaction/' + transaction_id + '/notes';
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/transaction/` + transaction_id + '/notes';
         const method = 'POST'
-        const request = await send({url}, {method}, {headers}, {body});
+        await send({url}, {method}, {headers}, {body});
         setUpdate(true);
     }
 
@@ -85,9 +85,9 @@ export const TransactionsProvider = ({children}) => {
             'category_id': category_id
         }
         const headers = {'Content-Type': 'application/json'}
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/transaction/' + transaction_id + '/category';
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/transaction/` + transaction_id + '/category';
         const method = 'PUT'
-        const request = await send({url}, {method}, {headers}, {body});
+        await send({url}, {method}, {headers}, {body});
         setUpdate(true);
     }
 

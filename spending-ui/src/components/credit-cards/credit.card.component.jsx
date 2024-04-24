@@ -8,7 +8,7 @@ import ModalPromptComponent from "../widgets/modal-prompt/modal-prompt.component
 import CreditCardDataUpdateForm from "./credit.card.data.update.form";
 
 const CreditCards = () => {
-    const {setSectionTitle, creditCardInfo, creditCardData, loanInfo, servicesInfo} = useContext(StaticDataContext);
+    const {setSectionTitle, creditCardInfo, creditCardData, loanInfo, servicesInfo, updateCreditCardData} = useContext(StaticDataContext);
     const [isLoaded, setIsLoaded] = useState(false);
     const [columns, setColumns] = useState([]);
     const [loanColumns, setLoanColumns] = useState([]);
@@ -440,18 +440,13 @@ const CreditCards = () => {
         setOpenUpdateForm(true);
     }
 
-    const closeModal = async (id, value, save_result) => {
+    const closeModal = async (value, save_result) => {
         if (openUpdateForm) {
             console.log("Close Modal: ", value);
+            console.log("Close Modal: ", save_result);
             setOpenUpdateForm(false);
             if(save_result) {
-                // console.log("---Saving: ", editColumn);
-                // switch(editColumn) {
-                //     case 4: // notes
-                //         await updateNotes(id, value);
-                //         break;
-                //     default: break;
-                // }
+                updateCreditCardData(value)
             }
         }
     }

@@ -19,38 +19,50 @@ export const StaticDataProvider = ({children}) => {
     const [servicesInfo, setServicesInfo] = useState([]);
 
     const getTransactionDefinitions = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/data_definitions'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/data_definitions`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     };
 
     const getCreditCardInfo = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/credit_cards'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/credit_cards`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     }
 
     const getCreditCardData = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/credit_card_data'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/credit_card_data`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     }
 
     const getLoanInfo = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/loans'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/loans`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
     }
 
     const getServicesInfo = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/services'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/services`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         return(str);
+    }
+
+    const updateCreditCardData = async (payload) => {
+        const requestOptions = {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        };
+
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/credit_card_data`
+        await fetch(url, requestOptions);
+        getCreditCardInfo().then((res) => setCreditCardInfo(res));
     }
 
     useEffect(() => {
@@ -72,7 +84,8 @@ export const StaticDataProvider = ({children}) => {
         creditCardData,
         creditCardInfo,
         loanInfo,
-        servicesInfo
+        servicesInfo,
+        updateCreditCardData
     };
     return <StaticDataContext.Provider value={routines}>{children}</StaticDataContext.Provider>
 };

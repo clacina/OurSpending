@@ -1,0 +1,18 @@
+yarn run v1.22.22
+$ react-app-rewired start
+Starting the development server...
+
+Compiled successfully!
+
+You can now view spending-ui in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://172.20.97.30:3000
+
+Note that the development build is not optimized.
+To create a production build, use yarn build.
+
+webpack compiled successfully
+Compiling...
+Compiled successfully!
+webpack compiled successfully

@@ -20,7 +20,7 @@ export const InstitutionsProvider = ({children}) => {
 
     const updateInstitution = async (bank_id, body) => {
         const headers = {'Content-Type': 'application/json'}
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/bank/' + bank_id;
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/bank/` + bank_id;
         const method = 'PUT'
         console.log("Sending update: ", body);
         const request = await send(url, method, headers, body);

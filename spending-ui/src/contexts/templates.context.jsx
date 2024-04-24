@@ -14,7 +14,7 @@ export const TemplatesProvider = ({children}) => {
     const [updateQualifiers, setUpdateQualifiers] = useState(true);
 
     const getTemplates = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/templates`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         setUpdate(false);
@@ -22,7 +22,7 @@ export const TemplatesProvider = ({children}) => {
     };
 
     const getQualifiers = async () => {
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/template_qualifiers'
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/template_qualifiers`
         const data = await fetch(url, { method: 'GET' })
         var str = await data.json();
         setUpdateQualifiers(false);
@@ -31,7 +31,7 @@ export const TemplatesProvider = ({children}) => {
 
     const updateTemplate = async (template_id, body) => {
         const headers = {'Content-Type': 'application/json'}
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/template/' + template_id;
+        const url = `${process.env.REACT_APP_PROCESSOR}/resources/template/` + template_id;
         const method = 'PATCH'
         console.log("Sending update: ", body);
         const request = await send({url}, {method}, {headers}, {body});
@@ -49,7 +49,7 @@ export const TemplatesProvider = ({children}) => {
         console.log("Create Template");
         if(payload !== undefined) {
             const headers = {'Content-Type': 'application/json'}
-            const url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/templates';
+            const url = `${process.env.REACT_APP_PROCESSOR}/resources/templates`;
             const method = 'POST'
             console.log("Sending update: ", payload);
             const response = await send(url, method, headers, payload);
@@ -67,9 +67,9 @@ export const TemplatesProvider = ({children}) => {
             const headers = {'Content-Type': 'application/json'}
             let url = '';
             if('template_id' in payload && payload['template_id']) {
-                url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + payload['batch_id'] + '/match_template/' + payload['template_id'];
+                url = `${process.env.REACT_APP_PROCESSOR}/resources/processed_batch/` + payload['batch_id'] + '/match_template/' + payload['template_id'];
             } else if('qualifiers' in payload && payload['qualifiers'].length > 0) {
-                url = `${process.env.REACT_APP_PROCESSOR}` + '/resources/processed_batch/' + payload['batch_id'] + '/match_qualifiers/';
+                url = `${process.env.REACT_APP_PROCESSOR}/resources/processed_batch/` + payload['batch_id'] + '/match_qualifiers/';
             } else {
                 return("Invalid payload");
             }

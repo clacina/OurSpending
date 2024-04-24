@@ -2,7 +2,7 @@
     Original code: https://codesandbox.io/s/react-sidebar-navigation-menu-0hkkj?file=/src/components/SlidebarData.js
  */
 
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useState} from "react";
 
 // ICONS
 import * as FaIcons from "react-icons/fa";

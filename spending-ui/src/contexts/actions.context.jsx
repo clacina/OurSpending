@@ -1,4 +1,4 @@
-import {createContext, useEffect, useState} from "react";
+import {createContext} from "react";
 import send from "../utils/http_client";
 
 export const ActionsContext = createContext({
@@ -10,7 +10,7 @@ export const ActionsProvider = ({children}) => {
     const processBatch = async (batch_id, notes) => {
         console.log("In process batch...");
         const headers = {'Content-Type': 'application/json'}
-        const url = `${process.env.REACT_APP_PROCESSOR}` + '/actions/batch/' + batch_id + '/process';
+        const url = `${process.env.REACT_APP_PROCESSOR}/actions/batch/` + batch_id + '/process';
         const method = 'POST'
         const body = {
             "notes": notes
