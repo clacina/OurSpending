@@ -632,7 +632,7 @@ def category_report(batch_id: int):
 )
 async def get_saved_filters():
     filter_data = db_access.load_saved_filters()
-    logging.info(f"Saved filters: {filter_data}")
+    # logging.info(f"Saved filters: {filter_data}")
 
     filter_list = []
     for f in filter_data:
@@ -646,12 +646,12 @@ async def get_saved_filters():
         if f[6] and len(f[6]):
             tag_list = []
             tags = f[6].split(',')
-            logging.info(f"Tags: {tags}")
+            # logging.info(f"Tags: {tags}")
             for tag in tags:
                 tag = tag.strip()
-                logging.info(f"--Updated tag: {tag}")
+                # logging.info(f"--Updated tag: {tag}")
                 q = db_access.fetch_tag(tag)
-                logging.info(f"--got query result: {q}")
+                # logging.info(f"--got query result: {q}")
                 if q is not None:
                     tag_list.append(TagModel(
                         id=q[0],
@@ -682,7 +682,7 @@ async def get_batch_contents():
     notes: str
     """
     contents = db_access.load_batch_contents()
-    logging.info(f"Batch Contents: {contents}")
+    # logging.info(f"Batch Contents: {contents}")
 
     content_list = []
     for f in contents:

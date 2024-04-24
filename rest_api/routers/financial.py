@@ -91,7 +91,7 @@ async def update_institution(institution_id: int, info: Request = None):
 )
 async def get_cc_info():
     contents = db_access.load_cc_info()
-    logging.info(f"Credit Info: {contents}")
+    # logging.info(f"Credit Info: {contents}")
 
     content_list = []
     for f in contents:
@@ -117,7 +117,7 @@ async def get_cc_info():
 )
 async def get_cc_data():
     contents = db_access.load_cc_data()
-    logging.info(f"Credit Data: {contents}")
+    # logging.info(f"Credit Data: {contents}")
 
     content_list = []
     for f in contents:
@@ -131,6 +131,48 @@ async def get_cc_data():
     return content_list
 
 
+@router.post(
+    "/credit_card_data",
+    summary="Update balance information for one or more credit cards.",
+    status_code=status.HTTP_201_CREATED,
+    tags=["Credit Cards"]
+)
+async def update_cc_data(info: Request = None):
+    cc_data = await info.json()
+    # logging.info(f"cc data: {cc_data}")
+
+    new_balances = cc_data['updatedBalance']
+    new_minimumPayments = cc_data['updatedMinPayment']
+
+    logging.info(f"balances: {new_balances}")
+    logging.info(f"min payments: {new_minimumPayments}")
+
+    # Insert new records in db
+    for k, v in new_balances.items():
+        # Balance: entry_balance_62:
+        card_id = k[len('entry_balance_'):]
+        if v != '':
+            sql = "INSERT INTO credit_card_data (card_id, balance, balance_date) VALUES (%(card_id)s, %(balance)s, NOW())"
+            query_params = {
+                'card_id': card_id,
+                'balance': v
+            }
+
+            print(f"Balance: {k}: {v}")
+            print(f"Card: {card_id}")
+            # see if there is a new min payment
+            new_min_payment = new_minimumPayments[f'entry_min_payment_{card_id}']
+            if new_min_payment:
+                sql = "INSERT INTO credit_card_data (card_id, balance, balance_date, minimum_payment) VALUES (%(card_id)s, %(balance)s, NOW(), %(min_payment)s)"
+                query_params['min_payment'] = new_min_payment
+                try:
+                    cursor = db_access.get_db_cursor()
+                    cursor.execute(sql, query_params)
+                except Exception as e:
+                    print(f"Error inserting data: {str(e)}")
+                    raise e
+
+
 @router.get(
     "/credit_card_data/latest",
     summary="Get latest balance info for all cards",
@@ -139,7 +181,7 @@ async def get_cc_data():
 )
 async def get_cc_data():
     contents = db_access.load_cc_data()
-    logging.info(f"Credit Data: {contents}")
+    # logging.info(f"Credit Data: {contents}")
 
     content_list = []
     for f in contents:
@@ -161,7 +203,7 @@ async def get_cc_data():
 )
 async def get_loans():
     contents = db_access.load_loans()
-    logging.info(f"Loans: {contents}")
+    # logging.info(f"Loans: {contents}")
 
     content_list = []
     for f in contents:
