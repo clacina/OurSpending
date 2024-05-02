@@ -84,6 +84,7 @@ const ProcessedTransactions = () => {
 
     useEffect(() => {
         console.log("UE-05")
+        console.log(`${transactionResourcesLoaded}, ${transactionsMap.length}, ${templatesMap.length}`)
 
         // Group transactions by institution
         if (transactionResourcesLoaded && transactionsMap.length && templatesMap.length) {

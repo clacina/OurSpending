@@ -1,0 +1,10 @@
+{
+  "files": ["src/**/*.jsx"],
+  "formats": [
+    {
+      "name": "stylish",
+      "output": "console"
+    }
+  ],
+  "eslintConfig": {}
+}
