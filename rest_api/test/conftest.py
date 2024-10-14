@@ -9,7 +9,7 @@ db_access = DBAccess()
 
 TEST_DB_NAME = "lacinaslair_test"
 MAIN_DB_NAME = "lacinaslair"
-DB_SERVER = "postgresql://lacinaslair:gr8ful@192.168.1.89:5432"
+DB_SERVER = "postgresql://lacinaslair:gr8ful@10.0.0.100:5432"
 
 """
 test_models.py::TestCategoryFactory::test_1

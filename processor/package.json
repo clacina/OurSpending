@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node ./bin/www",
     "dev": "nodemon app.js",
-    "swagger": "node ./swagger.js"
+    "swagger": "node ./swagger.js",
+    "eslint-output": "eslint-output"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -15,6 +16,8 @@
     "debug": "~2.6.9",
     "dotenv": "^16.4.0",
     "ejs": "^3.1.9",
+    "eslint": "^9.1.1",
+    "eslint-output": "^3.0.1",
     "express": "^4.18.2",
     "got": "^13.0.0",
     "morgan": "~1.9.1",

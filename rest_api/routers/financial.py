@@ -139,20 +139,29 @@ async def get_cc_data():
 )
 async def update_cc_data(info: Request = None):
     cc_data = await info.json()
-    # logging.info(f"cc data: {cc_data}")
+    logging.info(f"cc data: {cc_data}")
 
-    new_balances = cc_data['updatedBalance']
-    new_minimumPayments = cc_data['updatedMinPayment']
+    new_balances = cc_data['updated_balance']
+    new_minimumPayments = cc_data['updated_payment']
 
     logging.info(f"balances: {new_balances}")
     logging.info(f"min payments: {new_minimumPayments}")
+
+    conn = db_access.connect_to_db()
+    cursor = conn.cursor()
 
     # Insert new records in db
     for k, v in new_balances.items():
         # Balance: entry_balance_62:
         card_id = k[len('entry_balance_'):]
+
         if v != '':
-            sql = "INSERT INTO credit_card_data (card_id, balance, balance_date) VALUES (%(card_id)s, %(balance)s, NOW())"
+            sql = """
+                INSERT INTO credit_card_data (card_id, balance, balance_date) 
+                VALUES (%(card_id)s, %(balance)s, NOW())
+                ON CONFLICT (card_id)
+                DO UPDATE SET balance=%(balance)s, balance_date=NOW()
+            """
             query_params = {
                 'card_id': card_id,
                 'balance': v
@@ -160,17 +169,37 @@ async def update_cc_data(info: Request = None):
 
             print(f"Balance: {k}: {v}")
             print(f"Card: {card_id}")
-            # see if there is a new min payment
-            new_min_payment = new_minimumPayments[f'entry_min_payment_{card_id}']
-            if new_min_payment:
-                sql = "INSERT INTO credit_card_data (card_id, balance, balance_date, minimum_payment) VALUES (%(card_id)s, %(balance)s, NOW(), %(min_payment)s)"
-                query_params['min_payment'] = new_min_payment
+            try:
+                cursor.execute(sql, query_params)
+                conn.commit()
+            except Exception as e:
+                print(f"Error inserting balance data: {str(e)}")
+                raise e
+
+        # see if there is a new min payment
+        for k, v in new_minimumPayments.items():
+            # Minimum Payment: entry_min_payment__62:
+            card_id = k[len('entry_min_payment_'):]
+            if v != '':
+                sql = """
+                    INSERT INTO credit_card_data (card_id, balance_date, minimum_payment) 
+                    VALUES (%(card_id)s, NOW(), %(min_payment)s)
+                    ON CONFLICT (card_id)
+                    DO UPDATE SET minimum_payment=%(min_payment)s, balance_date=NOW() 
+                """
+                query_params = {
+                    'card_id': card_id,
+                    'min_payment': v
+                }
+                # ALTER TABLE credit_card_data ADD CONSTRAINT unique_card_id UNIQUE (card_id);
                 try:
-                    cursor = db_access.get_db_cursor()
                     cursor.execute(sql, query_params)
+                    conn.commit()
                 except Exception as e:
-                    print(f"Error inserting data: {str(e)}")
+                    print(f"Error inserting payment data: {str(e)}")
                     raise e
+
+        return await get_cc_data()
 
 
 @router.get(

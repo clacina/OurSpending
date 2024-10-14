@@ -337,7 +337,7 @@ class TransactionNotesResource(DBResource):
 class DBAccess:
     def __init__(self):
         # self.host = 'localhost'  # Local Server
-        self.host = ' 192.168.1.89'      # Ubuntu server
+        self.host = ' 10.0.0.100'      # Ubuntu server
         self.db = 'lacinaslair'
         self.test_db = 'lacinaslair'
         self.active_db = self.db

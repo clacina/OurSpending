@@ -353,6 +353,33 @@ def test_get_processed_transaction_non_existent():
     assert response.status_code == 404
 
 
+def test_get_credit_cards():
+    response = client.get(f"/credit_cards")
+    assert response.status_code == 200
+    print(f"Credit Cards: {response.json()}")
+
+
+def test_get_credit_card_data():
+    response = client.get(f"/credit_card_data")
+    assert response.status_code == 200
+    print(f"Credit Card data: {response.json()}")
+
+
+def test_update_credit_card_data():
+    test_data = {
+        'value': f'Stuff for Nolia {random.randint(0, 100)}',
+        'notes': 'Category Notes'
+    }
+    response = client.post("/credit_card_data",
+                           json=test_data,
+                           headers={"Content-Type": "application/json"})
+    assert response.status_code == 201
+
+    response = client.get(f"/credit_card_data")
+    assert response.status_code == 200
+    print(f"Credit Card data: {response.json()}")
+
+
 """
 add_template
 update_template

@@ -13,7 +13,7 @@ from rest_api.test import models
 url = URL.create(
     drivername="postgresql",
     username="lacinaslair",
-    host="192.168.1.89",
+    host="10.0.0.100",
     database="lacinaslair"
 )
 
