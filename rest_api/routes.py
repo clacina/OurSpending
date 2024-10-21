@@ -11,11 +11,11 @@ from fastapi import APIRouter, Query, HTTPException, status, Body, Request
 from fastapi import Path
 from pydantic import BaseModel
 
-import rest_api.models as models
+import models as models
 from common.db_access import DBAccess
-from rest_api.models import TagModel
-from rest_api.reports import report_processor
-from rest_api.reports import reports
+from models import TagModel
+from reports import report_processor
+from reports import reports
 
 router = APIRouter()
 db_access = DBAccess()

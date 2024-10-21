@@ -2,8 +2,8 @@ import sys
 
 # append the path of the
 # parent directory
-sys.path.append("..")
-from rest_api.template_models import TemplateQualifier, TemplateTag, BankingTemplate
+# sys.path.append("..")
+from template_models import TemplateQualifier, TemplateTag, BankingTemplate
 from common.db_access import DBAccess
 import json
 from typing import Optional

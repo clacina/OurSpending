@@ -4,7 +4,7 @@
 
 import logging
 from typing import Optional, List
-from rest_api.models import CategoryModel, InstitutionsModel, TagModel, QualifierModel, TemplateQualifierModel
+from models import CategoryModel, InstitutionsModel, TagModel, QualifierModel, TemplateQualifierModel
 from pydantic import BaseConfig, BaseModel
 
 BaseConfig.arbitrary_types_allowed = True

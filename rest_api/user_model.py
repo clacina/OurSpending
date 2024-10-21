@@ -1,6 +1,5 @@
 from fastapi import status, HTTPException
 
-import rest_api.utils
 from common.db_access import DBAccess
 db_access = DBAccess()
 

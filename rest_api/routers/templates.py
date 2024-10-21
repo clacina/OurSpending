@@ -9,12 +9,12 @@ from typing import Optional, List
 from fastapi import APIRouter, Query, HTTPException, status, Body, Request
 from pydantic import BaseModel
 
-import rest_api.models as models
+import models as models
 from common.db_access import DBAccess
-from rest_api.models import CategoryModel
-from rest_api.models import QualifierModel
-from rest_api.models import TagModel
-from rest_api.template_models import (
+from models import CategoryModel
+from models import QualifierModel
+from models import TagModel
+from template_models import (
     TemplateDetailModel,
     TemplatesDetailReportBuilder,
     TemplateReportModel,
@@ -133,13 +133,13 @@ def update_template(template_id: int, template: TemplateReportModel = Body(...))
 
 
 class TemplateUpdate(BaseModel):
-    institution_id: int | None = None
-    category: CategoryModel | None = None
-    credit: bool | None = None
-    tags: List[TagModel] | None = None
-    qualifiers: List[QualifierModel] | None = None
-    hint: str | None = None
-    notes: str | None = None
+    institution_id: Optional[int] = None
+    category: Optional[CategoryModel] = None
+    credit: Optional[bool] = None
+    tags: Optional[List[TagModel]] = None
+    qualifiers: Optional[List[QualifierModel]] = None
+    hint: Optional[str] = None
+    notes: Optional[str] = None
 
 
 @router.patch(

@@ -2,6 +2,7 @@ import logging
 import sys
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -14,8 +15,8 @@ LOGGER_FORMAT = "%(asctime)s | %(message)s"
 class LoggerConfig(BaseModel):
     handlers: list
     format: str
-    date_format: str | None = None
-    logger_file: Path | None = None
+    date_format: Optional[str] = None
+    logger_file: Optional[Path] = None
     level: int = logging.INFO
 
 

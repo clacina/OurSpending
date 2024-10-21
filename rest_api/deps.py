@@ -7,9 +7,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
 
-from rest_api.schemas import TokenPayload, SystemUser
+from schemas import TokenPayload, SystemUser
 from common.db_access import DBAccess
-from .utils import ALGORITHM, JWT_SECRET_KEY
+from utils import ALGORITHM, JWT_SECRET_KEY
 
 reuseable_oauth = OAuth2PasswordBearer(tokenUrl="/login", scheme_name="JWT")
 db_access = DBAccess()

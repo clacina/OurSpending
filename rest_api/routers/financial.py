@@ -8,7 +8,7 @@ from typing import List
 
 from fastapi import APIRouter, Query, HTTPException, status, Body, Request
 
-import rest_api.models as models
+import models as models
 from common.db_access import DBAccess
 
 router = APIRouter()

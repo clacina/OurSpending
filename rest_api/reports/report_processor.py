@@ -7,7 +7,7 @@ Data and processing routines for report data
 import abc
 import logging
 
-from rest_api.reports import db_utils
+from reports import db_utils
 
 
 class ProcessingTransaction:
