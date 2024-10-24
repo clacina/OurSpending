@@ -140,66 +140,53 @@ async def get_cc_data():
 async def update_cc_data(info: Request = None):
     cc_data = await info.json()
     logging.info(f"cc data: {cc_data}")
+    # Single record and value
+    # {'id': 63, 'balance': '344'}
+    update_table = None
+    update_field = None
 
-    new_balances = cc_data['updated_balance']
-    new_minimumPayments = cc_data['updated_payment']
+    card_id = cc_data.get('id', None)
+    assert card_id, f"Payload not properly formatted: {cc_data}"
+    query_params = {'card_id': card_id}
 
-    logging.info(f"balances: {new_balances}")
-    logging.info(f"min payments: {new_minimumPayments}")
+    for k, v in cc_data.items():
+        logging.info(f"{k}: {v}")
+        if k != "id":
+            update_field = k
+            query_params['placeholder'] = v
+        match k:
+            case "balance" | "minimum_payment":
+                update_table = 'credit_card_data'
+            case "credit_limit" | "interest_rate" | "interest_rate_cash" | "due_date":
+                update_table = 'credit_cards'
+
+    assert update_field
+    if update_table == 'credit_card_data':
+        query = f"""
+            INSERT INTO {update_table} (card_id, {update_field}) 
+            VALUES (%(card_id)s, %(placeholder)s)
+            ON CONFLICT (card_id)
+            DO UPDATE SET {update_field}=%(placeholder)s
+        """
+    else:
+        query = f"""
+            UPDATE {update_table} SET {update_field}=%(placeholder)s WHERE id=%(card_id)s 
+        """
+
+    logging.info(f"Insert : {query}")
+    logging.info(f"Params : {query_params}")
 
     conn = db_access.connect_to_db()
     cursor = conn.cursor()
 
-    # Insert new records in db
-    for k, v in new_balances.items():
-        # Balance: entry_balance_62:
-        card_id = k[len('entry_balance_'):]
+    try:
+        cursor.execute(query, query_params)
+        conn.commit()
+    except Exception as e:
+        print(f"Error inserting balance data: {str(e)}")
+        raise e
 
-        if v != '':
-            sql = """
-                INSERT INTO credit_card_data (card_id, balance, balance_date) 
-                VALUES (%(card_id)s, %(balance)s, NOW())
-                ON CONFLICT (card_id)
-                DO UPDATE SET balance=%(balance)s, balance_date=NOW()
-            """
-            query_params = {
-                'card_id': card_id,
-                'balance': v
-            }
-
-            print(f"Balance: {k}: {v}")
-            print(f"Card: {card_id}")
-            try:
-                cursor.execute(sql, query_params)
-                conn.commit()
-            except Exception as e:
-                print(f"Error inserting balance data: {str(e)}")
-                raise e
-
-        # see if there is a new min payment
-        for k, v in new_minimumPayments.items():
-            # Minimum Payment: entry_min_payment__62:
-            card_id = k[len('entry_min_payment_'):]
-            if v != '':
-                sql = """
-                    INSERT INTO credit_card_data (card_id, balance_date, minimum_payment) 
-                    VALUES (%(card_id)s, NOW(), %(min_payment)s)
-                    ON CONFLICT (card_id)
-                    DO UPDATE SET minimum_payment=%(min_payment)s, balance_date=NOW() 
-                """
-                query_params = {
-                    'card_id': card_id,
-                    'min_payment': v
-                }
-                # ALTER TABLE credit_card_data ADD CONSTRAINT unique_card_id UNIQUE (card_id);
-                try:
-                    cursor.execute(sql, query_params)
-                    conn.commit()
-                except Exception as e:
-                    print(f"Error inserting payment data: {str(e)}")
-                    raise e
-
-        return await get_cc_data()
+    return await get_cc_data()
 
 
 @router.get(

@@ -11,17 +11,12 @@ version: '3.2'
 services:
   restapi:
     image: localhost:5000/restapi
-    entrypoint: "uvicorn app:app --reload --port=8080 --host=0.0.0.0"
+    entrypoint: "uvicorn app:app --reload --port=8080"
+    network_mode: host
     ports:
       - "8080:8080"
-#    environment:
     volumes:
       - ./:/app/
       - ./debug.log:/app/debug.log:rw
     user: lacinaslair
     restart: on-failure
-#    depends_on:
-#      - flowroutedb
-#      - localstack
-#      - smtpd.internal
-#
