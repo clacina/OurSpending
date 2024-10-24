@@ -2,10 +2,10 @@ from flask import current_app
 import os
 import sys
 
-from data_processing import db_utils
-from data_processing.processors import select_processor_from_file
-from data_processing.settings import data_mgr
-from data_processing.settings import ConfigurationData
+import db_utils
+from processors import select_processor_from_file
+from settings import data_mgr
+from settings import ConfigurationData
 
 
 def build_config_for_institution(config, institution_id):
@@ -36,7 +36,7 @@ def configure_processor(datafile, processor_class, institution_id):
     :return: a derived object from ProcessorBase and the processor type passed
     """
     current_app.logger.info(f"ConfigProc: {processor_class}")
-    class_ = getattr(sys.modules['data_processing.processors'], processor_class, None)
+    class_ = getattr(sys.modules['processors'], processor_class, None)
     processor = class_(datafile)
 
     processor.institution_id = institution_id

@@ -1,13 +1,24 @@
 from apiflask import APIFlask
 from flask import request, json, jsonify
-from data_processing.rich import OurRich
+from flask_rich import RichApplication
 
-from data_processing.backend import load_sources, create_batch, update_batch, configure_processor
-from data_processing.processors import select_processors_from_batch
-from data_processing.match_qualifiers import find_template_matches, match_qualifiers
-from data_processing.schemas import LoadSchema, ProcessSchema
+# NOTE: Not sure why we need to append the path below. Without it, python can't find imports
+"""
+  File "/home/clacina/projects/OurSpending/data_processing/app.py", line 9, in <module>
+    from backend import load_sources, create_batch, update_batch, configure_processor
+ModuleNotFoundError: No module named 'backend'
+"""
+import sys, os
+sys.path.append(os.getcwd())
 
-import data_processing.db_utils as db_utils
+from backend import load_sources, create_batch, update_batch, configure_processor
+from processors import select_processors_from_batch
+from match_qualifiers import find_template_matches, match_qualifiers
+from schemas import LoadSchema, ProcessSchema
+
+import db_utils as db_utils
+
+OurRich = RichApplication()
 
 
 """

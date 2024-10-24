@@ -59,7 +59,7 @@ class DBResource:
         pass
 
     def delete_entry(self, id):
-        query = "DELETE from {self.table} WHERE id=%(id)s"
+        query = f"DELETE from {self.table} WHERE id=%(id)s"
         query_params = {"id": id}
         try:
             self.cursor.execute(query, query_params)

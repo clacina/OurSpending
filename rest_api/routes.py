@@ -16,6 +16,7 @@ from common.db_access import DBAccess
 from models import TagModel
 from reports import report_processor
 from reports import reports
+from routers.transactions import parse_transaction_record
 
 router = APIRouter()
 db_access = DBAccess()
